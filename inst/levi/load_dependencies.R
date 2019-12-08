@@ -7,8 +7,8 @@ library(DT)
 library(tidyverse)
 library(magrittr)
 library(plotly)
-library(ggrepel)
-
+library(vroom)
+library(janitor)
 
 # source code which needs to run once -------------------------------------
 
@@ -20,5 +20,4 @@ source("helpers.R")
 
 #counties <- readRDS("./data/counties.rds")
 
-library(reactlog)
-options(shiny.reactlog = TRUE)
+

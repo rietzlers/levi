@@ -19,15 +19,9 @@ header <-
 
 sidebar <-
     dashboardSidebar(sidebarMenu(
-        menuItem(
-            "Load tevi-data",
-            tabName = "load_data",
-            icon = icon("th"),
-            badgeLabel = "first",
-            badgeColor = "green"
-        ),
+        menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")),
         menuItem("Display Signal", tabName = "display_signal", icon = icon("bar-chart-o"))
-        #menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard"))
+
     ))
 
 
@@ -35,9 +29,12 @@ sidebar <-
 
 body <-
     dashboardBody(tabItems(
-        # load data ---------------------
+        # dashboard: select file --------------------
         tabItem(
-            tabName = "load_data",
+            tabName = "dashboard",
+            shinydashboard::box(
+                width = 4,
+
                 # upload file -
                 shinydashboard::box(
                     title = "select tevi-data (.dat-file)",
@@ -45,35 +42,62 @@ body <-
                     fileInput(
                         "file",
                         label = NULL,
-                        multiple = FALSE,
-                        accept = c("text/csv",
-                                   "text/comma-separated-values,text/plain",
-                                   ".csv",
-                                   ".dat")
+                        multiple = TRUE,
+                        accept = c(
+                            "text/csv",
+                            "text/comma-separated-values,text/plain",
+                            ".csv",
+                            ".dat"
+                        )
                     )
                 ),
-                
+
                 shinydashboard::box(
                     collapsible = TRUE,
                     width = 12,
                     title = "Set parameters",
-                    div(
-                        box(width = 4, numericInput("frame_rate", label = "Frame-Rate [Hz]", value = NULL)),
-                        box(width = 4, numericInput("sample_mass", label = "Sample-Mass[g]", value = NULL)),
-                        box(width = 4, numericInput("sphere_radius", label = "Sphere-Radius [mm]", value = NULL))
+                    box(
+                        width = 4,
+                        numericInput("frame_rate", label = "Frame-Rate [Hz]", value = NULL)
+                    ),
+                    box(
+                        width = 4,
+                        numericInput("sample_mass", label = "Sample-Mass[g]", value = NULL)
+                    ),
+                    box(
+                        width = 4,
+                        numericInput("sphere_radius", label = "Sphere-Radius [mm]", value = NULL)
                     )
+
                 ),
-                
+
                 # display data-table -
                 shinydashboard::box(
                     collapsible = TRUE,
                     width = 12,
                     title = "Imported data",
-                    DT::DTOutput("raw_tevi_data_table")
-                    
+                    verbatimTextOutput("raw_tevi_data_table")
+
                 )
             ),
-        
+            # dashboard: display info --------------------
+            shinydashboard::box(
+                width = 8,
+                shinydashboard::box(
+                    width =   12,
+                    plotOutput("plot_center_xy", height = 200)
+                ),
+                shinydashboard::box(
+                    width =  12,
+                    plotOutput("plot_temp", height = 200)
+                ),
+                shinydashboard::box(
+                    width =  12,
+                    plotOutput("plot_heat_i", height = 200)
+                )
+            )
+        ),
+
         # display signal --------------------
         tabItem(
             tabName = "display_signal",

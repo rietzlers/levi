@@ -1,44 +1,36 @@
 
-server <- 
-  function(input, output, session) { 
-  
+server <-
+  function(input, output, session) {
+
     # reactive data ----
     raw_tevi_data <-
       reactive({
         validate(
           need(input$file, label = "tevi-data (.dat-file)")
         )
-        
+
         df_raw <-
-          read_delim(
+          vroom::vroom(
             input$file$datapath,
-            "\t",
-            escape_double = FALSE,
+            delim = "\t",
             col_types = cols(
               `Absolute Time` = col_time(format = "%H:%M:%OS"),
-              R_CenterX = col_double(),
-              R_CenterY = col_double(),
-              R_RadiusX = col_double(),
-              R_RadiusY = col_double()
+              .default = col_double()
             ),
             trim_ws = TRUE
-          )
-        
-        df <- 
-          df_raw[-1, ] %>% 
-          arrange(Seconds) %>% 
-          mutate(time = Seconds - Seconds[1]) %>% 
-          select(
-            time,
-            contains("X", ignore.case = FALSE),
-            contains("Y", ignore.case = FALSE)
-          )
-        
-        
-        
-        validate(need(nrow(df) > 0,
-                      "there are no observations in uploaded data"))
-        
+          ) %>%
+          janitor::clean_names()
+
+
+        df <-
+          df_raw[-1, ] %>%
+          arrange(seconds) %>%
+          mutate(time = seconds - seconds[1])
+
+        names(df) <- map_chr(names(df), function(name) {str_remove(name, "^a_|^r_")})
+
+        validate(need(nrow(df) > 0, "there are no observations in uploaded data"))
+
         # update UI -
         # available signals
         col_names <- df %>% names()
@@ -51,10 +43,10 @@ server <-
         sample_rate <-
           df %>% summarize(est_sample_freq = round(1/mean(diff(time), na.rm = TRUE)))
         updateNumericInput(session, "frame_rate", value = sample_rate$est_sample_freq)
-        
+
         df
       })
-    
+
     data_selection <-
       reactive({
         selected_data <-
@@ -63,12 +55,12 @@ server <-
                     "select data by brushing (left-click and pull) over signal-plot"))
         selected_data
       })
-    
-    signal <- 
+
+    signal <-
       reactive({
         rlang::sym(req(input$signal_choice))
     })
-    
+
     est_spec <-
       reactive({
         est_spec <-
@@ -76,63 +68,87 @@ server <-
                         pull(!!signal()),
                       frequency = input$frame_rate),
                    plot = FALSE)
-        
+
         tibble(freq = est_spec$freq, spec = log(est_spec$spec))
       })
 
-    # raw tevi-data table -----
+    # dashboard  -----
     output$raw_tevi_data_table <-
-      DT::renderDT({
-        datatable(raw_tevi_data())
+      renderPrint({
+        raw_tevi_data()
         })
-    
-   
-    
+
+    output$plot_center_xy <-
+      renderPlot({
+        raw_tevi_data() %>%
+          ggplot(aes(x = time)) +
+          geom_line(aes(y = center_x)) +
+          geom_line(aes(y = center_y)) +
+          labs(
+            y = "Center-Coordinates [px]"
+          )
+        })
+
+    output$plot_temp <-
+      renderPlot({
+        raw_tevi_data() %>%
+          ggplot(aes(x = time)) +
+          geom_line(aes(y = pyro_temp))
+      })
+
+    output$plot_heat_i <-
+      renderPlot({
+        raw_tevi_data() %>%
+          ggplot(aes(x = time)) +
+          geom_line(aes(y = htr_i))
+      })
+
+
     # display signal ------
     output$signal_plot <-
       renderPlot({
         raw_tevi_data() %>%
           ggplot(aes(x = time)) +
           geom_line(aes(y = !!signal()))
-        
+
       })
-    
+
     # signal in range ------------------
     output$signal_in_selected_range <-
       renderPlot({
-        data_selection() %>% 
+        data_selection() %>%
           ggplot(aes(x = time)) +
           geom_line(aes(y = !!signal()))
       })
-      
+
     # spectrum ---------
-    output$spectrum <- 
+    output$spectrum <-
       renderPlotly({
-        est_spec_plot <- 
-          est_spec() %>% 
+        est_spec_plot <-
+          est_spec() %>%
           ggplot(aes(x = freq, y = spec)) +
           geom_line() +
           labs(
             x = "Frequency [Hz]",
             y = "log(periodogram)"
           )
-        
-        est_spec_plot %>% 
+
+        est_spec_plot %>%
           ggplotly()
-        
+
       })
-    
+
     # numerical summary --------------
-    output$selected_signal_info <- 
+    output$selected_signal_info <-
       renderUI({
-      data <- 
-        data_selection() %>% 
+      data <-
+        data_selection() %>%
         select(time, !!signal())
-      
+
       time_range <- data %$% range(time)
       time <- mean(time_range)
       time_span <- time_range[2] - time_range[1]
-      
+
       {
         h5(
           str_glue(
@@ -140,12 +156,12 @@ server <-
         )
       }
     })
-    
+
     output$spectrum_info <-
       renderUI({
-        max_freq <- 
-        est_spec() %>% 
-          filter(near(spec, max(spec), tol = 0.5)) %>% 
+        max_freq <-
+        est_spec() %>%
+          filter(near(spec, max(spec), tol = 0.5)) %>%
           summarize(
             max_freq = mean(freq)
           )
