@@ -61,3 +61,11 @@ select_data <- function(session, data, brush_data) {
   ))
   selected_data
 }
+
+estimate_signal_spectrum <- function(session, data, signal, frame_rate) {
+  est_spec <-
+    spectrum(ts(data  %>% pull(!!signal), frequency = frame_rate),
+             plot = FALSE)
+
+  tibble(freq = est_spec$freq, spec = log(est_spec$spec))
+}
