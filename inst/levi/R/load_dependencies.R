@@ -9,6 +9,7 @@ library(magrittr)
 library(plotly)
 library(vroom)
 library(janitor)
+library(zeallot)
 
 # source code which needs to run once -------------------------------------
 
