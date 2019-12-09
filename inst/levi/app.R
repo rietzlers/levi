@@ -62,19 +62,8 @@ body <-
           collapsible = TRUE,
           width = 12,
           title = "Set parameters",
-          box(
-            width = 4,
-            numericInput("frame_rate", label = "Frame-Rate [Hz]", value = NULL)
-          ),
-          box(
-            width = 4,
-            numericInput("sample_mass", label = "Sample-Mass[g]", value = NULL)
-          ),
-          box(
-            width = 4,
-            numericInput("sphere_radius", label = "Sphere-Radius [mm]", value = NULL)
-          )
-
+          #boxed_numericInput("frame_rate", "Frame-Rate [Hz]"),
+          !!!sample_spec_inputs
         ),
 
         # display data-table -
@@ -144,18 +133,7 @@ server <-
 
     signal <- reactive(rlang::sym(req(input$signal_choice)))
 
-    est_spec <-
-      reactive({
-        est_spec <-
-          spectrum(ts(
-            data_selection() %>%
-              pull(!!signal()),
-            frequency = input$frame_rate
-          ),
-          plot = FALSE)
-
-        tibble(freq = est_spec$freq, spec = log(est_spec$spec))
-      })
+    est_spec <- reactive(estimate_signal_spectrum(session, data_selection(), signal(), input$frame_rate))
 
     # dashboard  -----
     output$raw_tevi_data_table <-
