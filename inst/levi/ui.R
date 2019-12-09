@@ -131,4 +131,4 @@ body <-
     ))
 
 
-dashboardPage(header, sidebar, body)
+dashboardPage(header, sidebar, body, title = "Alloy-EML-Analysis")
