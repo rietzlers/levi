@@ -1,4 +1,4 @@
 library(testthat)
-library(alloyLevi)
+library(levi)
 
-test_check("alloyLevi")
+test_check("levi")
