@@ -13,7 +13,7 @@ library(janitor)
 # source code which needs to run once -------------------------------------
 
 
-source("helpers.R")
+source("R/helpers.R")
 
 
 # load data ---------------------------------------------------------------
