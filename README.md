@@ -4,7 +4,9 @@
 
 Shiny-Web-App zur Analyse von EML-Experimenten
 
+# Usage
 
+Visit https://rietzlers.shinyapps.io/levi/ to use the app. 
 
 
 
