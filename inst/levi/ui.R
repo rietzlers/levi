@@ -1,7 +1,6 @@
-source(file.path("load_dependencies.R"),
+source(file.path("R/load_dependencies.R"),
        local = TRUE,
        encoding = "UTF-8")$value
-
 
 # header ------------------------------------------------------------------
 
@@ -15,18 +14,23 @@ header <-
 
 
 
-# sidebar -----------------------------------------------------------------
-
+# sidebar ----------------------------------------------------------------
 sidebar <-
     dashboardSidebar(sidebarMenu(
-        menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")),
-        menuItem("Display Signal", tabName = "display_signal", icon = icon("bar-chart-o"))
+        menuItem(
+            "Dashboard",
+            tabName = "dashboard",
+            icon = icon("dashboard")
+        ),
+        menuItem(
+            "Display Signal",
+            tabName = "display_signal",
+            icon = icon("bar-chart-o")
+        )
 
     ))
 
-
-
-
+# body ------------------------
 body <-
     dashboardBody(tabItems(
         # dashboard: select file --------------------
@@ -83,18 +87,12 @@ body <-
             # dashboard: display info --------------------
             shinydashboard::box(
                 width = 8,
-                shinydashboard::box(
-                    width =   12,
-                    plotOutput("plot_center_xy", height = 200)
-                ),
-                shinydashboard::box(
-                    width =  12,
-                    plotOutput("plot_temp", height = 200)
-                ),
-                shinydashboard::box(
-                    width =  12,
-                    plotOutput("plot_heat_i", height = 200)
-                )
+                shinydashboard::box(width =   12,
+                                    plotOutput("plot_center_xy", height = 200)),
+                shinydashboard::box(width =  12,
+                                    plotOutput("plot_temp", height = 200)),
+                shinydashboard::box(width =  12,
+                                    plotOutput("plot_heat_i", height = 200))
             )
         ),
 
@@ -120,25 +118,17 @@ body <-
                 width = 12,
                 box(width = 6,
                     plotOutput("signal_in_selected_range",
-                               height = 250)
-                    ),
+                               height = 250)),
                 box(width = 6,
                     plotlyOutput("spectrum",
-                                 height = 250)
-                    )
+                                 height = 250))
             ),
-            box(
-                width = 6,
-                uiOutput("selected_signal_info")
-            ),
-            box(
-                width = 6,
-                uiOutput("spectrum_info")
-            )
+            box(width = 6,
+                uiOutput("selected_signal_info")),
+            box(width = 6,
+                uiOutput("spectrum_info"))
         )
     ))
 
 
-# setup page -----------------
 dashboardPage(header, sidebar, body)
-
