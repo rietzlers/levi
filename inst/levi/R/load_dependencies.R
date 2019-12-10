@@ -16,6 +16,7 @@ library(zeallot)
 
 source("R/helpers.R")
 source("R/inputs.R")
+source("R/conversion.R")
 
 # load data ---------------------------------------------------------------
 

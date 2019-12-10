@@ -153,9 +153,17 @@ server <-
 
     output$plot_temp <-
       renderPlot({
+        test_data <-
+          raw_tevi_data() %$%
+          tibble(
+            time_n = seq(min(time), max(time), length.out = 100),
+            temp = to_temperature(tibble(time, pyro_temp), time_n)
+            )
+
         raw_tevi_data() %>%
           ggplot(aes(x = time)) +
-          geom_line(aes(y = pyro_temp))
+          geom_line(aes(y = pyro_temp)) +
+          geom_point(data = test_data, aes(x = time_n, y = temp), color = "red")
       })
 
     output$plot_heat_i <-
