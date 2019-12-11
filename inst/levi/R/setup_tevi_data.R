@@ -1,9 +1,10 @@
 ## setup_tevi_data.R ##
 
 import_tevi_data <- function(session, file) {
+
   validate(need(file, "upload a tevi-data-file (.dat-file)"))
 
-
+  # load data as is
   df_raw <-
     vroom::vroom(
       file$datapath,
@@ -13,21 +14,22 @@ import_tevi_data <- function(session, file) {
         .default = col_double()
       ),
       trim_ws = TRUE
-    ) %>%
-    janitor::clean_names()
+    )
 
+  validate(need(nrow(df_raw) > 0, "there are no observations in uploaded data"))
 
-  df <-
-    df_raw[-1, ] %>%
-    arrange(seconds) %>%
-    mutate(time = seconds - seconds[1])
+  # clean col_names to snake-case
+  df_raw <- df_raw %>% janitor::clean_names()
 
-  names(df) <-
-    map_chr(names(df), function(name) {
-      str_remove(name, "^a_|^r_")
-    })
+ # delete first row with units
+  df <- df_raw[-1, ]
 
-  validate(need(nrow(df) > 0, "there are no observations in uploaded data"))
+  # add exp-time: time=0 is start of measurement
+  df <-  df %>% arrange(seconds) %>% mutate(time = seconds - seconds[1])
+
+  # standardize var-names (remove different prefix for ax-/radial-data)
+  names(df) <- map_chr(names(df), ~ str_remove(.x, "^a_|^r_"))
+
 
   # update UI -
   # available signals
@@ -44,10 +46,6 @@ import_tevi_data <- function(session, file) {
     diff(time), na.rm = TRUE
   ))))
   updateNumericInput(session, "frame_rate", value = est_sample_freq)
-
-  df <-
-    df %>%
-    mutate(htr_i_norm = htr_i / max(htr_i, na.rm = TRUE))
 
   df
 
