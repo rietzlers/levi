@@ -10,6 +10,7 @@ library(plotly)
 library(vroom)
 library(janitor)
 library(zeallot)
+library(crosstalk)
 
 # source code which needs to run once -------------------------------------
 

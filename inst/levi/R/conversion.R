@@ -5,5 +5,7 @@ to_surface_tension <- function(freq, mass){
 }
 
 to_temperature <- function(data, time){
+  # temperatur sollte im interessierenden bereich ! monoton fallend sein (bis auf heizpulse)!
+  # stark verrauschte signale sollten geglättet werden.
     approx(data$time, data$pyro_temp, time)$y
 }
