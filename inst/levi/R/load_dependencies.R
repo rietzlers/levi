@@ -14,10 +14,10 @@ library(crosstalk)
 
 # source code which needs to run once -------------------------------------
 
-source("R/setup_tevi_data.R")
+source("R/tevi_data_model.R")
 source("R/helpers.R")
 source("R/inputs.R")
-source("R/conversion.R")
+
 
 # load data ---------------------------------------------------------------
 

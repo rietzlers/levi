@@ -132,7 +132,6 @@ server <-
 
     data_selection <- reactive({select_data(session, raw_tevi_data(), input$signal_plot_brush)})
 
-    shared_selection <- SharedData(data_selection)
 
     signal <- reactive(rlang::sym(req(input$signal_choice)))
 
