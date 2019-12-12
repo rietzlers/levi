@@ -1,13 +1,14 @@
 # module_signal_plot.R #
 
-signalPlotUI <- function(id) {
+signalPlotUI <- function(id, width = 12) {
   ns <- NS(id)
 
+  #browser()
   tagList(
-    box(width = 12,
+    box(width = width,
       selectInput(ns("signal_choice"), label = "Choose Signal to analyse", choices = NULL),
       plotOutput(ns("signal_plot"),
-        brush = brushOpts(id = ns("signal_plot_brush"), fill = "#ccc", direction = "x"),
+        brush = brushOpts(id = ns("brush"), fill = "#ccc", direction = "x"),
         height = 250
       ),
       box(width = 6,
@@ -26,10 +27,17 @@ signalPlotUI <- function(id) {
 signalPlot <- function(input, output, session, raw_tevi_data, frame_rate){
 
   signal <- reactive(rlang::sym(req(input$signal_choice)))
+  est_spec <- reactive({
+    validate(need(nrow(data_selection()) > 0,  "select data by brushing over plot"))
+    estimate_signal_spectrum(data_selection(), signal(), frame_rate())
+    })
 
-  data_selection <- reactive({select_data(session, raw_tevi_data(), input$signal_plot_brush)})
-
-  est_spec <- reactive(estimate_signal_spectrum(data_selection(), signal(), frame_rate()))
+  data_selection <-
+    reactive({
+      #select_data(session, raw_tevi_data(), input$signal_plot_brush)
+      brushedPoints(raw_tevi_data(), input$brush, xvar = "time")
+      #validate(need(nrow(selected_data) > 0, "select data by brushing (left-click and pull) over signal-plot"))
+    })
 
   # update UI -
   observeEvent(raw_tevi_data(), {
@@ -37,7 +45,6 @@ signalPlot <- function(input, output, session, raw_tevi_data, frame_rate){
     col_names <- raw_tevi_data() %>% names()
     signal_names <- col_names[col_names != "time"]
     updateSelectInput(session, "signal_choice", choices = signal_names)
-
   })
 
   # display signal ------
@@ -46,7 +53,6 @@ signalPlot <- function(input, output, session, raw_tevi_data, frame_rate){
       raw_tevi_data() %>%
         ggplot(aes(x = time)) +
         geom_line(aes(y = !!signal()))
-
     })
 
   # signal in range ------------------
