@@ -1,4 +1,4 @@
-
+# load_dependencies.R #
 
 # load libs ---------------------------------------------------------------
 
@@ -17,6 +17,7 @@ library(crosstalk)
 source("R/tevi_data_model.R")
 source("R/helpers.R")
 source("R/inputs.R")
+source("R/module_signal_plot.R")
 
 
 # load data ---------------------------------------------------------------

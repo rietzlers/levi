@@ -30,17 +30,7 @@ import_tevi_data <- function(session, file) {
   # standardize var-names (remove different prefix for ax-/radial-data)
   names(df) <- map_chr(names(df), ~ str_remove(.x, "^a_|^r_"))
 
-
-  # update UI -
-  # available signals
-  col_names <- df %>% names()
-  signal_names <- col_names[col_names != "time"]
-  updateSelectInput(
-    session,
-    "signal_choice",
-    choices = signal_names,
-    selected = sample(signal_names, size = 1)
-  )
+  # updata ui--------------
   # estimate sample/frame-rate from mean dt
   c(est_sample_freq) %<-% (df %>% summarize(est_sample_freq = round(1 / mean(
     diff(time), na.rm = TRUE
@@ -59,4 +49,12 @@ to_temperature <- function(data, time){
   # temperatur sollte im interessierenden bereich ! monoton fallend sein (bis auf heizpulse)!
   # stark verrauschte signale sollten geglättet werden.
   approx(data$time, data$pyro_temp, time)$y
+}
+
+estimate_signal_spectrum <- function(data, signal, frame_rate) {
+  est_spec <-
+    spectrum(ts(data  %>% pull(!!signal), frequency = frame_rate),
+             plot = FALSE)
+
+  tibble(freq = est_spec$freq, spec = log(est_spec$spec))
 }

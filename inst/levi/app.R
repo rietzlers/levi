@@ -88,37 +88,7 @@ body <-
     ),
 
     # display signal --------------------
-    tabItem(
-      tabName = "display_signal",
-      box(
-        width = 12,
-        title = "Signal Plot",
-        selectInput("signal_choice", label = "Select Signal", choices = NULL),
-        plotOutput(
-          "signal_plot",
-          brush = brushOpts(
-            id = "signal_plot_brush",
-            fill = "#ccc",
-            direction = "x"
-          ),
-          height = 250
-        )
-      ),
-      box(
-        title = "Signal in selected Range and corresponding spectrum",
-        width = 12,
-        box(width = 6,
-            plotOutput("signal_in_selected_range",
-                       height = 250)),
-        box(width = 6,
-            plotlyOutput("spectrum",
-                         height = 250))
-      ),
-      box(width = 6,
-          uiOutput("selected_signal_info")),
-      box(width = 6,
-          uiOutput("spectrum_info"))
-    )
+    tabItem(tabName = "display_signal", signalPlotUI("signal1"))
 
   ))
 
@@ -129,13 +99,6 @@ server <-
   function(input, output, session) {
     # reactive data ----
     raw_tevi_data <- reactive({import_tevi_data(session, input$file)})
-
-    data_selection <- reactive({select_data(session, raw_tevi_data(), input$signal_plot_brush)})
-
-
-    signal <- reactive(rlang::sym(req(input$signal_choice)))
-
-    est_spec <- reactive(estimate_signal_spectrum(session, data_selection(), signal(), input$frame_rate))
 
     # dashboard  -----
     output$raw_tevi_data_table <-
@@ -175,67 +138,7 @@ server <-
           geom_line(aes(y = htr_i))
       })
 
-
-    # display signal ------
-    output$signal_plot <-
-      renderPlot({
-        raw_tevi_data() %>%
-          ggplot(aes(x = time)) +
-          geom_line(aes(y = !!signal()))
-
-      })
-
-    # signal in range ------------------
-    output$signal_in_selected_range <-
-      renderPlot({
-        data_selection() %>%
-          ggplot(aes(x = time)) +
-          geom_line(aes(y = !!signal()))
-      })
-
-    # spectrum ---------
-    output$spectrum <-
-      renderPlotly({
-        est_spec_plot <-
-          est_spec() %>%
-          ggplot(aes(x = freq, y = spec)) +
-          geom_line() +
-          labs(x = "Frequency [Hz]",
-               y = "log(periodogram)")
-
-        est_spec_plot %>%
-          ggplotly()
-
-      })
-
-    # numerical summary --------------
-    output$selected_signal_info <-
-      renderUI({
-        data <-
-          data_selection() %>%
-          select(time,!!signal())
-
-        time_range <- data %$% range(time)
-        time <- mean(time_range)
-        time_span <- time_range[2] - time_range[1]
-
-        {
-          h5(
-            str_glue(
-              "Window center-point: {round(time, 2)} s and window-width: {round(time_span, 2)} s"
-            )
-          )
-        }
-      })
-
-    output$spectrum_info <-
-      renderUI({
-        max_freq <-
-          est_spec() %>%
-          filter(near(spec, max(spec), tol = 0.5)) %>%
-          summarize(max_freq = mean(freq))
-        h5(str_glue("Maximum Freq.: {round(max_freq$max_freq, 2)} Hz"))
-      })
+    callModule(signalPlot, "signal1", reactive(raw_tevi_data()), reactive(input$frame_rate))
   }
 
 shinyApp(ui, server)
