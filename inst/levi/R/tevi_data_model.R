@@ -30,12 +30,6 @@ import_tevi_data <- function(session, file) {
   # standardize var-names (remove different prefix for ax-/radial-data)
   names(df) <- map_chr(names(df), ~ str_remove(.x, "^a_|^r_"))
 
-  # updata ui--------------
-  # estimate sample/frame-rate from mean dt
-  c(est_sample_freq) %<-% (df %>% summarize(est_sample_freq = round(1 / mean(
-    diff(time), na.rm = TRUE
-  ))))
-  updateNumericInput(session, "frame_rate", value = est_sample_freq)
 
   df
 

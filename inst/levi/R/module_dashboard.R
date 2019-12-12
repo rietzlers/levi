@@ -78,6 +78,19 @@ dashboard <- function(input, output, session){
         geom_line(aes(y = htr_i))
     })
 
+
+  # update ui ------------
+  observeEvent(
+    raw_tevi_data(),
+    {
+    # estimate sample/frame-rate from mean dt
+    c(est_sample_freq) %<-%
+      (raw_tevi_data() %>%
+         summarize(est_sample_freq = round(1 / mean(diff(time), na.rm = TRUE))))
+
+    updateNumericInput(session, "frame_rate", value = est_sample_freq)
+   })
+
   list(
     raw_tevi_data,
     reactive(input$frame_rate)
