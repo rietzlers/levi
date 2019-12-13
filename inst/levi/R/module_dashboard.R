@@ -27,16 +27,40 @@ dashboardUI <- function(id) {
   ),
   # dashboard: display info --------------------
   box(width = 8,
-        plotOutput(ns("plot_center_xy"), height = 200),
-        plotOutput(ns("plot_temp"), height = 200),
-        plotOutput(ns("plot_heat_i"), height = 200)
+      plotOutput(ns("plot_center_xy"), height = 200),
+      plotOutput(ns("plot_temp"), height = 200, brush = brushOpts(id = ns("plot_temp_brush"), fill = "#ccc", direction = "x")),
+      verbatimTextOutput(ns("time_range")),
+      plotOutput(ns("plot_heat_i"), height = 200,brush = brushOpts(id = ns("plot_heat_brush"), fill = "#ccc", direction = "x")),
+      fluidRow(
+        column(2, selectInput(ns("heat_pulse_choice"), label = NULL, choices = c("one", "two", "three"))),
+        column(8, verbatimTextOutput(ns("heat_pulse_range"))),
+        column(2, actionButton(ns("take_heat_puls_range"), label = "save", icon = icon("archive")))
+      )
   ))
 }
+
+
+#' dashboard
+#'
+#'
+#' @param input,output,session standard \code{shiny} boilerplate
+#'
+#' @return list with: reactives: raw_tevi_data (tibble), experiment-meta-info (list)
 
 dashboard <- function(input, output, session){
 
   raw_tevi_data <-
     reactive({import_tevi_data(session, input$file)})
+
+  meta_info <-
+    reactive({
+      meta_info <-
+        list(
+          exp_time_range = get_brush_range(input$plot_temp_brush),
+          heat_pulses = list()
+          )
+      meta_info
+      })
 
   output$raw_tevi_data_table <-
     renderPrint({
@@ -68,6 +92,13 @@ dashboard <- function(input, output, session){
         geom_point(data = test_data, aes(x = time_n, y = temp), color = "red")
     })
 
+  output$time_range <-
+    renderPrint({
+      meta_info()
+      #str_glue("Selected Range: [{round(meta_info()$exp_time_range$xmin,4)}s, {round(meta_info()$exp_time_range$xmax, 4)} x]")
+      #display_range(input$plot_temp_brush)
+      })
+
   output$plot_heat_i <-
     renderPlot({
       raw_tevi_data() %>%
@@ -75,6 +106,10 @@ dashboard <- function(input, output, session){
         geom_line(aes(y = htr_i))
     })
 
+  output$heat_pulse_range <-
+    renderPrint({
+      str_glue("Heat-Pulse {input$heat_pulse_choice}: {display_range(input$plot_heat_brush)}")
+    })
 
   # update ui ------------
   observeEvent(
@@ -93,3 +128,17 @@ dashboard <- function(input, output, session){
     reactive(input$frame_rate)
   )
 }
+
+get_brush_range <-
+  function(brush){
+    validate(need(brush, "brush range"))
+    c(xmin, xmax, ...rest)  %<-% brush
+    list(xmin = xmin, xmax = xmax)
+  }
+
+display_range <-
+  function(brush){
+    validate(need(brush, "select range"))
+    c(xmin, xmax, ...rest)  %<-% brush
+    str_glue("Selected Range: [{round(xmin,4)}s, {round(xmax, 4)}s]")
+  }
