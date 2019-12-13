@@ -28,15 +28,16 @@ signalPlot <- function(input, output, session, raw_tevi_data, frame_rate){
 
   signal <- reactive(rlang::sym(req(input$signal_choice)))
   est_spec <- reactive({
-    validate(need(nrow(data_selection()) > 0,  "select data by brushing over plot"))
     estimate_signal_spectrum(data_selection(), signal(), frame_rate())
     })
 
   data_selection <-
     reactive({
-      #select_data(session, raw_tevi_data(), input$signal_plot_brush)
-      brushedPoints(raw_tevi_data(), input$brush, xvar = "time")
-      #validate(need(nrow(selected_data) > 0, "select data by brushing (left-click and pull) over signal-plot"))
+      selected_data <-
+        brushedPoints(raw_tevi_data(), input$brush, xvar = "time")
+      validate(need(nrow(selected_data) > 0,
+                    "select data by brushing (left-click and pull) over signal-plot"))
+      selected_data
     })
 
   # update UI -

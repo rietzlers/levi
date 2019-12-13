@@ -15,7 +15,6 @@ library(crosstalk)
 # source code which needs to run once -------------------------------------
 
 source("R/tevi_data_model.R")
-source("R/helpers.R")
 source("R/module_signal_plot.R")
 source("R/module_dashboard.R")
 source("R/module_compare_signals.R")
