@@ -39,11 +39,11 @@ ui <- dashboardPage(header, sidebar, body, title = "Alloy-EML-Analysis")
 server <-
   function(input, output, session) {
 
-    c(raw_tevi_data, frame_rate) %<-% callModule(dashboard, "dashboard1")
+    c(raw_tevi_data, meta_info) %<-% callModule(dashboard, "dashboard1")
 
-    callModule(signalPlot, "signal1", reactive(raw_tevi_data()), reactive(frame_rate()))
+    callModule(signalPlot, "signal1", raw_tevi_data, reactive(meta_info$frame_rate))
 
-    callModule(compareSignals, "comp1", reactive(raw_tevi_data()), reactive(frame_rate()))
+    callModule(compareSignals, "comp1", raw_tevi_data, reactive(meta_info$frame_rate))
   }
 
 shinyApp(ui, server)
