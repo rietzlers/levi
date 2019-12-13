@@ -7,12 +7,8 @@ import_tevi_data <- function(session, file) {
   # load data as is
   df_raw <-
     vroom::vroom(
-      file$datapath,
-      delim = "\t",
-      col_types = cols(
-        `Absolute Time` = col_time(format = "%H:%M:%OS"),
-        .default = col_double()
-      ),
+      file$datapath, delim = "\t",
+      col_types = cols(`Absolute Time` = col_time(format = "%H:%M:%OS"), .default = col_double()),
       trim_ws = TRUE
     )
 
@@ -29,7 +25,6 @@ import_tevi_data <- function(session, file) {
 
   # standardize var-names (remove different prefix for ax-/radial-data)
   names(df) <- map_chr(names(df), ~ str_remove(.x, "^a_|^r_"))
-
 
   df
 
