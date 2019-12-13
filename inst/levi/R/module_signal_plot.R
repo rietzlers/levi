@@ -51,17 +51,13 @@ signalPlot <- function(input, output, session, raw_tevi_data, frame_rate){
   # display signal ------
   output$signal_plot <-
     renderPlot({
-      raw_tevi_data() %>%
-        ggplot(aes(x = time)) +
-        geom_line(aes(y = !!signal()))
+      ts_plot(raw_tevi_data(), input$signal_choice)
     })
 
   # signal in range ------------------
   output$signal_in_selected_range <-
     renderPlot({
-      data_selection() %>%
-        ggplot(aes(x = time)) +
-        geom_line(aes(y = !!signal()))
+      ts_plot(data_selection(), input$signal_choice)
     })
 
   # spectrum ---------
@@ -107,4 +103,10 @@ signalPlot <- function(input, output, session, raw_tevi_data, frame_rate){
         summarize(max_freq = mean(freq))
       h5(str_glue("Maximum Freq.: {round(max_freq$max_freq, 2)} Hz"))
     })
+}
+
+ts_plot <- function(ds, var){
+  ds %>%
+    ggplot(aes(x = time)) +
+    geom_line(aes_string(y = var))
 }
