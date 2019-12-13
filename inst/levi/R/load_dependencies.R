@@ -18,7 +18,7 @@ source("R/tevi_data_model.R")
 source("R/module_signal_plot.R")
 source("R/module_dashboard.R")
 source("R/module_compare_signals.R")
-
+source("R/helpers.R")
 
 # load data ---------------------------------------------------------------
 
