@@ -1,6 +1,12 @@
 # module_dashboard.R #
 
 
+#' dashboardUI
+#'
+#' @param id character used to specify namespace, see \code{shiny::\link[shiny]{NS}}
+#'
+#' @return tagList with inputs for file-upload, experiment meta-info
+#' and outputs for visual display of importand variables
 dashboardUI <- function(id) {
   ns <- NS(id)
   tagList(
