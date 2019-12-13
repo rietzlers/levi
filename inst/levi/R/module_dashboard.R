@@ -5,9 +5,7 @@ dashboardUI <- function(id) {
   ns <- NS(id)
   tagList(
     box(width = 4,
-        fileInput(ns("file"),
-                  label = "select tevi-data (.dat-file)",
-                  accept = c(".dat")),
+        fileInput(ns("file"), label = "select tevi-data (.dat-file)", accept = c(".dat")),
     box(width = 12, collapsible = TRUE,
       title = "Set parameters",
       tibble::tribble(
@@ -16,23 +14,16 @@ dashboardUI <- function(id) {
         "sample_mass", "Sample-Mass [g]",
         "sphere_radius", "Sphere-Radius [mn]"
       ) %>%
-        purrr::pmap( ~ numericInput(
-          inputId = ns(.x),
-          label = .y,
-          value = NULL
-        ))
+        purrr::pmap( ~ numericInput(inputId = ns(.x), label = .y, value = NULL))
     ),
     verbatimTextOutput(ns("raw_tevi_data_table"))
 
   ),
   # dashboard: display info --------------------
   box(width = 8,
-    box(width =   12,
-        plotOutput(ns("plot_center_xy"), height = 200)),
-    box(width =  12,
-        plotOutput(ns("plot_temp"), height = 200)),
-    box(width =  12,
-        plotOutput(ns("plot_heat_i"), height = 200))
+        plotOutput(ns("plot_center_xy"), height = 200),
+        plotOutput(ns("plot_temp"), height = 200),
+        plotOutput(ns("plot_heat_i"), height = 200)
   ))
 }
 
