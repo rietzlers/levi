@@ -61,6 +61,7 @@ dashboard <- function(input, output, session){
                    get_brush_range(input$plot_heat_brush)
                })
 
+
   output$raw_tevi_data_table <-
     renderPrint({
       raw_tevi_data()
@@ -116,16 +117,13 @@ dashboard <- function(input, output, session){
     updateNumericInput(session, "frame_rate", value = est_sample_freq)
    })
 
+  observeEvent(input$frame_rate, meta_info$frame_rate <- input$frame_rate)
+
   list(
     raw_tevi_data,
-    reactive(input$frame_rate)
+    meta_info
   )
 }
 
-get_brush_range <-
-  function(brush){
-    validate(need(brush, "brush range"))
-    c(xmin, xmax, ...rest)  %<-% brush
-    c(xmin, xmax)
-  }
+
 
