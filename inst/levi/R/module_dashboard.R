@@ -32,9 +32,9 @@ dashboardUI <- function(id) {
       verbatimTextOutput(ns("time_range")),
       plotOutput(ns("plot_heat_i"), height = 200,brush = brushOpts(id = ns("plot_heat_brush"), fill = "#ccc", direction = "x")),
       fluidRow(
-        column(2, selectInput(ns("heat_pulse_choice"), label = NULL, choices = c("one", "two", "three"))),
+        column(2, selectInput(ns("heat_pulse_choice"), label = NULL, choices = c("one" = "one", "two" = "two", "three" = "three"))),
         column(8, verbatimTextOutput(ns("heat_pulse_range"))),
-        column(2, actionButton(ns("take_heat_puls_range"), label = "save", icon = icon("archive")))
+        column(2, actionButton(ns("save_meta_info"), label = "save", icon = icon("archive")))
       )
   ))
 }
@@ -52,15 +52,14 @@ dashboard <- function(input, output, session){
   raw_tevi_data <-
     reactive({import_tevi_data(session, input$file)})
 
-  meta_info <-
-    reactive({
-      meta_info <-
-        list(
-          exp_time_range = get_brush_range(input$plot_temp_brush),
-          heat_pulses = list()
-          )
-      meta_info
-      })
+  meta_info <- reactiveValues()
+
+  observeEvent(input$save_meta_info,
+               {
+                 meta_info$ss_times <- get_brush_range(input$plot_temp_brush)
+                 meta_info[[input$heat_pulse_choice]] <-
+                   get_brush_range(input$plot_heat_brush)
+               })
 
   output$raw_tevi_data_table <-
     renderPrint({
@@ -93,11 +92,7 @@ dashboard <- function(input, output, session){
     })
 
   output$time_range <-
-    renderPrint({
-      meta_info()
-      #str_glue("Selected Range: [{round(meta_info()$exp_time_range$xmin,4)}s, {round(meta_info()$exp_time_range$xmax, 4)} x]")
-      #display_range(input$plot_temp_brush)
-      })
+    renderPrint({meta_info$ss_times})
 
   output$plot_heat_i <-
     renderPlot({
@@ -107,9 +102,7 @@ dashboard <- function(input, output, session){
     })
 
   output$heat_pulse_range <-
-    renderPrint({
-      str_glue("Heat-Pulse {input$heat_pulse_choice}: {display_range(input$plot_heat_brush)}")
-    })
+    renderPrint({meta_info[[input$heat_pulse_choice]]})
 
   # update ui ------------
   observeEvent(
@@ -133,12 +126,6 @@ get_brush_range <-
   function(brush){
     validate(need(brush, "brush range"))
     c(xmin, xmax, ...rest)  %<-% brush
-    list(xmin = xmin, xmax = xmax)
+    c(xmin, xmax)
   }
 
-display_range <-
-  function(brush){
-    validate(need(brush, "select range"))
-    c(xmin, xmax, ...rest)  %<-% brush
-    str_glue("Selected Range: [{round(xmin,4)}s, {round(xmax, 4)}s]")
-  }
