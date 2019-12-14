@@ -23,7 +23,7 @@ dashboardUI <- function(id) {
       verbatimTextOutput(ns("time_range")),
       plotOutput(ns("plot_heat_i"), height = 200,brush = brushOpts(id = ns("plot_heat_brush"), fill = "#ccc", direction = "x")),
       fluidRow(
-        column(2, selectInput(ns("heat_pulse_choice"), label = NULL, choices = c("one" = "one", "two" = "two", "three" = "three"))),
+        column(2, selectInput(ns("heat_pulse_choice"), label = NULL, choices = c("one" = "hp1", "two" = "hp2", "three" = "hp3"))),
         column(8, verbatimTextOutput(ns("heat_pulse_range"))),
         column(2, actionButton(ns("save_timing_info"), label = "save", icon = icon("archive")))
       )
@@ -38,25 +38,22 @@ dashboardUI <- function(id) {
 #'
 #' @return list with: reactives: raw_tevi_data (tibble), experiment-meta-info (list)
 
-dashboard <- function(input, output, session, model){
+dashboard <- function(input, output, session, data, frame_rate){
 
   raw_tevi_data <- reactive({import_tevi_data(session, input$file)})
 
-  timing_info <- reactiveValues()
+  model <- reactiveValues()
 
   observeEvent(input$save_timing_info,
                {
-                 timing_info$ss_times <- get_brush_range(input$plot_temp_brush)
-                 timing_info[[input$heat_pulse_choice]] <-
+                 model$ss_times <- get_brush_range(input$plot_temp_brush)
+                 model[[input$heat_pulse_choice]] <-
                    get_brush_range(input$plot_heat_brush)
                })
 
-  c(model$frame_rate) %<-% callModule(parameters, "params", raw_tevi_data)
+  c(frame_rate) %<-% callModule(parameters, "params", raw_tevi_data)
 
-  output$raw_tevi_data_table <-
-    renderPrint({
-      raw_tevi_data()
-    })
+  output$raw_tevi_data_table <- renderPrint({raw_tevi_data()})
 
   output$plot_center_xy <-
     renderPlot({
@@ -84,7 +81,7 @@ dashboard <- function(input, output, session, model){
     })
 
   output$time_range <-
-    renderPrint({timing_info$ss_times})
+    renderPrint({model$ss_times})
 
   output$plot_heat_i <-
     renderPlot({
@@ -94,13 +91,13 @@ dashboard <- function(input, output, session, model){
     })
 
   output$heat_pulse_range <-
-    renderPrint({timing_info[[input$heat_pulse_choice]]})
+    renderPrint({model[[input$heat_pulse_choice]]})
 
 
 
   list(
     raw_tevi_data,
-    timing_info
+    frame_rate
   )
 }
 
