@@ -15,6 +15,7 @@ library(crosstalk)
 # source code which needs to run once -------------------------------------
 
 source("R/data_model.R")
+source("R/parameters.R")
 source("R/signal_plot.R")
 source("R/dashboard.R")
 source("R/compare_signals.R")

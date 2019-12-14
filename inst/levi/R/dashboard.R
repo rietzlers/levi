@@ -12,16 +12,7 @@ dashboardUI <- function(id) {
   tagList(
     box(width = 4,
         fileInput(ns("file"), label = "select tevi-data (.dat-file)", accept = c(".dat")),
-    box(width = 12, collapsible = TRUE,
-      title = "Set parameters",
-      tibble::tribble(
-        ~ id, ~ label,
-        "frame_rate" , "Frame-Rate [Hz]",
-        "sample_mass", "Sample-Mass [g]",
-        "sphere_radius", "Sphere-Radius [mn]"
-      ) %>%
-        purrr::pmap( ~ numericInput(inputId = ns(.x), label = .y, value = NULL))
-    ),
+    parametersUI(ns("params")),
     verbatimTextOutput(ns("raw_tevi_data_table"))
 
   ),
@@ -34,7 +25,7 @@ dashboardUI <- function(id) {
       fluidRow(
         column(2, selectInput(ns("heat_pulse_choice"), label = NULL, choices = c("one" = "one", "two" = "two", "three" = "three"))),
         column(8, verbatimTextOutput(ns("heat_pulse_range"))),
-        column(2, actionButton(ns("save_meta_info"), label = "save", icon = icon("archive")))
+        column(2, actionButton(ns("save_timing_info"), label = "save", icon = icon("archive")))
       )
   ))
 }
@@ -47,20 +38,20 @@ dashboardUI <- function(id) {
 #'
 #' @return list with: reactives: raw_tevi_data (tibble), experiment-meta-info (list)
 
-dashboard <- function(input, output, session){
+dashboard <- function(input, output, session, model){
 
-  raw_tevi_data <-
-    reactive({import_tevi_data(session, input$file)})
+  raw_tevi_data <- reactive({import_tevi_data(session, input$file)})
 
-  meta_info <- reactiveValues()
+  timing_info <- reactiveValues()
 
-  observeEvent(input$save_meta_info,
+  observeEvent(input$save_timing_info,
                {
-                 meta_info$ss_times <- get_brush_range(input$plot_temp_brush)
-                 meta_info[[input$heat_pulse_choice]] <-
+                 timing_info$ss_times <- get_brush_range(input$plot_temp_brush)
+                 timing_info[[input$heat_pulse_choice]] <-
                    get_brush_range(input$plot_heat_brush)
                })
 
+  c(model$frame_rate) %<-% callModule(parameters, "params", raw_tevi_data)
 
   output$raw_tevi_data_table <-
     renderPrint({
@@ -93,7 +84,7 @@ dashboard <- function(input, output, session){
     })
 
   output$time_range <-
-    renderPrint({meta_info$ss_times})
+    renderPrint({timing_info$ss_times})
 
   output$plot_heat_i <-
     renderPlot({
@@ -103,25 +94,13 @@ dashboard <- function(input, output, session){
     })
 
   output$heat_pulse_range <-
-    renderPrint({meta_info[[input$heat_pulse_choice]]})
+    renderPrint({timing_info[[input$heat_pulse_choice]]})
 
-  # update ui ------------
-  observeEvent(
-    raw_tevi_data(),
-    {
-    # estimate sample/frame-rate from mean dt
-    c(est_sample_freq) %<-%
-      (raw_tevi_data() %>%
-         summarize(est_sample_freq = round(1 / mean(diff(time), na.rm = TRUE))))
 
-    updateNumericInput(session, "frame_rate", value = est_sample_freq)
-   })
-
-  observeEvent(input$frame_rate, meta_info$frame_rate <- input$frame_rate)
 
   list(
     raw_tevi_data,
-    meta_info
+    timing_info
   )
 }
 
