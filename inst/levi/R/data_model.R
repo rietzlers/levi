@@ -42,8 +42,10 @@ to_temperature <- function(data, time){
 
 estimate_signal_spectrum <- function(data, signal, frame_rate) {
   est_spec <-
-    spectrum(ts(data  %>% pull(!!signal), frequency = frame_rate),
-             plot = FALSE)
+    spectrum(
+      ts(data  %>% pull(!!signal), frequency = frame_rate),
+      plot = FALSE
+      )
 
   tibble(freq = est_spec$freq, spec = log(est_spec$spec))
 }
