@@ -33,5 +33,5 @@ parameters <- function(input, output, session, raw_tevi_data){
 
     })
 
-  list(isolate(input$frame_rate))
+  list(reactive(input$frame_rate))
   }
