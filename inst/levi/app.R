@@ -7,8 +7,7 @@ options(shiny.reactlog = TRUE)
 
 source(file.path("R/load_dependencies.R"), local = TRUE, encoding = "UTF-8")$value
 
-
-# header ------------------------------------------------------------------
+# view --------
 header <-
   dashboardHeader(
     title = "levi",
@@ -17,7 +16,7 @@ header <-
     dropdownMenu(type = "tasks")
   )
 
-# sidebar ----------------------------------------------------------------
+
 sidebar <-
   dashboardSidebar(sidebarMenu(
     menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")),
@@ -25,7 +24,7 @@ sidebar <-
     menuItem("Compare Signals", tabName = "compare_signals", icon = icon("microscope"))
   ))
 
-# body ------------------------
+
 body <-
   dashboardBody(tabItems(
     tabItem(tabName = "dashboard", dashboardUI("dashboard1")),
@@ -35,15 +34,30 @@ body <-
 
 ui <- dashboardPage(header, sidebar, body, title = "Alloy-EML-Analysis")
 
-
+# controller -----------------
 server <-
   function(input, output, session) {
 
-    c(raw_tevi_data, meta_info) %<-% callModule(dashboard, "dashboard1")
+    # model-specification -------------
+    model <-
+      reactiveValues(
+        alloy = NA_character_,
+        data = tibble(),
+        frame_rate = NA_real_,
+        sample_mass = NA_real_,
+        sample_radius = NA_real_,
+        camara = NA_character_,
+        ss_times = c(NA_real_, NA_real_),
+        hp1 = c(NA_real_, NA_real_)
+        )
 
-    callModule(signalPlot, "signal1", raw_tevi_data, reactive(meta_info$frame_rate))
+    # modules -------------
 
-    callModule(compareSignals, "comp1", raw_tevi_data, reactive(meta_info$frame_rate))
+    c(model$data, timing_info) %<-% callModule(dashboard, "dashboard1", model)
+
+    callModule(signalPlot, "signal1", reactive(model$data), reactive(timing_info$frame_rate))
+
+    callModule(compareSignals, "comp1", reactive(model$data), reactive(timing_info$frame_rate))
   }
 
 shinyApp(ui, server)
