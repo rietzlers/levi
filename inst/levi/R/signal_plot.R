@@ -1,4 +1,4 @@
-# module_signal_plot.R #
+# signal_plot.R #
 
 signalPlotUI <- function(id, width = 12) {
   ns <- NS(id)

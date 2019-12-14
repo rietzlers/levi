@@ -1,4 +1,4 @@
-## setup_tevi_data.R ##
+## data_model.R ##
 
 import_tevi_data <- function(session, file) {
 

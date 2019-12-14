@@ -1,4 +1,4 @@
-# module_compare_signals.R #
+# module compare_signals.R #
 
 compareSignalsUI <- function(id){
 

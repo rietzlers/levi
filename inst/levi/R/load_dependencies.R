@@ -14,10 +14,10 @@ library(crosstalk)
 
 # source code which needs to run once -------------------------------------
 
-source("R/tevi_data_model.R")
-source("R/module_signal_plot.R")
-source("R/module_dashboard.R")
-source("R/module_compare_signals.R")
+source("R/data_model.R")
+source("R/signal_plot.R")
+source("R/dashboard.R")
+source("R/compare_signals.R")
 source("R/helpers.R")
 
 # load data ---------------------------------------------------------------

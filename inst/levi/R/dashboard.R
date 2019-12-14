@@ -1,4 +1,4 @@
-# module_dashboard.R #
+# module dashboard.R #
 
 
 #' dashboardUI
