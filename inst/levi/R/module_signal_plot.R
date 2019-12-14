@@ -1,13 +1,14 @@
 # module_signal_plot.R #
 
-signalPlotUI <- function(id) {
+signalPlotUI <- function(id, width = 12) {
   ns <- NS(id)
 
+  #browser()
   tagList(
-    box(width = 12,
+    box(width = width,
       selectInput(ns("signal_choice"), label = "Choose Signal to analyse", choices = NULL),
       plotOutput(ns("signal_plot"),
-        brush = brushOpts(id = ns("signal_plot_brush"), fill = "#ccc", direction = "x"),
+        brush = brushOpts(id = ns("brush"), fill = "#ccc", direction = "x"),
         height = 250
       ),
       box(width = 6,
@@ -16,7 +17,8 @@ signalPlotUI <- function(id) {
           ),
       box(width = 6,
           plotlyOutput(ns("spectrum"), height = 250),
-          uiOutput(ns("spectrum_info"))
+          uiOutput(ns("spectrum_info")),
+          verbatimTextOutput(ns("spectrum_click_info"))
           )
       )
   )
@@ -25,11 +27,21 @@ signalPlotUI <- function(id) {
 
 signalPlot <- function(input, output, session, raw_tevi_data, frame_rate){
 
+  ns <- session$ns
+
   signal <- reactive(rlang::sym(req(input$signal_choice)))
+  est_spec <- reactive({
+    estimate_signal_spectrum(data_selection(), signal(), frame_rate())
+    })
 
-  data_selection <- reactive({select_data(session, raw_tevi_data(), input$signal_plot_brush)})
-
-  est_spec <- reactive(estimate_signal_spectrum(data_selection(), signal(), frame_rate()))
+  data_selection <-
+    reactive({
+      selected_data <-
+        brushedPoints(raw_tevi_data(), input$brush)
+      validate(need(nrow(selected_data) > 0,
+                    "select data by brushing (left-click and pull) over signal-plot"))
+      selected_data
+    })
 
   # update UI -
   observeEvent(raw_tevi_data(), {
@@ -37,24 +49,18 @@ signalPlot <- function(input, output, session, raw_tevi_data, frame_rate){
     col_names <- raw_tevi_data() %>% names()
     signal_names <- col_names[col_names != "time"]
     updateSelectInput(session, "signal_choice", choices = signal_names)
-
   })
 
   # display signal ------
   output$signal_plot <-
     renderPlot({
-      raw_tevi_data() %>%
-        ggplot(aes(x = time)) +
-        geom_line(aes(y = !!signal()))
-
+      ts_plot(raw_tevi_data(), input$signal_choice)
     })
 
   # signal in range ------------------
   output$signal_in_selected_range <-
     renderPlot({
-      data_selection() %>%
-        ggplot(aes(x = time)) +
-        geom_line(aes(y = !!signal()))
+      ts_plot(data_selection(), input$signal_choice)
     })
 
   # spectrum ---------
@@ -68,7 +74,8 @@ signalPlot <- function(input, output, session, raw_tevi_data, frame_rate){
              y = "log(periodogram)")
 
       est_spec_plot %>%
-        ggplotly()
+        ggplotly(source = ns("spectrum_plotly")) %>%
+        event_register("plotly_click")
 
     })
 
@@ -100,4 +107,17 @@ signalPlot <- function(input, output, session, raw_tevi_data, frame_rate){
         summarize(max_freq = mean(freq))
       h5(str_glue("Maximum Freq.: {round(max_freq$max_freq, 2)} Hz"))
     })
+
+  output$spectrum_click_info <- renderPrint({
+    #hover_info <- event_data("plotly_hover", source = "spectrum_plotly")
+    click_info <- event_data("plotly_click", source = ns("spectrum_plotly"))
+    if (is.null(click_info)) "Click events appear here (double-click to clear)" else click_info
+  })
+}
+
+
+ts_plot <- function(ds, var){
+  ds %>%
+    ggplot(aes(x = time)) +
+    geom_line(aes_string(y = var))
 }
