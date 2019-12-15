@@ -1,19 +1,11 @@
-# module dashboard.R #
 
-
-#' dashboardUI
-#'
-#' @param id character used to specify namespace, see \code{shiny::\link[shiny]{NS}}
-#'
-#' @return tagList with inputs for file-upload, experiment meta-info
-#' and outputs for visual display of importand variables
 dashboardUI <- function(id) {
   ns <- NS(id)
   tagList(
     box(width = 4,
         fileInput(ns("file"), label = "select tevi-data (.dat-file)", accept = c(".dat")),
         parametersUI(ns("params")),
-        verbatimTextOutput(ns("raw_tevi_data_table"))
+        verbatimTextOutput(ns("tevi_data_table"))
 
       ),
   # dashboard: display info --------------------
@@ -24,54 +16,54 @@ dashboardUI <- function(id) {
         fluidRow(
           column(2, selectInput(ns("hp"), label = NULL, choices = c("one" = "hp1", "two" = "hp2", "three" = "hp3"))),
           column(2, actionButton(ns("save"), label = "save", icon = icon("archive"))),
-          column(8, verbatimTextOutput(ns("hp_range")) )
+          column(8, verbatimTextOutput(ns("exp_timing")) )
           )
         )
     )
 }
 
+dashboard <- function(input, output, session){
 
-#' dashboard
-#'
-#'
-#' @param input,output,session standard \code{shiny} boilerplate
-#'
-#' @return list with: reactives: raw_tevi_data (tibble), experiment-meta-info (list)
+  tevi_data <- reactive({import_tevi_data(session, input$file)})
+  exp_timing <- reactiveValues()
 
-dashboard <- function(input, output, session, data, frame_rate){
-
-  raw_tevi_data <- reactive({import_tevi_data(session, input$file)})
-  c(frame_rate) %<-% callModule(parameters, "params", raw_tevi_data)
-
-  output$raw_tevi_data_table <- renderPrint({raw_tevi_data()})
-
-  output$plot_center_xy <-
-    renderPlot({
-      raw_tevi_data() %>%
-        ggplot(aes(x = time)) +
-        geom_line(aes(y = center_x)) +
-        geom_line(aes(y = center_y), color = "red")
+  observeEvent(
+    {input$save
+    liquid_cooling()},{
+      exp_timing[["liquid_cooling"]] <-  liquid_cooling()
+      exp_timing[[input$hp]] <- hp_range()
     })
 
-  ss_times <-  callModule(signal, "temp", raw_tevi_data)
+  output$tevi_data_table <- renderPrint({tevi_data()})
 
-  heating_brush <- callModule(signal, "heating", raw_tevi_data)
+  output$plot_center_xy <-
+    renderPlot({center_coords(tevi_data(), as_tibble(reactiveValuesToList(exp_timing)))})
 
-  output$hp_range <-
-    renderPrint({
-      str_glue("{hp_times[[input$hp]]}")
-      })
+  liquid_cooling <-  callModule(signal, "temp", tevi_data)
+  hp_range <- callModule(signal, "heating", tevi_data)
+  c(frame_rate) %<-% callModule(parameters, "params", tevi_data)
 
-  hp_times <- reactiveValues()
+  output$exp_timing <-
+    renderPrint({as_tibble(reactiveValuesToList(exp_timing))})
 
-  observeEvent(input$save,
-               hp_times[[input$hp]] <-  heating_brush()
-               )
   list(
-    raw_tevi_data,
+    tevi_data,
     frame_rate
   )
 }
 
+center_coords <-
+  function(data, exp_timing){
+    p <-
+    data %>%
+    ggplot(aes(x = time)) +
+      geom_line(aes(y = center_x)) +
+      geom_line(aes(y = center_y), color = "red")
 
+
+    if(c("liquid_cooling") %in% names(exp_timing)){
+      p <- p + geom_vline(data = exp_timing, aes(xintercept = liquid_cooling), linetype = "dashed")
+    }
+    p
+  }
 
