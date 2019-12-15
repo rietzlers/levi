@@ -18,15 +18,15 @@ parametersUI <- function(id) {
 }
 
 
-parameters <- function(input, output, session, raw_tevi_data){
+parameters <- function(input, output, session, data){
 
   # update ui ------------
   observeEvent(
-    raw_tevi_data(),
+    data(),
     {
       # estimate sample/frame-rate from mean dt
       c(est_sample_freq) %<-%
-        (raw_tevi_data() %>%
+        (data() %>%
            summarize(est_sample_freq = round(1 / mean(diff(time), na.rm = TRUE))))
 
       updateNumericInput(session, "frame_rate", value = est_sample_freq)
