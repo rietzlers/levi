@@ -22,9 +22,9 @@ dashboardUI <- function(id) {
         signalUI(ns("temp")),
         signalUI(ns("heating")),
         fluidRow(
-          column(2, selectInput(ns("heat_pulse_choice"), label = NULL, choices = c("one" = "hp1", "two" = "hp2", "three" = "hp3"))),
-          column(2, actionButton(ns("save_timing_info"), label = "save", icon = icon("archive"))),
-          column(8, verbatimTextOutput(ns("heat_pulse_range")) )
+          column(2, selectInput(ns("hp"), label = NULL, choices = c("one" = "hp1", "two" = "hp2", "three" = "hp3"))),
+          column(2, actionButton(ns("save"), label = "save", icon = icon("archive"))),
+          column(8, verbatimTextOutput(ns("hp_range")) )
           )
         )
     )
@@ -41,14 +41,6 @@ dashboardUI <- function(id) {
 dashboard <- function(input, output, session, data, frame_rate){
 
   raw_tevi_data <- reactive({import_tevi_data(session, input$file)})
-
-  model <- reactiveValues()
-
-  observeEvent(input$save_timing_info,
-               {
-                 model[[input$heat_pulse_choice]] <- isolate(heating_brush)
-               })
-
   c(frame_rate) %<-% callModule(parameters, "params", raw_tevi_data)
 
   output$raw_tevi_data_table <- renderPrint({raw_tevi_data()})
@@ -61,16 +53,20 @@ dashboard <- function(input, output, session, data, frame_rate){
         geom_line(aes(y = center_y), color = "red")
     })
 
-  model$ss_times <-  callModule(signal, "temp", raw_tevi_data)
+  ss_times <-  callModule(signal, "temp", raw_tevi_data)
 
   heating_brush <- callModule(signal, "heating", raw_tevi_data)
 
-  output$heat_pulse_range <-
+  output$hp_range <-
     renderPrint({
-      model[[input$heat_pulse_choice]]()
-    })
+      str_glue("{hp_times[[input$hp]]}")
+      })
 
+  hp_times <- reactiveValues()
 
+  observeEvent(input$save,
+               hp_times[[input$hp]] <-  heating_brush()
+               )
   list(
     raw_tevi_data,
     frame_rate
