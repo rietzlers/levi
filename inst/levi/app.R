@@ -41,23 +41,24 @@ server <-
     # model-specification -------------
     model <-
       list(
-        alloy = reactive(NA_character_),
-        data = reactive(tibble()),
-        frame_rate = reactive(NA_real_),
-        sample_mass = reactive(NA_real_),
-        sample_radius = reactive(NA_real_),
-        camara = reactive(NA_character_),
-        ss_times = reactive(c(NA_real_, NA_real_)),
-        hp1 = reactive(c(NA_real_, NA_real_))
+        tevi_data = tibble(),
+        frame_rate = NA_real_,
+        sample_mass = NA_real_,
+        sample_radius = NA_real_,
+        camara = NA_character_,
+        alloy = NA_character_,
+        exp_timing = tibble()
         )
+
+    model <- map(model, ~ reactive(.x))
 
     # modules -------------
 
-    c(model$data, model$frame_rate) %<-% callModule(dashboard, "dashboard1", model$data, model$frame_rate)
+    c(model$tevi_data, model$frame_rate) %<-% callModule(dashboard, "dashboard1")
 
-    callModule(signalPlot, "signal1", model$data, model$frame_rate)
+    callModule(signalPlot, "signal1", model$tevi_data, model$frame_rate)
 
-    #callModule(compareSignals, "comp1", reactive(model$data), reactive(timing_info$frame_rate))
+    #callModule(compareSignals, "comp1", reactive(model$tevi_data), reactive(timing_info$frame_rate))
   }
 
 shinyApp(ui, server)
