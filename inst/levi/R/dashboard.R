@@ -5,10 +5,7 @@ dashboardUI <- function(id) {
     box(width = 4,
         fileInput(ns("file"), label = "select tevi-data (.dat-file)", accept = c(".dat")),
         parametersUI(ns("params")),
-        verbatimTextOutput(ns("tevi_data_table"))
-
-      ),
-  # dashboard: display info --------------------
+        verbatimTextOutput(ns("tevi_data_table"))),
     box(width = 8,
         plotOutput(ns("plot_center_xy"), height = 200),
         signalUI(ns("temp")),
@@ -16,9 +13,7 @@ dashboardUI <- function(id) {
         fluidRow(
           column(2, selectInput(ns("hp"), label = NULL, choices = c("one" = "hp1", "two" = "hp2", "three" = "hp3"))),
           column(2, actionButton(ns("save"), label = "save", icon = icon("archive"))),
-          column(8, verbatimTextOutput(ns("exp_timing")) )
-          )
-        )
+          column(8, verbatimTextOutput(ns("exp_timing")) )))
     )
 }
 
@@ -27,12 +22,9 @@ dashboard <- function(input, output, session){
   tevi_data <- reactive({import_tevi_data(session, input$file)})
   exp_timing <- reactiveValues()
 
-  observeEvent(
-    {input$save
-    liquid_cooling()},{
+  observeEvent({input$save; liquid_cooling()},{
       exp_timing[["liquid_cooling"]] <-  liquid_cooling()
-      exp_timing[[input$hp]] <- hp_range()
-    })
+      exp_timing[[input$hp]] <- hp_range()})
 
   output$tevi_data_table <- renderPrint({tevi_data()})
 
