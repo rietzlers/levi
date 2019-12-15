@@ -20,6 +20,7 @@ source("R/signal_plot.R")
 source("R/dashboard.R")
 source("R/compare_signals.R")
 source("R/helpers.R")
+source("R/signal_vc.R")
 
 # load data ---------------------------------------------------------------
 

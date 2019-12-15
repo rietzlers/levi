@@ -12,22 +12,22 @@ dashboardUI <- function(id) {
   tagList(
     box(width = 4,
         fileInput(ns("file"), label = "select tevi-data (.dat-file)", accept = c(".dat")),
-    parametersUI(ns("params")),
-    verbatimTextOutput(ns("raw_tevi_data_table"))
+        parametersUI(ns("params")),
+        verbatimTextOutput(ns("raw_tevi_data_table"))
 
-  ),
+      ),
   # dashboard: display info --------------------
-  box(width = 8,
-      plotOutput(ns("plot_center_xy"), height = 200),
-      plotOutput(ns("plot_temp"), height = 200, brush = brushOpts(id = ns("plot_temp_brush"), fill = "#ccc", direction = "x")),
-      verbatimTextOutput(ns("time_range")),
-      plotOutput(ns("plot_heat_i"), height = 200,brush = brushOpts(id = ns("plot_heat_brush"), fill = "#ccc", direction = "x")),
-      fluidRow(
-        column(2, selectInput(ns("heat_pulse_choice"), label = NULL, choices = c("one" = "hp1", "two" = "hp2", "three" = "hp3"))),
-        column(8, verbatimTextOutput(ns("heat_pulse_range"))),
-        column(2, actionButton(ns("save_timing_info"), label = "save", icon = icon("archive")))
-      )
-  ))
+    box(width = 8,
+        plotOutput(ns("plot_center_xy"), height = 200),
+        signalUI(ns("temp")),
+        signalUI(ns("heating")),
+        fluidRow(
+          column(2, selectInput(ns("heat_pulse_choice"), label = NULL, choices = c("one" = "hp1", "two" = "hp2", "three" = "hp3"))),
+          column(2, actionButton(ns("save_timing_info"), label = "save", icon = icon("archive"))),
+          column(8, verbatimTextOutput(ns("heat_pulse_range")) )
+          )
+        )
+    )
 }
 
 
@@ -46,9 +46,7 @@ dashboard <- function(input, output, session, data, frame_rate){
 
   observeEvent(input$save_timing_info,
                {
-                 model$ss_times <- get_brush_range(input$plot_temp_brush)
-                 model[[input$heat_pulse_choice]] <-
-                   get_brush_range(input$plot_heat_brush)
+                 model[[input$heat_pulse_choice]] <- isolate(heating_brush)
                })
 
   c(frame_rate) %<-% callModule(parameters, "params", raw_tevi_data)
@@ -60,39 +58,17 @@ dashboard <- function(input, output, session, data, frame_rate){
       raw_tevi_data() %>%
         ggplot(aes(x = time)) +
         geom_line(aes(y = center_x)) +
-        geom_line(aes(y = center_y), color = "red") +
-        # geom_line(aes(y = htr_i_norm)) +
-        labs(y = "Center-Coordinates [px]")
+        geom_line(aes(y = center_y), color = "red")
     })
 
-  output$plot_temp <-
-    renderPlot({
-      test_data <-
-        raw_tevi_data() %$%
-        tibble(
-          time_n = seq(min(time), max(time), length.out = 100),
-          temp = to_temperature(tibble(time, pyro_temp), time_n)
-        )
+  model$ss_times <-  callModule(signal, "temp", raw_tevi_data)
 
-      raw_tevi_data() %>%
-        ggplot(aes(x = time)) +
-        geom_line(aes(y = pyro_temp)) +
-        geom_point(data = test_data, aes(x = time_n, y = temp), color = "red")
-    })
-
-  output$time_range <-
-    renderPrint({model$ss_times})
-
-  output$plot_heat_i <-
-    renderPlot({
-      raw_tevi_data() %>%
-        ggplot(aes(x = time)) +
-        geom_line(aes(y = htr_i))
-    })
+  heating_brush <- callModule(signal, "heating", raw_tevi_data)
 
   output$heat_pulse_range <-
-    renderPrint({model[[input$heat_pulse_choice]]})
-
+    renderPrint({
+      model[[input$heat_pulse_choice]]()
+    })
 
 
   list(
