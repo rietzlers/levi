@@ -15,11 +15,11 @@ library(crosstalk)
 # source code which needs to run once -------------------------------------
 
 source("R/data_model.R")
-source("R/parameters.R")
+source("R/model_params_vs.R")
 source("R/sig_analysis.R")
 source("R/dashboard.R")
 source("R/compare_signals.R")
-source("R/helpers.R")
+source("R/ui_helpers.R")
 source("R/signal_vc.R")
 
 # load data ---------------------------------------------------------------
