@@ -16,7 +16,7 @@ library(crosstalk)
 
 source("R/data_model.R")
 source("R/parameters.R")
-source("R/signal_plot.R")
+source("R/sig_analysis.R")
 source("R/dashboard.R")
 source("R/compare_signals.R")
 source("R/helpers.R")

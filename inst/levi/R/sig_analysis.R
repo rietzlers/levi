@@ -30,6 +30,7 @@ signalPlot <- function(input, output, session, raw_tevi_data, frame_rate){
   ns <- session$ns
 
   signal <- reactive(rlang::sym(req(input$signal_choice)))
+
   est_spec <- reactive({
     estimate_signal_spectrum(data_selection(), signal(), frame_rate())
     })
