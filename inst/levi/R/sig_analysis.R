@@ -16,9 +16,7 @@ signalPlotUI <- function(id, width = 12) {
           uiOutput(ns("selected_signal_info"))
           ),
       box(width = 6,
-          plotlyOutput(ns("spectrum"), height = 250),
-          uiOutput(ns("spectrum_info")),
-          verbatimTextOutput(ns("spectrum_click_info"))
+          spectrumUI(ns("spectrum"))
           )
       )
   )
@@ -30,10 +28,6 @@ signalPlot <- function(input, output, session, raw_tevi_data, frame_rate){
   ns <- session$ns
 
   signal <- reactive(rlang::sym(req(input$signal_choice)))
-
-  est_spec <- reactive({
-    estimate_signal_spectrum(data_selection(), signal(), frame_rate())
-    })
 
   data_selection <-
     reactive({
@@ -65,20 +59,7 @@ signalPlot <- function(input, output, session, raw_tevi_data, frame_rate){
     })
 
   # spectrum ---------
-  output$spectrum <-
-    renderPlotly({
-      est_spec_plot <-
-        est_spec() %>%
-        ggplot(aes(x = freq, y = spec)) +
-        geom_line() +
-        labs(x = "Frequency [Hz]",
-             y = "log(periodogram)")
-
-      est_spec_plot %>%
-        ggplotly(source = ns("spectrum_plotly")) %>%
-        event_register("plotly_click")
-
-    })
+  callModule(spectrum_ctrl, "spectrum", data_selection, signal, frame_rate)
 
   # numerical summary --------------
   output$selected_signal_info <-
@@ -99,21 +80,6 @@ signalPlot <- function(input, output, session, raw_tevi_data, frame_rate){
         )
       }
     })
-
-  output$spectrum_info <-
-    renderUI({
-      max_freq <-
-        est_spec() %>%
-        filter(near(spec, max(spec), tol = 0.5)) %>%
-        summarize(max_freq = mean(freq))
-      h5(str_glue("Maximum Freq.: {round(max_freq$max_freq, 2)} Hz"))
-    })
-
-  output$spectrum_click_info <- renderPrint({
-    #hover_info <- event_data("plotly_hover", source = "spectrum_plotly")
-    click_info <- event_data("plotly_click", source = ns("spectrum_plotly"))
-    if (is.null(click_info)) "Click events appear here (double-click to clear)" else click_info
-  })
 }
 
 
