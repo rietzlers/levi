@@ -8,19 +8,22 @@ signalUI <- function(id, height = 200){
     selectInput(ns("selected_signal"), label = "select signal", choices = NULL),
     plotOutput(
       ns("signal"), height = height,
-      brush = brushOpts(id = ns("brush"), fill = "#ccc", direction = "x")
+      brush = brushOpts(id = ns("brush"), fill = "#ccc", direction = "x", resetOnNew = TRUE)
       ),
     verbatimTextOutput(ns("brush_info"))
   )
 }
 
 
-signal <- function(input, output, session, data){
+signal <- function(input, output, session, data, variable = NULL){
 
   observeEvent(
     data(),
     {
       updateSelectInput(session, "selected_signal", choices = names(data()))
+      if(!is.null(variable)){
+        updateSelectInput(session, "selected_signal", selected = variable)
+      }
     }
     )
 
