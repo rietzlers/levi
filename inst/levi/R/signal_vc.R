@@ -9,8 +9,7 @@ signalUI <- function(id, height = 200){
     plotOutput(
       ns("signal"), height = height,
       brush = brushOpts(id = ns("brush"), fill = "#ccc", direction = "x", resetOnNew = TRUE)
-      ),
-    verbatimTextOutput(ns("brush_info"))
+      )
   )
 }
 
@@ -30,11 +29,7 @@ signal <- function(input, output, session, data, variable = NULL){
   output$signal <-
     renderPlot({gen_signal_plot(data(), input$selected_signal)})
 
-  output$brush_info <-
-    renderPrint(get_brush_range(input$brush))
-
   return(reactive({get_brush_range(input$brush)}))
-
 }
 
 gen_signal_plot <-
