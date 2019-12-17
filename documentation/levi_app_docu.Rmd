@@ -1,0 +1,119 @@
+---
+title: "Struktur und Bedienung der App"
+author: "Stephan Rietzler"
+date: "12/17/2019"
+output: 
+  html_notebook:
+    code_folding: hide
+---
+
+# Dashboard
+
+Zentrales UI zum laden und aufbereiten der Tevi-Datensätze.
+
+* festlegung der heizpulse und abkühlungsphase
+
+
+# Signal-Analysis
+
+Auswahl eines sigs und Zeitfensters. Bestimmung der dominanten 
+Frequenz in diesem Zeitfenster
+
+# Spektrogramm-Schätzer
+
+Die Bestimmung der dominanten Frequenz im gewählten Zeitfenster wird über eine
+Spektrogramm-Schätzung durchgeführt. 
+
+Die Spektrogram-Schätzung kann über die Standard-Funktion ```spectrum ``` oder 'von Hand'
+durch eine FFT durchgeführt werden. 
+
+Im folgenden sollen die beiden Methoden an einfachen Beispielen kurz verglichen werden.
+
+# Beispiel-Signal
+
+```{r}
+sample_rate <- 400
+test_data <-
+  tibble(t = seq(0, 10, by = 1 / sample_rate),
+         sig = exp(-0.1*t)*(sin(2 * pi * 30 * t)))
+test_data <-
+  cmsx10 %>%
+  transmute(
+    t = time,
+    sig = radius_y - mean(radius_y)
+  )
+data <-
+  test_data %>% 
+  filter(t %>% between(7.2, 10)) %>%
+  mutate(
+    fc = fft(sig),
+    freqs = seq(0, length(t) - 1) / length(t) * sample_rate,
+    amps = Mod(fc),
+    phase = Arg(fc)
+  ) 
+
+(data %>% 
+  ggplot(aes(x = t)) +
+  geom_line(aes(y = sig))) %>% 
+  ggplotly()
+```
+
+## spectrum vs. fft-amps
+
+```{r}
+spectrum(ts(data$sig, frequency = sample_rate))
+
+amp_plot <-
+data %>% 
+  filter(freqs < sample_rate/2) %>% 
+  ggplot(aes(x = freqs)) +
+  geom_line(aes(y = amps), color = "red")
+
+amp_plot %>% ggplotly()
+```
+
+## Rekonsturiere Signal, evtl BP-gefiltert
+
+```{r}
+data <- 
+  data %>% 
+  mutate(
+    lp = if_else(freqs <= 40, fc, 0i),
+    sig_re = Re(fft(lp, inverse = TRUE))/length(t),
+    equal = near(sig, sig_re)
+  )
+
+data %>% 
+  ggplot(aes(x = t)) +
+  geom_line(aes(y = sig_re, color = equal))
+
+spectrum(ts(data$sig_re, frequency = sample_rate))
+```
+
+## fit lorentz to periodogram
+
+Physikalisch motiviert wird eine [Lorentz-Kurve](https://de.wikipedia.org/wiki/Lorentzkurve)
+an das Periodogram gefittet. 
+
+\[f(\omega) = \frac{A}{(\omega^2 - \omega_0²)² + \gamma^2\omega^2} \]
+
+Der gefittete Parameter $\omega_0$ ist dann die gesuchte dominante Freq. im gewählten Zeitfenster.
+
+
+```{r}
+lorentz_fit_start <- c(A = 1000000, w0 = 40, g = 1)
+lorentz_fit <- nls(amps ~ A/((freqs^2 - w0^2)^2 + g^2*freqs^2), 
+                   data = data %>% filter(freqs < sample_rate/2), start = lorentz_fit_start, trace = TRUE)
+summary(lorentz_fit)
+lf_pred <- 
+
+amp_plot <-
+data %>% 
+  filter(freqs < sample_rate/2) %>% 
+  ggplot(aes(x = freqs)) +
+  geom_line(aes(y = amps), color = "red") +
+  geom_line(aes(y = predict(lorentz_fit)), linetype = "dashed") 
+
+amp_plot %>% ggplotly()
+```
+
