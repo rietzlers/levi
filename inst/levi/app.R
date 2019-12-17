@@ -5,7 +5,7 @@ library(reactlog)
 # tell shiny to log all reactivity
 options(shiny.reactlog = TRUE)
 
-source(file.path("R/load_dependencies.R"), local = TRUE, encoding = "UTF-8")$value
+source(file.path("R/load_dependencies.R"), local = TRUE, encoding = "UTF-8")
 
 # view --------
 header <-
@@ -20,16 +20,14 @@ header <-
 sidebar <-
   dashboardSidebar(sidebarMenu(
     menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")),
-    menuItem("Display Signal", tabName = "display_signal", icon = icon("bar-chart-o")),
-    menuItem("Compare Signals", tabName = "compare_signals", icon = icon("microscope"))
+    menuItem("Signal Analysis", tabName = "signal_analysis", icon = icon("bar-chart-o"))
   ))
 
 
 body <-
   dashboardBody(tabItems(
     tabItem(tabName = "dashboard", dashboardUI("dashboard1")),
-    tabItem(tabName = "display_signal", signalPlotUI("signal1")),
-    tabItem(tabName = "compare_signals", compareSignalsUI("comp1"))
+    tabItem(tabName = "signal_analysis", signalAnalysisUI("analysis"))
   ))
 
 ui <- dashboardPage(header, sidebar, body, title = "Alloy-EML-Analysis")
@@ -52,13 +50,18 @@ server <-
 
     model <- map(model, ~ reactive(.x))
 
+    ctrls <-
+      list(
+        centerSignal = reactive(FALSE),
+        smoothSignal = reactive(0)
+      )
+
     # modules -------------
 
     c(model$tevi_data, model$frame_rate) %<-% callModule(dashboard, "dashboard1")
 
-    callModule(signalPlot, "signal1", model$tevi_data, model$frame_rate)
+    callModule(signalAnalysis, "analysis", model$tevi_data, model$frame_rate)
 
-    #callModule(compareSignals, "comp1", reactive(model$tevi_data), reactive(timing_info$frame_rate))
   }
 
 shinyApp(ui, server)
