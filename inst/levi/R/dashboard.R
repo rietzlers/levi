@@ -28,8 +28,8 @@ dashboard <- function(input, output, session){
         hp3 = c(NA_real_, NA_real_))
 
     observe({
-      exp_timing$lc <-  liquid_cooling()
-      exp_timing[[isolate(input$hp)]] <- hp_range()
+      exp_timing$lc <-  get_brush_range(lc_brush())
+      exp_timing[[isolate(input$hp)]] <- get_brush_range(hp_brush())
       })
     # reset exp_timing with new data
     observeEvent(input$file, {
@@ -40,14 +40,13 @@ dashboard <- function(input, output, session){
 
   exp_timing <- gen_exp_timing()
 
-
   output$plot_center_xy <-
     renderPlot({center_coords(tevi_data(), exp_timing())})
 
-  liquid_cooling <-
+  c(...skip, lc_brush) %<-%
     callModule(signal, "temp", tevi_data, "pyro_temp")
 
-  hp_range <-
+  c(...skip, hp_brush) %<-%
     callModule(signal, "heating", tevi_data, "htr_i")
 
   c(frame_rate) %<-%
