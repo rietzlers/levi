@@ -1,0 +1,42 @@
+---
+title: "Import Test-Data"
+output: html_notebook
+---
+
+# Alloy Specs
+
+```{r}
+library(readxl)
+alloy_specs <- read_excel("./Samples-Database.xlsx")
+alloy_specs
+```
+
+# Tevi-Datensätze
+
+```{r}
+library(vroom)
+  # load data as is
+  cmsx_10_c06_rad <-
+    vroom::vroom(
+      "./dat/CMSX-10 ISS Batch-1.2b cycle06 rad.dat", delim = "\t",
+      col_types = cols(`Absolute Time` = col_time(format = "%H:%M:%OS"), .default = col_double()),
+      trim_ws = TRUE
+    )
+
+  validate(need(nrow(cmsx_10_c06_rad) > 0, "there are no observations in uploaded data"))
+
+  # clean col_names to snake-case
+  cmsx_10_c06_rad <- cmsx_10_c06_rad %>% janitor::clean_names()
+
+ # delete first row with units
+  cmsx10 <- cmsx_10_c06_rad[-1, ]
+
+  # add exp-time: time=0 is start of measurement
+  cmsx10 <-  cmsx10 %>% arrange(seconds) %>% mutate(time = seconds - seconds[1])
+
+  # standardize var-names (remove different prefix for ax-/radial-data)
+  names(cmsx10) <- map_chr(names(cmsx10), ~ str_remove(.x, "^a_|^r_"))
+
+  cmsx10
+```
+
