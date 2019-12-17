@@ -2,23 +2,12 @@
 
 signalAnalysisUI <- function(id, width = 12) {
   ns <- NS(id)
-
-  #browser()
   tagList(
-    box(width = width,
-      selectInput(ns("signal_choice"), label = "Choose Signal to analyse", choices = NULL),
-      plotOutput(ns("signal_plot"),
-        brush = brushOpts(id = ns("brush"), fill = "#ccc", direction = "x"),
-        height = 250
-      ),
-      box(width = 6,
-          plotOutput(ns("signal_in_selected_range"),  height = 250),
-          uiOutput(ns("selected_signal_info"))
-          ),
-      box(width = 6,
-          spectrumUI(ns("spectrum"))
-          )
-      )
+    box(width = width, signalUI(ns("completeTimerange"))),
+    box(width = width / 2,
+        plotOutput(ns("signal_in_selected_range"),  height = 250),
+        uiOutput(ns("selected_signal_info"))),
+    box(width = width / 2, spectrumUI(ns("spectrum")))
   )
 }
 
@@ -27,11 +16,9 @@ signalAnalysis <- function(input, output, session, raw_tevi_data, frame_rate){
 
   ns <- session$ns
 
-  signal <- reactive(rlang::sym(req(input$signal_choice)))
-
   data_selection <-
     reactive({
-      selected_data <-brushedPoints(raw_tevi_data(), input$brush)
+      selected_data <-brushedPoints(raw_tevi_data(), signalbrush())
       validate(need(nrow(selected_data) > 0,
                     "select data by brushing (left-click and pull) over signal-plot"))
       selected_data
@@ -44,13 +31,11 @@ signalAnalysis <- function(input, output, session, raw_tevi_data, frame_rate){
     updateSelectInput(session, "signal_choice", choices = signal_names)
   })
 
-  # display signal ------
-  output$signal_plot <-
-    renderPlot({ts_plot(raw_tevi_data(), input$signal_choice)})
+  c(signal, signalbrush) %<-% callModule(signal, "completeTimerange", raw_tevi_data, "radius_y")
 
   # signal in range ------------------
   output$signal_in_selected_range <-
-    renderPlot({ts_plot(data_selection(), input$signal_choice)})
+    renderPlot({ts_plot(data_selection(), signal())})
 
   # spectrum ---------
   callModule(spectrum_ctrl, "spectrum", data_selection, signal, frame_rate)
@@ -67,5 +52,5 @@ signalAnalysis <- function(input, output, session, raw_tevi_data, frame_rate){
 ts_plot <- function(ds, var){
   ds %>%
     ggplot(aes(x = time)) +
-    geom_line(aes_string(y = var))
+    geom_line(aes(y = !!var))
 }
