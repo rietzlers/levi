@@ -1,6 +1,6 @@
 # signal_plot.R #
 
-signalPlotUI <- function(id, width = 12) {
+signalAnalysisUI <- function(id, width = 12) {
   ns <- NS(id)
 
   #browser()
@@ -23,7 +23,7 @@ signalPlotUI <- function(id, width = 12) {
 }
 
 
-signalPlot <- function(input, output, session, raw_tevi_data, frame_rate){
+signalAnalysis <- function(input, output, session, raw_tevi_data, frame_rate){
 
   ns <- session$ns
 
@@ -31,8 +31,7 @@ signalPlot <- function(input, output, session, raw_tevi_data, frame_rate){
 
   data_selection <-
     reactive({
-      selected_data <-
-        brushedPoints(raw_tevi_data(), input$brush)
+      selected_data <-brushedPoints(raw_tevi_data(), input$brush)
       validate(need(nrow(selected_data) > 0,
                     "select data by brushing (left-click and pull) over signal-plot"))
       selected_data
@@ -40,7 +39,6 @@ signalPlot <- function(input, output, session, raw_tevi_data, frame_rate){
 
   # update UI -
   observeEvent(raw_tevi_data(), {
-    # available signals
     col_names <- raw_tevi_data() %>% names()
     signal_names <- col_names[col_names != "time"]
     updateSelectInput(session, "signal_choice", choices = signal_names)
@@ -48,15 +46,11 @@ signalPlot <- function(input, output, session, raw_tevi_data, frame_rate){
 
   # display signal ------
   output$signal_plot <-
-    renderPlot({
-      ts_plot(raw_tevi_data(), input$signal_choice)
-    })
+    renderPlot({ts_plot(raw_tevi_data(), input$signal_choice)})
 
   # signal in range ------------------
   output$signal_in_selected_range <-
-    renderPlot({
-      ts_plot(data_selection(), input$signal_choice)
-    })
+    renderPlot({ts_plot(data_selection(), input$signal_choice)})
 
   # spectrum ---------
   callModule(spectrum_ctrl, "spectrum", data_selection, signal, frame_rate)
@@ -64,21 +58,8 @@ signalPlot <- function(input, output, session, raw_tevi_data, frame_rate){
   # numerical summary --------------
   output$selected_signal_info <-
     renderUI({
-      data <-
-        data_selection() %>%
-        select(time,!!signal())
-
-      time_range <- data %$% range(time)
-      time <- mean(time_range)
-      time_span <- time_range[2] - time_range[1]
-
-      {
-        h5(
-          str_glue(
-            "Window center-point: {round(time, 2)} s and window-width: {round(time_span, 2)} s"
-          )
-        )
-      }
+      br <- get_brush_range(input$brush)
+      h5(str_glue("Window center-point: {round(mean(br), 2)} s and window-width: {round(diff(br), 2)} s"))
     })
 }
 
