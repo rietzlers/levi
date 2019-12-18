@@ -23,8 +23,6 @@ library(vroom)
       trim_ws = TRUE
     )
 
-  validate(need(nrow(cmsx_10_c06_rad) > 0, "there are no observations in uploaded data"))
-
   # clean col_names to snake-case
   cmsx_10_c06_rad <- cmsx_10_c06_rad %>% janitor::clean_names()
 
