@@ -1,4 +1,19 @@
 
+#' Berechnung des Stichprobenspektrums
+#'
+#' periodogram berechnet das Stichprobenspektrum  (Schlittgen Seite 68) einer gegebenen Zeitreihe:
+#' \deqn{I(\lambda) = N\cdot |D(\lambda)|^2}
+#' \eqn{D(\lambda)}: Fouriertransformierte der Zeitreihe.
+#'
+#' @param sr
+#' @param ts
+#'
+#' @return
+#' @export
+periodogram <- function(ts, sr, type){
+# check for missing observations!!
+}
+
 #' fit_lorentz
 #'
 #' @param data tibble with columns f and fc_amp
@@ -8,18 +23,19 @@
 #' @return list(fit_params, fitted[[lf_amp]]) NULL if nls did not converge
 #' @export
 fit_lorentz <- function(data, sr = 400, c0 = c(A = 1000, f0 = 30, g = 0.1) ) {
+  # falls nicht konvergiert: ändere Startwerte und versuche erneut. ca. 20 mal.
   tryCatch({
     lfit <-
       nls(
-        fc_amp ~ A / ((f ^ 2 - f0 ^ 2) ^ 2 + g ^ 2 * f ^ 2),
-        data = data %>% filter(f < sr / 2),
+        fc_amp_squared ~ A / ((f ^ 2 - f0 ^ 2) ^ 2 + (g / 2) ^ 2 * f ^ 2),
+        data = data %>% filter(f < sr / 2) %>% mutate(fc_amp_squared = fc_amp^2),
         start =  c0,
         trace = FALSE
       )
     fit_params = as_tibble(summary(lfit)$coeff) %>% janitor::clean_names()
     fitted = data %>%
       filter(f < sr / 2) %>%
-      mutate(lf_amp = predict(lfit))
+      mutate(lf_amp = sqrt(predict(lfit)))
     list(
       fit_params = fit_params,
       fitted = fitted
@@ -31,30 +47,25 @@ fit_lorentz <- function(data, sr = 400, c0 = c(A = 1000, f0 = 30, g = 0.1) ) {
   error = function(cond) {
     return(list(fit_params = NULL, fitted = NULL))
   })
-
-
 }
 
 
-#' gen_example data
+#' get_spectrum
 #'
+#' @param data tibble with variable sig
 #' @param sr sample-rate
-#' @param dc damping-constant
-#' @param f0 signal-freq
-#' @param fs freq-shift
-#' @param noise_sd sd of additive nois
-#' @param wr window-range
-#' @param bp band-pass-range
 #'
-#' @return tibble with vars: t, sig, f, fc, fc_amp, fc_phase, sig_re (reconstructed sig after bp), equal
-#' @export
-gen_example_data <-
-  function(T = 10, sr = 400, dc = 0.1, f0 = 30, fs = 0, noise_sd = 0.1, wr = c(0, 10), bp = c(0, 400)) {
-    tibble(
-      t = seq(0, T, by = 1 / sr),
-      sig = exp(-dc * t) * (sin(2 * pi * (f0 - fs * t) * t)) + rnorm(n = length(t), sd = noise_sd)
-    ) %>%
-      filter(t %>% between(wr[1], wr[2])) %>%
+#' @return
+get_spectrum <- function(data, sr, type = "spec"){
+  if (type == "spec")
+  {
+    data %$%
+      tibble(
+        f = spectrum(ts(sig), frequncy = sr, plot = FALSE)$freq * sr,
+        fc_amp = spectrum(ts(sig), frequncy = sr, plot = FALSE)$spec
+      )
+  }else{
+    data %>%
       mutate(
         fc = fft(sig),
         f = seq(0, length(t) - 1) / length(t) * sr,
@@ -67,18 +78,5 @@ gen_example_data <-
         equal = factor(if_else(near(sig, sig_re), "yes", "no"), levels = c("yes", "no"))
       )
   }
-
-
-#' get_spectrum
-#'
-#' @param data tibble with variable sig
-#' @param sr sample-rate
-#'
-#' @return
-get_spectrum <- function(data, sr){
-  data %$%
-    tibble(
-      f = spectrum(ts(sig), frequncy = sr, plot = FALSE)$freq * sr,
-      fc_amp = spectrum(ts(sig), frequncy = sr, plot = FALSE)$spec
-    )
 }
+
