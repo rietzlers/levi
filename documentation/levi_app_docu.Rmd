@@ -75,11 +75,9 @@ signalPlot <- function(sig_data){
     geom_line(aes(y = sig_re, color = equal))
 }
 
-
-
 summary_plot <- function(sig_data, spec_data, freq_range, sample_rate = 400, f0 = 30, d = 0.5 ){
 
-    freq_range = c(freq_range[1], min(c(freq_range[2], sample_rate/2)))
+  freq_range = c(freq_range[1], min(c(freq_range[2], sample_rate/2)))
     
   fft_plot <-
     sig_data %>% 
@@ -129,12 +127,7 @@ summary_plot <- function(sig_data, spec_data, freq_range, sample_rate = 400, f0 
   plot_grid(fft_plot, spec_plot, nrow = 2)
 }
 
-max_freq <- function(data, sample_rate = 400){
-  data %>% filter(near(fc_amp, max(fc_amp))) %>% transmute(f, fc_amp) %>% filter(f < sample_rate/2)
-}
-
 ```
-
 
 
 ```{r}
@@ -144,7 +137,6 @@ sig_data <- reactive({
     gen_example_data(T = 10, sr = 400, dc = input$dc, f0 = input$f0, fs = input$fs, noise_sd = input$noise,
                      wr = input$wr, bp = input$bp) 
 })
-
 spec_data <- reactive({get_spectrum(sig_data(), sr = 400)})
 
 
@@ -154,23 +146,19 @@ column(width = 3, numericInput("dc", "Dämpfung", value = 0.3, min = 0, max = 2,
 column(width = 3, numericInput("fs", "freq-shift[Hz/s]", value = 0, min = 0, max = 10, step = 0.5)),
 column(width = 3, numericInput("noise", "Signal-Noise", value = 0.1, min = 0, max = 1, step = 0.1))
 )
-renderPlot(signalPlot(sig_data()))
 
 fluidRow(
   column(width = 4, sliderInput("wr", "Window-Range", value = c(1, 2), min = 0, max = 10)),
   column(width = 4, sliderInput("bp", "Band-Pass", min = 0, max = 400, value = c(0,400)))
 )
+renderPlot(signalPlot(sig_data()))
+renderPlot({summary_plot(sig_data(),  spec_data(), input$bp, f0 = input$f0_start, d = input$d_start)})
 fluidRow(
   column(width = 2, actionButton("resample", "Resample")),
   column(width = 4, numericInput("f0_start", "fO start", value = 30)),
   column(width = 4, numericInput("d_start", "damping start", value = 0.3, step = 0.05))
 )
-renderPlot({summary_plot(sig_data(),  spec_data(), input$bp, f0 = input$f0_start, d = input$d_start)})
-
 ```
-
-
-
 
 
 
