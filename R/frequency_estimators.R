@@ -56,6 +56,7 @@ fit_lorentz <- function(data, sr = 400, c0 = c(A = 1000, f0 = 30, g = 0.1) ) {
 #' @param sr sample-rate
 #'
 #' @return
+#' @export
 get_spectrum <- function(data, sr, type = "spec"){
   if (type == "spec")
   {
@@ -80,3 +81,17 @@ get_spectrum <- function(data, sr, type = "spec"){
   }
 }
 
+#' ermittle die dominante Frequenz eines signals aus dem Periodogramm
+#'
+#'
+#' @param data datensatz mit variablen f und fc_amp
+#' @param sample_rate sample-rate
+#'
+#' @return tibble with variables f and fc_amp mit einer observation
+#' @export
+max_freq <- function(data, sample_rate = 400){
+  data %>%
+    filter(near(fc_amp, max(fc_amp)))  %>%
+    filter(f < sample_rate/2) %>% # spiegelsymmetrie an der nyquist-freq!
+    transmute(f = mean(f), fc_amp = mean(fc_amp))
+}
