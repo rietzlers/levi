@@ -36,31 +36,10 @@ ui <- dashboardPage(header, sidebar, body, title = "Alloy-EML-Analysis")
 server <-
   function(input, output, session) {
 
-    # model-specification -------------
-    model <-
-      list(
-        tevi_data = tibble(),
-        frame_rate = NA_real_,
-        sample_mass = NA_real_,
-        sample_radius = NA_real_,
-        camara = NA_character_,
-        alloy = NA_character_,
-        exp_timing = tibble()
-        )
+    c(signals, frame_rate) %<-%
+      callModule(dashboard, "dashboard1")
 
-    model <- map(model, ~ reactive(.x))
-
-    ctrls <-
-      list(
-        centerSignal = reactive(FALSE),
-        smoothSignal = reactive(0)
-      )
-
-    # modules -------------
-
-    c(model$tevi_data, model$frame_rate) %<-% callModule(dashboard, "dashboard1")
-
-    callModule(signalAnalysis, "analysis", model$tevi_data, model$frame_rate)
+    callModule(signalAnalysis, "analysis", signals, frame_rate)
 
   }
 
