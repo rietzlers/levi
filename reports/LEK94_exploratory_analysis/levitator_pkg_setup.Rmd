@@ -1,0 +1,14 @@
+---
+title: "levitator-package setup"
+output: html_notebook
+---
+
+# Data
+```{r}
+devtools::use_data(lek94, overwrite = TRUE)
+devtools::document()
+
+```
+
+
+
