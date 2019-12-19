@@ -1,5 +1,5 @@
 
-dashboardUI <- function(id) {
+importTeviDataUI <- function(id) {
   ns <- NS(id)
   tagList(
     box(width = 4,
@@ -15,7 +15,7 @@ dashboardUI <- function(id) {
     )
 }
 
-dashboard <- function(input, output, session){
+importTeviData <- function(input, output, session){
 
   tevi_data <- reactive({import_tevi_data(session, input$file)})
 

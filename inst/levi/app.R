@@ -19,14 +19,14 @@ header <-
 
 sidebar <-
   dashboardSidebar(sidebarMenu(
-    menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")),
+    menuItem("Import Tevi Data", tabName = "importTeviData", icon = icon("dashboard")),
     menuItem("Signal Analysis", tabName = "signal_analysis", icon = icon("bar-chart-o"))
   ))
 
 
 body <-
   dashboardBody(tabItems(
-    tabItem(tabName = "dashboard", dashboardUI("dashboard1")),
+    tabItem(tabName = "importTeviData", importTeviDataUI("tdi")),
     tabItem(tabName = "signal_analysis", signalAnalysisUI("analysis"))
   ))
 
@@ -37,7 +37,7 @@ server <-
   function(input, output, session) {
 
     c(signals, frame_rate) %<-%
-      callModule(dashboard, "dashboard1")
+      callModule(importTeviData, "tdi")
 
     callModule(signalAnalysis, "analysis", signals, frame_rate)
 
