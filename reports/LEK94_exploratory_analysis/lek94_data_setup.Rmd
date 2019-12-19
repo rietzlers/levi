@@ -1,0 +1,532 @@
+# Daten-Aufbereitung 
+Bemerkung:  
+Das Ganze markdown-document kann als 'child' im Haupt-Dokument 
+'eingelesen' werden mit:
+{r load data into knitr-session, child = 'lek94_data_setup.Rmd'}
+
+## cycle 01
+```{r load cycle 01}
+LEK94_01_rad <- read_delim(
+  "~/workspace/Projekt_Metalllegierungsschmelzen/Daten/ISS/LEK94/LEK94 Cycle 01/LEK94_01_rad.dat", 
+  "\t", 
+  escape_double = FALSE, col_types = cols(`Absolute Time` = col_time(format = "%H:%M:%OS")), 
+  trim_ws = TRUE)
+
+LEK94_01_ax <- read_delim(
+  "~/workspace/Projekt_Metalllegierungsschmelzen/Daten/ISS/LEK94/LEK94 Cycle 01/LEK94_01_ax.dat", 
+  "\t", 
+  escape_double = FALSE, col_types = cols(`Absolute Time` = col_time(format = "%H:%M:%OS")), 
+  trim_ws = TRUE)
+
+c01r <- LEK94_01_rad %>% 
+  transmute(
+    abs_time = `Absolute Time`,
+    #abs_time_r = `Absolute Time`,
+    cx_r = R_CenterX, # - mean(R_CenterX, na.rm = TRUE),
+    cy_r = R_CenterY,#  - mean(R_CenterY, na.rm = TRUE),
+    rx_r = R_RadiusX,
+    ry_r = R_RadiusY,
+    r1_r = R_RadiusRotated1,
+    r2_r = R_RadiusRotated2,
+    area_r = R_Area,
+    area_diff_r = R_AreaDiff,
+    temp_r = PyroTemp,
+    heat_ctrl_r = Htr_Uctrl,
+    heat_u_r = Htr_U,
+    heat_i_r = Htr_I,
+    heat_freq_r = Htr_FREQ,
+    view_r = "radial"
+    ) %>% 
+  arrange(abs_time) %>% 
+  mutate(delta_r = as.numeric(abs_time - lag(abs_time)))
+
+c01a <- LEK94_01_ax %>% 
+  transmute(
+    abs_time = `Absolute Time`,
+    #abs_time_a = `Absolute Time`,
+    cx_a = A_CenterX, # - mean(A_CenterX, na.rm = TRUE),
+    cy_a = A_CenterY, # - mean(A_CenterY, na.rm = TRUE),
+    rx_a = A_RadiusX,
+    ry_a = A_RadiusY,
+    r1_a = A_RadiusRotated1,
+    r2_a = A_RadiusRotated2,
+    area_a = A_Area,
+    area_diff_a = A_AreaDiff,
+    temp_a = PyroTemp,
+    heat_ctrl_a = Htr_Uctrl,
+    heat_u_a = Htr_U,
+    heat_i_a = Htr_I,
+    heat_freq_a = Htr_FREQ,
+    view_a = "axial"
+    ) %>% 
+  arrange(abs_time) %>% 
+  mutate(delta_a = as.numeric(abs_time - lag(abs_time)))
+
+c01 <- 
+  full_join(c01r, c01a, by = "abs_time") %>% 
+  mutate(
+    time = as.numeric(abs_time - min(abs_time, na.rm = TRUE)),
+    
+    
+    temp = coalesce(temp_r, temp_a),
+    heat_ctrl = coalesce(heat_ctrl_r, heat_ctrl_a),
+    heat_u = coalesce(heat_u_r, heat_u_a),
+    heat_i = coalesce(heat_i_r, heat_i_a),
+    heat_freq = coalesce(heat_freq_r, heat_freq_a),
+    cycle = 1,# "c01; UH=7V; Tmax=1600C",
+    view = if_else((!is.na(view_a) & !is.na(view_r)), "common_obs", coalesce(view_a, view_r))
+    ) %>% 
+  select(-temp_r, -temp_a, -heat_ctrl_r, -heat_ctrl_a, -heat_u_r, -heat_u_a, -heat_i_r, -heat_i_a, -heat_freq_r, -heat_freq_a,  -view_r, -view_a) %>% 
+  arrange(time) 
+
+rm(c01a, c01r, LEK94_01_ax, LEK94_01_rad)
+```
+## cycle 02
+```{r load cycle 02}
+LEK94_02_rad <- read_delim(
+  "~/workspace/Projekt_Metalllegierungsschmelzen/Daten/ISS/LEK94/LEK94 Cycle 02/LEK94_02_rad.dat", 
+  "\t", 
+  escape_double = FALSE, col_types = cols(`Absolute Time` = col_time(format = "%H:%M:%OS")), 
+  trim_ws = TRUE)
+
+LEK94_02_ax <- read_delim(
+  "~/workspace/Projekt_Metalllegierungsschmelzen/Daten/ISS/LEK94/LEK94 Cycle 02/LEK94_02_ax.dat", 
+  "\t", 
+  escape_double = FALSE, col_types = cols(`Absolute Time` = col_time(format = "%H:%M:%OS")), 
+  trim_ws = TRUE)
+
+c02r <- LEK94_02_rad %>% 
+  transmute(
+    abs_time = `Absolute Time`,
+    #abs_time_r = `Absolute Time`,
+    cx_r = R_CenterX, # - mean(R_CenterX, na.rm = TRUE),
+    cy_r = R_CenterY,#  - mean(R_CenterY, na.rm = TRUE),
+    rx_r = R_RadiusX,
+    ry_r = R_RadiusY,
+    r1_r = R_RadiusRotated1,
+    r2_r = R_RadiusRotated2,
+    area_r = R_Area,
+    area_diff_r = R_AreaDiff,
+    temp_r = PyroTemp,
+    heat_ctrl_r = Htr_Uctrl,
+    heat_u_r = Htr_U,
+    heat_i_r = Htr_I,
+    heat_freq_r = Htr_FREQ,
+    view_r = "radial"
+    ) %>% 
+  arrange(abs_time) %>% 
+  mutate(delta_r = as.numeric(abs_time - lag(abs_time)))
+
+c02a <- LEK94_02_ax %>% 
+  transmute(
+    abs_time = `Absolute Time`,
+    #abs_time_a = `Absolute Time`,
+    cx_a = A_CenterX, # - mean(A_CenterX, na.rm = TRUE),
+    cy_a = A_CenterY, # - mean(A_CenterY, na.rm = TRUE),
+    rx_a = A_RadiusX,
+    ry_a = A_RadiusY,
+    r1_a = A_RadiusRotated1,
+    r2_a = A_RadiusRotated2,
+    area_a = A_Area,
+    area_diff_a = A_AreaDiff,
+    temp_a = PyroTemp,
+    heat_ctrl_a = Htr_Uctrl,
+    heat_u_a = Htr_U,
+    heat_i_a = Htr_I,
+    heat_freq_a = Htr_FREQ,
+    view_a = "axial"
+    ) %>% 
+  arrange(abs_time) %>% 
+  mutate(delta_a = as.numeric(abs_time - lag(abs_time)))
+
+c02 <- 
+  full_join(c02r, c02a, by = "abs_time") %>% 
+  mutate(
+    time = as.numeric(abs_time - min(abs_time, na.rm = TRUE)),
+    
+    
+    temp = coalesce(temp_r, temp_a),
+    heat_ctrl = coalesce(heat_ctrl_r, heat_ctrl_a),
+    heat_u = coalesce(heat_u_r, heat_u_a),
+    heat_i = coalesce(heat_i_r, heat_i_a),
+    heat_freq = coalesce(heat_freq_r, heat_freq_a),
+    cycle = 2, #"c02; UH=7.5V; Tmax=1650C",
+    view = if_else((!is.na(view_a) & !is.na(view_r)), "common_obs", coalesce(view_a, view_r))
+    ) %>% 
+  select(-temp_r, -temp_a, -heat_ctrl_r, -heat_ctrl_a, -heat_u_r, -heat_u_a, -heat_i_r, -heat_i_a, -heat_freq_r, -heat_freq_a,  -view_r, -view_a) %>% 
+  arrange(time) 
+
+rm(c02a, c02r, LEK94_02_ax, LEK94_02_rad)
+```
+## cycle 03
+```{r load cycle 03}
+LEK94_03_rad <- read_delim(
+  "~/workspace/Projekt_Metalllegierungsschmelzen/Daten/ISS/LEK94/LEK94 Cycle 03/LEK94_03_rad.dat", 
+  "\t", 
+  escape_double = FALSE, col_types = cols(`Absolute Time` = col_time(format = "%H:%M:%OS")), 
+  trim_ws = TRUE)
+
+LEK94_03_ax <- read_delim(
+  "~/workspace/Projekt_Metalllegierungsschmelzen/Daten/ISS/LEK94/LEK94 Cycle 03/LEK94_03_ax.dat", 
+  "\t", 
+  escape_double = FALSE, col_types = cols(`Absolute Time` = col_time(format = "%H:%M:%OS")), 
+  trim_ws = TRUE)
+
+c03r <- LEK94_03_rad %>% 
+  transmute(
+    abs_time = `Absolute Time`,
+    #abs_time_r = `Absolute Time`,
+    cx_r = R_CenterX, # - mean(R_CenterX, na.rm = TRUE),
+    cy_r = R_CenterY,#  - mean(R_CenterY, na.rm = TRUE),
+    rx_r = R_RadiusX,
+    ry_r = R_RadiusY,
+    r1_r = R_RadiusRotated1,
+    r2_r = R_RadiusRotated2,
+    area_r = R_Area,
+    area_diff_r = R_AreaDiff,
+    temp_r = PyroTemp,
+    heat_ctrl_r = Htr_Uctrl,
+    heat_u_r = Htr_U,
+    heat_i_r = Htr_I,
+    heat_freq_r = Htr_FREQ,
+    view_r = "radial"
+    ) %>% 
+  arrange(abs_time) %>% 
+  mutate(delta_r = as.numeric(abs_time - lag(abs_time)))
+
+c03a <- LEK94_03_ax %>% 
+  transmute(
+    abs_time = `Absolute Time`,
+    #abs_time_a = `Absolute Time`,
+    cx_a = A_CenterX, # - mean(A_CenterX, na.rm = TRUE),
+    cy_a = A_CenterY, # - mean(A_CenterY, na.rm = TRUE),
+    rx_a = A_RadiusX,
+    ry_a = A_RadiusY,
+    r1_a = A_RadiusRotated1,
+    r2_a = A_RadiusRotated2,
+    area_a = A_Area,
+    area_diff_a = A_AreaDiff,
+    temp_a = PyroTemp,
+    heat_ctrl_a = Htr_Uctrl,
+    heat_u_a = Htr_U,
+    heat_i_a = Htr_I,
+    heat_freq_a = Htr_FREQ,
+    view_a = "axial"
+    ) %>% 
+  arrange(abs_time) %>% 
+  mutate(delta_a = as.numeric(abs_time - lag(abs_time)))
+
+c03 <- 
+  full_join(c03r, c03a, by = "abs_time") %>% 
+  mutate(
+    time = as.numeric(abs_time - min(abs_time, na.rm = TRUE)),
+    
+    
+    temp = coalesce(temp_r, temp_a),
+    heat_ctrl = coalesce(heat_ctrl_r, heat_ctrl_a),
+    heat_u = coalesce(heat_u_r, heat_u_a),
+    heat_i = coalesce(heat_i_r, heat_i_a),
+    heat_freq = coalesce(heat_freq_r, heat_freq_a),
+    cycle = 3, #"c03; UH=8V; Tmax=1550C",
+    view = if_else((!is.na(view_a) & !is.na(view_r)), "common_obs", coalesce(view_a, view_r))
+    ) %>% 
+  select(-temp_r, -temp_a, -heat_ctrl_r, -heat_ctrl_a, -heat_u_r, -heat_u_a, -heat_i_r, -heat_i_a, -heat_freq_r, -heat_freq_a,  -view_r, -view_a) %>% 
+  arrange(time) 
+
+rm(c03a, c03r, LEK94_03_ax, LEK94_03_rad)
+```
+## cycle 04
+```{r load cycle 04}
+LEK94_04_rad <- read_delim(
+  "~/workspace/Projekt_Metalllegierungsschmelzen/Daten/ISS/LEK94/LEK94 Cycle 04/LEK94_04_rad.dat", 
+  "\t", 
+  escape_double = FALSE, col_types = cols(`Absolute Time` = col_time(format = "%H:%M:%OS")), 
+  trim_ws = TRUE)
+
+LEK94_04_ax <- read_delim(
+  "~/workspace/Projekt_Metalllegierungsschmelzen/Daten/ISS/LEK94/LEK94 Cycle 04/LEK94_04_ax.dat", 
+  "\t", 
+  escape_double = FALSE, col_types = cols(`Absolute Time` = col_time(format = "%H:%M:%OS")), 
+  trim_ws = TRUE)
+
+c04r <- LEK94_04_rad %>% 
+  transmute(
+    abs_time = `Absolute Time`,
+    #abs_time_r = `Absolute Time`,
+    cx_r = R_CenterX, # - mean(R_CenterX, na.rm = TRUE),
+    cy_r = R_CenterY,#  - mean(R_CenterY, na.rm = TRUE),
+    rx_r = R_RadiusX,
+    ry_r = R_RadiusY,
+    r1_r = R_RadiusRotated1,
+    r2_r = R_RadiusRotated2,
+    area_r = R_Area,
+    area_diff_r = R_AreaDiff,
+    temp_r = PyroTemp,
+    heat_ctrl_r = Htr_Uctrl,
+    heat_u_r = Htr_U,
+    heat_i_r = Htr_I,
+    heat_freq_r = Htr_FREQ,
+    view_r = "radial"
+    ) %>% 
+  arrange(abs_time) %>% 
+  mutate(delta_r = as.numeric(abs_time - lag(abs_time)))
+
+c04a <- LEK94_04_ax %>% 
+  transmute(
+    abs_time = `Absolute Time`,
+    #abs_time_a = `Absolute Time`,
+    cx_a = A_CenterX, # - mean(A_CenterX, na.rm = TRUE),
+    cy_a = A_CenterY, # - mean(A_CenterY, na.rm = TRUE),
+    rx_a = A_RadiusX,
+    ry_a = A_RadiusY,
+    r1_a = A_RadiusRotated1,
+    r2_a = A_RadiusRotated2,
+    area_a = A_Area,
+    area_diff_a = A_AreaDiff,
+    temp_a = PyroTemp,
+    heat_ctrl_a = Htr_Uctrl,
+    heat_u_a = Htr_U,
+    heat_i_a = Htr_I,
+    heat_freq_a = Htr_FREQ,
+    view_a = "axial"
+    ) %>% 
+  arrange(abs_time) %>% 
+  mutate(delta_a = as.numeric(abs_time - lag(abs_time)))
+
+c04 <- 
+  full_join(c04r, c04a, by = "abs_time") %>% 
+  mutate(
+    time = as.numeric(abs_time - min(abs_time, na.rm = TRUE)),
+    
+    
+    temp = coalesce(temp_r, temp_a),
+    heat_ctrl = coalesce(heat_ctrl_r, heat_ctrl_a),
+    heat_u = coalesce(heat_u_r, heat_u_a),
+    heat_i = coalesce(heat_i_r, heat_i_a),
+    heat_freq = coalesce(heat_freq_r, heat_freq_a),
+    cycle = 4, #"c04; UH=8.5V; Tmax=1500C",
+    view = if_else((!is.na(view_a) & !is.na(view_r)), "common_obs", coalesce(view_a, view_r))
+    ) %>% 
+  select(-temp_r, -temp_a, -heat_ctrl_r, -heat_ctrl_a, -heat_u_r, -heat_u_a, -heat_i_r, -heat_i_a, -heat_freq_r, -heat_freq_a,  -view_r, -view_a) %>% 
+  arrange(time) 
+
+rm(c04a, c04r, LEK94_04_ax, LEK94_04_rad)
+```
+## cycle 05
+```{r load cycle 05}
+LEK94_05_rad <- read_delim(
+  "~/workspace/Projekt_Metalllegierungsschmelzen/Daten/ISS/LEK94/LEK94 Cycle 05/LEK94_05_rad.dat", 
+  "\t", 
+  escape_double = FALSE, col_types = cols(`Absolute Time` = col_time(format = "%H:%M:%OS")), 
+  trim_ws = TRUE)
+
+LEK94_05_ax <- read_delim(
+  "~/workspace/Projekt_Metalllegierungsschmelzen/Daten/ISS/LEK94/LEK94 Cycle 05/LEK94_05_ax.dat", 
+  "\t", 
+  escape_double = FALSE, col_types = cols(`Absolute Time` = col_time(format = "%H:%M:%OS")), 
+  trim_ws = TRUE)
+
+c05r <- LEK94_05_rad %>% 
+  transmute(
+    abs_time = `Absolute Time`,
+    #abs_time_r = `Absolute Time`,
+    cx_r = R_CenterX, # - mean(R_CenterX, na.rm = TRUE),
+    cy_r = R_CenterY,#  - mean(R_CenterY, na.rm = TRUE),
+    rx_r = R_RadiusX,
+    ry_r = R_RadiusY,
+    r1_r = R_RadiusRotated1,
+    r2_r = R_RadiusRotated2,
+    area_r = R_Area,
+    area_diff_r = R_AreaDiff,
+    temp_r = PyroTemp,
+    heat_ctrl_r = Htr_Uctrl,
+    heat_u_r = Htr_U,
+    heat_i_r = Htr_I,
+    heat_freq_r = Htr_FREQ,
+    view_r = "radial"
+    ) %>% 
+  arrange(abs_time) %>% 
+  mutate(delta_r = as.numeric(abs_time - lag(abs_time)))
+
+c05a <- LEK94_05_ax %>% 
+  transmute(
+    abs_time = `Absolute Time`,
+    #abs_time_a = `Absolute Time`,
+    cx_a = A_CenterX, # - mean(A_CenterX, na.rm = TRUE),
+    cy_a = A_CenterY, # - mean(A_CenterY, na.rm = TRUE),
+    rx_a = A_RadiusX,
+    ry_a = A_RadiusY,
+    r1_a = A_RadiusRotated1,
+    r2_a = A_RadiusRotated2,
+    area_a = A_Area,
+    area_diff_a = A_AreaDiff,
+    temp_a = PyroTemp,
+    heat_ctrl_a = Htr_Uctrl,
+    heat_u_a = Htr_U,
+    heat_i_a = Htr_I,
+    heat_freq_a = Htr_FREQ,
+    view_a = "axial"
+    ) %>% 
+  arrange(abs_time) %>% 
+  mutate(delta_a = as.numeric(abs_time - lag(abs_time)))
+
+c05 <- 
+  full_join(c05r, c05a, by = "abs_time") %>% 
+  mutate(
+    time = as.numeric(abs_time - min(abs_time, na.rm = TRUE)),
+    
+    
+    temp = coalesce(temp_r, temp_a),
+    heat_ctrl = coalesce(heat_ctrl_r, heat_ctrl_a),
+    heat_u = coalesce(heat_u_r, heat_u_a),
+    heat_i = coalesce(heat_i_r, heat_i_a),
+    heat_freq = coalesce(heat_freq_r, heat_freq_a),
+    cycle = 5, #"c05; UH=7.2V; Tmax=1580C",
+    view = if_else((!is.na(view_a) & !is.na(view_r)), "common_obs", coalesce(view_a, view_r))
+    ) %>% 
+  select(-temp_r, -temp_a, -heat_ctrl_r, -heat_ctrl_a, -heat_u_r, -heat_u_a, -heat_i_r, -heat_i_a, -heat_freq_r, -heat_freq_a,  -view_r, -view_a) %>% 
+  arrange(time) 
+
+rm(c05a, c05r, LEK94_05_ax, LEK94_05_rad)
+```
+## cycle 06
+```{r load cycle 06}
+LEK94_06_rad <- read_delim(
+  "~/workspace/Projekt_Metalllegierungsschmelzen/Daten/ISS/LEK94/LEK94 Cycle 06/LEK94_06_rad.dat", 
+  "\t", 
+  escape_double = FALSE, col_types = cols(`Absolute Time` = col_time(format = "%H:%M:%OS")), 
+  trim_ws = TRUE)
+
+LEK94_06_ax <- read_delim(
+  "~/workspace/Projekt_Metalllegierungsschmelzen/Daten/ISS/LEK94/LEK94 Cycle 06/LEK94_06_ax.dat", 
+  "\t", 
+  escape_double = FALSE, col_types = cols(`Absolute Time` = col_time(format = "%H:%M:%OS")), 
+  trim_ws = TRUE)
+
+c06r <- LEK94_06_rad %>% 
+  transmute(
+    abs_time = `Absolute Time`,
+    #abs_time_r = `Absolute Time`,
+    cx_r = R_CenterX, # - mean(R_CenterX, na.rm = TRUE),
+    cy_r = R_CenterY,#  - mean(R_CenterY, na.rm = TRUE),
+    rx_r = R_RadiusX,
+    ry_r = R_RadiusY,
+    r1_r = R_RadiusRotated1,
+    r2_r = R_RadiusRotated2,
+    area_r = R_Area,
+    area_diff_r = R_AreaDiff,
+    temp_r = PyroTemp,
+    heat_ctrl_r = Htr_Uctrl,
+    heat_u_r = Htr_U,
+    heat_i_r = Htr_I,
+    heat_freq_r = Htr_FREQ,
+    view_r = "radial"
+    ) %>% 
+  arrange(abs_time) %>% 
+  mutate(delta_r = as.numeric(abs_time - lag(abs_time)))
+
+c06a <- LEK94_06_ax %>% 
+  transmute(
+    abs_time = `Absolute Time`,
+    #abs_time_a = `Absolute Time`,
+    cx_a = A_CenterX, # - mean(A_CenterX, na.rm = TRUE),
+    cy_a = A_CenterY, # - mean(A_CenterY, na.rm = TRUE),
+    rx_a = A_RadiusX,
+    ry_a = A_RadiusY,
+    r1_a = A_RadiusRotated1,
+    r2_a = A_RadiusRotated2,
+    area_a = A_Area,
+    area_diff_a = A_AreaDiff,
+    temp_a = PyroTemp,
+    heat_ctrl_a = Htr_Uctrl,
+    heat_u_a = Htr_U,
+    heat_i_a = Htr_I,
+    heat_freq_a = Htr_FREQ,
+    view_a = "axial"
+    ) %>% 
+  arrange(abs_time) %>% 
+  mutate(delta_a = as.numeric(abs_time - lag(abs_time)))
+
+c06 <- 
+  full_join(c06r, c06a, by = "abs_time") %>% 
+  mutate(
+    time = as.numeric(abs_time - min(abs_time, na.rm = TRUE)),
+    
+    
+    temp = coalesce(temp_r, temp_a),
+    heat_ctrl = coalesce(heat_ctrl_r, heat_ctrl_a),
+    heat_u = coalesce(heat_u_r, heat_u_a),
+    heat_i = coalesce(heat_i_r, heat_i_a),
+    heat_freq = coalesce(heat_freq_r, heat_freq_a),
+    cycle = 6, #"c06; UH=8.2V; Tmax=1540C",
+    view = if_else((!is.na(view_a) & !is.na(view_r)), "common_obs", coalesce(view_a, view_r))
+    ) %>% 
+  select(-temp_r, -temp_a, -heat_ctrl_r, -heat_ctrl_a, -heat_u_r, -heat_u_a, -heat_i_r, -heat_i_a, -heat_freq_r, -heat_freq_a,  -view_r, -view_a) %>% 
+  arrange(time) 
+
+rm(c06a, c06r, LEK94_06_ax, LEK94_06_rad)
+```
+
+## LEK94
+```{r lek96 cycle 1-6}
+lek94 <- 
+  c01 %>% union(c02) %>% union(c03) %>% union(c04) %>% union(c05) %>% union(c06) %>% 
+  rownames_to_column(var="obs") %>% 
+  mutate(
+    cx = if_else(view != 'common_obs', coalesce(cx_r, cx_a), NA_real_),
+    cy = if_else(view != 'common_obs', coalesce(cy_r, cy_a), NA_real_),
+    rx = if_else(view != 'common_obs', coalesce(rx_r, rx_a), NA_real_),
+    ry = if_else(view != 'common_obs', coalesce(ry_r, ry_a), NA_real_)
+  )
+lek94
+```
+
+## obscure observations
+```{r obscure observations}
+lek94 <- 
+  lek94 %>% 
+  mutate(obscure = FALSE) %>% 
+  mutate(obscure = if_else((!is.na(cx_a) & cx_a < 5), TRUE, obscure)) %>% 
+  mutate(obscure = if_else((!is.na(cy_a) & cy_a < 5), TRUE, obscure))
+
+lek94 %>% filter(view == "common_obs") %>% arrange(time) %>% transmute(obs, time, diff = time - lag(time)) 
+```
+
+## Versuchsplan
+```{r versuchsplan}
+versuchsplan <- read_excel("~/workspace/Projekt_Metalllegierungsschmelzen/levitator/data/rohdaten/Versuchsplan_LEK94.xlsx")
+```
+## Parameter/Ergebnisse
+```{r critical parameters}
+critical_params <- 
+  as_tibble(read_csv("~/workspace/Projekt_Metalllegierungsschmelzen/levitator/data/rohdaten/critical_params_lek94_c1-c6.csv", 
+                  col_types = 
+                    cols(
+                      cycle = col_integer(),
+                      pulse = col_integer(),
+                      t_p_s = col_time(format = "%H:%M:%OS"),
+                      t_p_e = col_time(format = "%H:%M:%OS"), 
+                      t_temp_s = col_time(format = "%H:%M:%OS"), 
+                      t_temp_e = col_time(format = "%H:%M:%OS"),
+                      temp_max_liquid = col_number(),
+                      temp_at_p_s = col_number(),
+                      temp_at_p_e = col_number(),
+                      temp_min_liquid = col_number()
+                    )
+  )
+)
+attr(critical_params, "spec") <- NULL
+
+
+```
+
+# Add data to package
+```{r add data to pckg}
+devtools::use_data(lek94, overwrite = TRUE)
+devtools::use_data(versuchsplan, overwrite = TRUE)
+devtools::use_data(critical_params, overwrite = TRUE)
+devtools::document()
+
+rm(list = ls())
+```
+

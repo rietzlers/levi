@@ -1,0 +1,345 @@
+---
+title: "LEK94 Auswertung Zyklus 1-6"
+author: "Stephan Rietzler"
+output:
+  html_notebook:
+    code_folding: hide
+    toc: yes
+  html_document:
+    toc: yes
+  pdf_document:
+    number_sections: yes
+  tufte::tufte_html:
+    number_sections: yes
+    toc: yes
+---
+
+```{r ws setup, include=FALSE}
+library(tidyverse)
+library(plotly)
+library(magrittr)
+library(devtools)
+library(readxl)
+library(shiny)
+```
+
+
+```{r setup this notebook, include=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE,
+  include = TRUE,
+  warning = FALSE,
+  message = FALSE,
+  cache = TRUE
+)
+```
+
+```{r load data into ws}
+lek94 <- levitator::lek94
+versuchsplan <- levitator::versuchsplan
+critical_params <-levitator::critical_params
+```
+
+
+# Versuchsplan/-durchführung
+In den ersten sechs Zyklen sollte gezielt der Einfluß der
+Temperatur auf Oberflächenspannung und Viskosität von LEK94 in der
+Schmelze untersucht werden. 
+
+Hierzu müssen (vergleichbare!) Anregungspulse zu unterschiedlichen Temperaturen gesetzt
+werden. Auswertung der beobachteten Kugeloszillationen direkt nach dem
+Impuls liefern dann Werte der Oberflächenspannung und Viskosität bei dieser
+Temperatur.
+
+**Frage an Rainer: A: Ist das so korrekt? Falls ja, wie wurde versucht dieses Ziel umzusetzten?**
+Im folgenden sind die mir zur Verfügung stehenden Versuchsparameter aufgelistet.
+Was genau bedeuten diese? 
+
+1. T_max ist die angestrebte maximale Temperatur der Probe!? 
+2. Wie versucht man einen vorgegebenen Wert für T_max experimentell zur erreichen?
+3. Was ist $U_{H,ctr}$? Gibt es einen Zhg. zu T_max? Scheint nicht so! 
+4. Pulsamplitude ist die Spannung und damit ein Maß für die 'Stärke' der Anregung!? 
+Wie wurde die Dauer festgelegt?
+5. Wie wurden die Zeitpunkte der Anregungsimpulse festgelegt?
+6. Was bedeutet der Kommentar: '$U_{H,ctr} =$ heating from 1350-1450C'?
+
+```{r}
+versuchsplan
+```
+
+In der folgenden Graphik sind die sechs Zyklen als Funktion der 
+absoluten Zeit dargestellt. 
+```{r}
+lek94 %>%  
+  ggplot(aes(x = abs_time)) +
+  geom_line(aes(y = temp), color = "red") +
+  geom_line(aes(y = heat_u), color = "blue", linetype = "dashed") +
+  ylab("temp and heiz-spannung") +
+  facet_grid(cycle ~ .)
+```
+Die Versuche wurden offensichtlich wie geplant in der Reihenfolge 1-6 um Mitternacht durchgeführt. 
+
+# Heizkurve und Heizpulse
+
+Im folgenden werden die gemessenen Temperatur-Zeit-Verläufe
+der ersten sechs Zyklen genauer untersucht.
+
+**Kommentar an Rainer:**  Du hast alle Daten messerscharf bei T_max abgeschnitten.
+Besser wäre es wenn man die Daten ab dem Einsetzen des Schmelzvorganges hätte.
+
+```{r }
+lek94 %>%
+  left_join(versuchsplan, by = "cycle") %>% 
+  mutate(cycle = factor(cycle,
+                        levels = c(4, 6, 3, 5, 1, 2),
+                        labels = c("c4/Tm=1500", "c6/Tm=1540", "c3/Tm=1550", "c5/Tm=1580", "c1/Tm=1600", "c2/Tm=1650"))
+         ) %>%
+  filter(time < 20) %>%
+  
+  ggplot(aes(x = time)) +
+  
+  geom_line(aes(y = temp), color = "red") +
+  geom_line(aes(y = heat_u + 1250), color = "blue", linetype = "dashed") +
+  
+  geom_hline(aes(yintercept = T_max), color = "grey", linetype = "dashed") +
+  geom_text(aes(x=10, y = T_max, label = "T_max geplant"), color = "grey", vjust = 1) +
+  
+  facet_wrap(~cycle, strip.position = "top") +
+  
+  labs(
+    title = "Temp-Zeit-Kurven; Anordnung: Aufsteigend nach T_max geplant",
+    caption = "Die vorhandenen Daten wurden scharf an Tmax (gemessen) abgeschnitten! Dadurch ist 
+       es schwierig zu beurteilen ob die geplante Tmax tatsächlich erreicht wurde.",
+    x = "Versuchszeit[s]",
+    y ="Temp[°C] and heiz-spannung[V + 1250]"
+  )
+```
+Nimmt man an das die Daten wirklich an $T_{max_{gemessen}}$ abgeschnitten wurden, so wurde die Zielvorgabe
+bzgl. Tmax nicht einmal in der Tendenz erreicht! 
+
+## Auffälligkeiten
+```{r}
+for(cycle_current in  1:6){
+  g <-
+    lek94 %>%
+    left_join(versuchsplan, by = "cycle") %>% 
+    filter(cycle == cycle_current, 1 < time, time < 12) %>%
+    mutate(cycle = factor(cycle,
+                          levels = c(4, 6, 3, 5, 1, 2),
+                          labels = c("c4/Tm=1500", "c6/Tm=1540", "c3/Tm=1550", "c5/Tm=1580", "c1/Tm=1600", "c2/Tm=1650"))
+    ) %>%
+    
+    ggplot(aes(x = time)) +
+    
+    geom_line(aes(y = temp), color = "red") +
+    geom_line(aes(y = heat_u + 1350), color = "blue", linetype = "dashed") +
+    
+    #geom_hline(aes(yintercept = T_max), color = "grey", linetype = "dashed") +
+    #geom_text(aes(x=10, y = T_max, label = "T_max geplant"), color = "grey", vjust = 1) +
+    
+    labs(
+      title = paste("Cycle 0", cycle_current, sep = ""),
+      caption = "Offensichtlich sind Heizpuls und Temperatur-Signal nicht sauber synchronisiert.
+    Der Anstieg der Temperatur wird VOR dem Puls detektiert.", 
+    x = "Versuchszeit[s]",
+    y ="Temp[°C] and heiz-spannung[~]"
+    )
+  print(g)
+} 
+rm(g)
+```
+
+## Meßgenauigkeit Pyrometer
+
+```{r}
+cycle_current = 6
+lek94 %>%
+  left_join(versuchsplan, by = "cycle") %>% 
+  filter(cycle == cycle_current, 11.7 < time, time < 11.9) %>%
+  mutate(cycle = factor(cycle,
+                        levels = c(4, 6, 3, 5, 1, 2),
+                        labels = c("c4/Tm=1500", "c6/Tm=1540", "c3/Tm=1550", "c5/Tm=1580", "c1/Tm=1600", "c2/Tm=1650"))
+         ) %>%
+  ggplot(aes(x = time, color = view)) +
+  geom_point(aes(y = temp)) +
+  labs(
+    #title = "Qualität des Pyrometers",
+    subtitle = paste("Exemplarisch am Temp-Verlauf zum Puls 2 des Cycle 0", cycle_current, sep = ""),
+    caption = "Farblich differenziert sind die observationen aus dem Axial- und Radial-Datensatz",
+    x = "Versuchszeit[s]",
+    y ="Temp[°C]"
+  )
+```
+
+An der Detail-Darstellung der Temp-Zeit-Kurve erkennt man:
+
+* Axial und Radial Daten sind korrekt synchronisiert.
+* Meß-Rate des Pyrometers ist ca. 100 Hz (Temp ist immer über max. 10ms konstant).
+* Meß-Genauigkeit ist ca. $\pm 1$°C (dies sind die Temp-Sprünge benachbarter Temp-Plateaus).
+
+Aus diesem Grund werden alle die Tempratur betreffenden Daten auf Grad gerundet. Zeiten
+auf 1/100 s.
+
+## Thermodynamische Werte
+Aus diesen Daten werden zunächst einige Versuchsparameter bestimmt
+die für die weitere Auswertung wichtig sind, wie z.B.:
+
+1. Zeitpunkt und Dauer der Heizpulse
+2. Zeitpunkt des zughörigen Temperatur-Anstiegs. *Sollte nach dem Puls sein!*
+3. Temperatur der Probe unmittelbar vor dem Heizpuls. (Erster markanter Knick in der Kurve) 
+4. Temperatur der Probe unmittelbar nach dem Heizpuls. (Zweiter markanter Knick in der Kurve)
+5. Temperatur-Zunahme durch den Heizpuls.
+6. $T_{max_{liquid}}$ und zugehörige Zeit
+7. $T_{min_{liquid}}$ und zugehörige Zeit
+
+Diese Daten werden aus der graphischen Darstellung der Messkurven 
+Temp./Heizkontroll-Spannung vs. absolute Zeit ermittelt,
+wie sie im folgenden Plot exemplarisch für Zyklus 3 dargestellt sind.
+
+```{r echo = FALSE}
+
+cycle_current <- 2
+
+(
+  lek94 %>%
+  left_join(versuchsplan, by = "cycle") %>%
+  filter(cycle == cycle_current, time < 20) %>%
+  ggplot(aes(x = abs_time)) +
+  geom_point(aes(y = temp), color = "red") +
+  geom_point(aes(y = heat_u + 1350), color = "blue") +
+  #scale_x_continuous(sec.axis = sec_axis(trans = ~. - min((lek94 %>% filter(cycle == cycle_current))$abs_time))) +
+  labs(
+    #title = "Qualität des Pyrometers",
+    #subtitle = paste("Cycle 0", cycle_current, sep = ""),
+    #caption = "Farblich differenziert sind die observationen aus dem Axial- und Radial-Datensatz",
+    x = "Versuchszeit[s]",
+    y ="Temp[°C]"
+  )
+)# %>% ggplotly()
+```
+
+*Bemerkung:* Mithilfe der gemessenen Temperatur-Zunahme der Probe und der 
+(wahrscheinlich) relativ einfach zu berechnenden eingebrachten Energie durch 
+den Heizpuls könnte man z.B. die Wärmekapazität der Probe bestimmen.
+
+Zur Kontrolle sind die ermittelten (relevanten thermodynamischen) Werte
+im folgenden Plot examplarisch Zyklus 2 dargestellt.
+
+```{r, eval=FALSE, include=FALSE}
+cycle_current <- 3
+
+
+lek94 %>% filter(cycle == cycle_current, time < 20) %>%
+  ggplot(aes(x = time)) +
+  geom_point(aes(y = temp), color = "red") +
+  geom_point(aes(y = heat_u + 1350), color = "blue") +
+  labs(
+    x = "Versuchszeit[s]",
+    y ="Temp[°C]"
+  )
+
+```
+
+
+# Center-Motion
+
+
+```{r cycle 01 data consistency check}
+(  
+lek94 %>% filter(view != "common_obs" & !obscure, cycle==2, view=="radial") %>% 
+  ggplot(aes(x = time)) + 
+  geom_line(aes(y = cx_a), size = 1, color = "black") +
+  geom_line(aes(y = cy_a), size = 1, color = "red", alpha = 0.2) +
+  geom_line(aes(y = cx_r), size = 1, color = "black") +
+  geom_line(aes(y = cy_r), size = 1, color = "red", alpha = 0.2) +
+  facet_grid(cycle ~ view, labeller = label_wrap_gen()) + 
+  guides(color = "none") +
+  labs(
+    y = "center-motion of droplet: x (black) and y (red) coordinates[pixel]",
+    x = "time[s]; 0s: start of recording"
+  )
+) #%>%  ggplotly()
+
+
+```
+
+
+
+**Fragen:**
+
+1. Wieviel Pixel haben die Kameras?
+2. Entfernung der Kameras von der Probe: Sind beide gleich weit entfernt? 
+D.h. ist die scheinbar größere Oszillation in der Ebene senkrecht zur 
+Zylinder-Symmetrie-Achse (Dipol des Impulsfeldes) des Versuchsaufbaus
+nur ein Artefakt der Projektion?
+3. Ich nehme an die x- und y- Koordinatenachsen beider "views" sind 
+parallel zu den Bildrändern. Bei 'korrekter' Ausrichtung beider Kameras
+sollte eine Raumrichtung von beiden Kameras aus unterschiedlicher Perspektive
+beobachtet werden! *Welche ist das?*  
+4. Warum ist der Offset bei der x- und y-Center-Koordinate der radial-Kamera
+verschieden? Eine mögliche Erklärung ist: Die Kamera ist *nicht korrekt*
+auf die Mitte des Versuchsaubaus ausgerichtet. Kann das sein?
+
+# Geometrische Daten
+## Radien
+
+```{r}
+(
+lek94 %>% filter(time < 12, cycle == 3) %>% left_join(critical_params, by = "cycle") %>% 
+  ggplot(aes(x = abs_time, color = view)) +
+  geom_line(aes(y = ry), size = 0.05) +
+  geom_vline(aes(xintercept = t_p_s)) +
+  geom_vline(aes(xintercept = t_p_e), color = "red") +
+  #geom_point(aes(y = ry), size = 0.05, alpha = 0.1) +
+  facet_grid(cycle ~ .)
+) %>% ggplotly()
+```
+Fragen:
+
+* Bei der Radial-Kamera fangen die radien zeitlich versetzt zum schwingen an. 
+Zudem machen sie einen sprung.
+
+
+## Phase zwischen Ellipsen-Hauptachsen
+
+Wenn eine Ellipse gefittet wird, **müssen** die Signale 90° phasenverschoben sein!
+D.h. die Lissajou-Figur sollte eine verrauschte Ellipse sein! Das ist offensichtlich nicht der Fall!
+
+Wie kann es sein dass ein Radius der Ellipse langsam auf Null schrumpt? Eigentlich 
+dürfte es das nicht geben!
+
+**Bei raumfesten Hauptachsen kann es sein das es einen Phasensprung gibt!** wenn sich 
+der oszillerende Tropfen wegdreht! Da dann die Zuordnung der Hauptachsen zu den Radien
+springt!
+
+```{r}
+t0 <- 7.3
+dt <- 0.5
+lek94 %>% filter(view != "common_obs" & !obscure, cycle==2, view=="radial") %>%
+  arrange(time) %>% filter(between(time,t0,t0+dt)) %>% 
+  ggplot(aes(x=rx, y=ry)) +
+  geom_path()
+```
+```{r}
+lek94 %>% filter(view != "common_obs" & !obscure, cycle==2, view=="radial") %>% 
+  filter(between(time,t0,t0+dt)) %>% 
+  ggplot(aes(x=time)) +
+  geom_line(aes(y=rx)) + geom_line(aes(y=ry), color="red", alpha=0.3)
+```
+
+
+# Fragen/Bemerkungen
+
+* Wurden alle sechs Zyklen mit der gleichen Probe durchgeführt?
+
+
+## Frequenzauflösung
+
+Die Präzision der Frequenz ist durch die Länge des Zeitfensters gegeben. D.h. 
+bei Time-Windows von ca. 0.5s ist die Frequenz-Präzision ca. 2 Hz. Durch
+fitten einer Gauß- oder Lorentzkurve (inhaltlich begründet) kann diese vielleicht 
+etwas verbessert werden. 
+
+**Mit welcher Begründung wird eine Lorentzkurve gefittet?** *Linear* Gedämpfter harmonischer
+Oszillator? Das ist die gleiche Begründung, warum im Zeitbereich
+eine Exponentialfunktion gefittet wird.

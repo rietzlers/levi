@@ -1,0 +1,566 @@
+---
+title: "Manual zur Auswertungssoftware 'Levitator' von  EML-Experimenten"
+author: "Stephan Rietzler"
+output:
+  pdf_document: default
+  html_notebook: default
+---
+
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(echo=FALSE, warning=FALSE, message=FALSE, error = FALSE,
+                      fig.path='figures/')
+library(tidyverse)
+library(phonTools)
+library(xlsx)
+library(magrittr)
+library(readr)
+```
+# Annahmen und Auswertungsideen
+
+Aufgrund theoretischer Überlegungen  sollten die Signale (z.B. R_RadiusX), welche die Oszillation des flüssigen Metalltropfens 
+beschreiben, folgende Signalform haben:
+$y = a\cdot e^{-b(T)\cdot t}\cdot sin(2\pi\cdot f(T)\cdot t)$ , wobei $t$=Beobachtungszeit, d.h. t=0 bezeichnet den Start der Aufnahme und $T$=Temperatur der Probe.  
+Die für die Materialeigenschaft zentrale Größe Temperatur wird kontinuierlich
+gemessen, d.h. man kennt $T=T(t)$ und man bekommt damit:
+$y = a\cdot e^{-b(T)\cdot t}\cdot sin(2\pi\cdot f(T)\cdot t)$  
+
+Die Frequenz $f(T)$ und die Dämpfung $b(T)$ stehen in 
+folgendem Zusammenhang mit den Materialeigenschaften Viskosität 
+$\eta (T)$ und Oberflächenspannung $\sigma (T)$:   
+- $\eta (T) = \frac{3}{20\pi}\cdot \frac{m}{r}\cdot b(T)$  
+- $\sigma (T) = \frac{3}{8}\pi m f(T)^2$
+
+Aus den optischen Daten werden nun Signale extrahiert welche die Oszillation
+der flüssigen Metallegierung beschreiben. (Details: Tevi-Software) 
+
+Aufgabe ist es nun, aus diesen Signalen 'gute' Schätzungen für die Zeit- bzw. Temperatur-
+abhängige Frequenz und Dämpfung des Signals zu bekommen. 
+
+Hierzu unterteilt man die Beobachtungszeit in Zeitfenster gleicher (!)
+Länge und unterstellt in einem solchen Zeitfenster folgende Signal-Form:
+$y = a\cdot e^{-b \cdot t}\cdot sin(2\pi\cdot f\cdot t)$, 
+d.h. konstante Dämfung und Frequenz. Wobei das 'Zeitfenster' zur bestimmung der 
+Dämpfung mehrere Zeitfenster zur bestimmung der Frequenz umfasst. Zur Bestimmung
+der Dämpfung kann man also nicht mehr diese 'ideale' Signalform unterstellen.
+
+Die Schätzung der Frequenz und Dämpfung aus den Rohsignalen beruht auf folgendem Ansatz:
+In einem gegebenem Zeitfenster wird das Signal Fourier transformiert, und anhand der
+(geglätteten) Absolut-Beträge der Fourier-Koeffizienten die dominante Frequenz $f_D$ mit
+zugehörigem Absolut-Betrag $A(f_D)$ des entsprechenden Fourier-Koeffizienten ermittelt.
+
+Da die Zeitfenster alle gleich (!) lang sind ist $A(f_D)$ ein Maß für die 
+Signal-Amplituden der dominanten Frequenz $f_D$ in jedem Zeitfenster mit dem 
+die Dämpfung des dominanten Signals über mehrere Zeitfenster ermittelt werden kann. 
+D.h. die Dämfung $b(T)$ wird ermittelt indem  eine Exponential-Funktion 
+$a \cdot e^{-b\cdot t}$ an $A\big(f_D(T(t)), T(t)\big)$ gefittet wird. Hierbei 
+muß man annehmen das die Temperatur über den Bereich über den gefittet wird 
+konstant ist. Dies ist aufgrund der schnellen Abkühlung des Tropfens sicher nicht
+gegeben. Die Angegebene Dämpfung (und damit Viskosität) ist also bestenfalls ein 
+Mittelwert über den entsprechenden Temperaturbereich. 
+
+Zur Bestimmung von $\eta (T)$ wird *generell* ein Zeitfenster gewählt welches durch eine
+Heizpuls begrenzt ist. D.h. bei zwei Heizpulsen bekommt man drei Zeitfenster in denen eine
+Viskosität bestimmt werden kann. Die zur jeweiligen Größe angegebene Temperatur entspricht
+dabei immer dem Mittelwert der Temperatur in dem verwendeten Zeitfenster.
+
+Andere Methoden zur Schätzung der Signaldämpfung  sind möglich und werden diskutiert. 
+
+Zur Bestimmung der Oberflächenspannung benötigt man nur die Frequenz der Schwingung.
+Diese Frequenz ermittelt man in jedem gewählten Zeitfenster als die Frequenz mit 
+der 'maximalen' Fourier-Koeffizienten-Amplitude. Wobei diese geglättet und etwas 
+aufbereitet werden. Aus dieser Frequenz bestimmt man dan zu jedem Zeitpunkt (Mittelpunkt
+des gewählten Zeitfensters)  die Oberflächenspannung
+$\sigma (T(t))$. Die Temperaturabhängigkeit $\sigma (T)$ wird nun durch einen linearen Fit an die in 
+den einzelenen Zeitfenstern ermittelten Oberflächenspannungen $\sigma (T)$ bestimmt.
+
+
+
+
+# Generelle Bemerkungen
+
+Zur Auswahl der Signale: 'Gemessen' werden zunächst vier Größen. Nämlich
+die Hauptradien zweier um 45° gegeneinander gedrehter Ellipsen. Offen ist 
+noch wie diese Größen von der Tevi-Software ermittelt werden. *Würde eine eine Ellipse konstanter
+Fläche gefittet (was ein Versuch wäre die Randbedingung: Konstantes Volumen zu berücksichtigen)
+so müßten die Signale x und y exakt 180° phasenverschoben sein!* Eine genaue Kenntniss
+wie die Signale von der Tevi-Software ermittelt werden wäre sicher hilfreich. 
+
+Signale wie z.B. Radius-Summe und -Differenz bieten aufgrund physikalischer 
+Überlegungen gewisse Vorteile. Die Signale der Radien der beiden Hauptachsen
+sollten theoretisch 180° phasenverschoben sein. Durch Differenzbildung sollte 
+sich dadurch ein deutlich verstärktes Signal der Schwingung ergeben. Zudem hat die
+Differenzbildung den Vorteil das sich Radienvergrößerungen und -verkleinerungen durch
+Bewegung der Kugel auf die Kamera zu aufheben. Statistisch haben sie aber den Nachteil das
+sie als Summe von Meßsignalen ein höheres Rauschen aufweisen. Das erwartete
+bessere signal-rausch-verhältnis dieser signale ist im Regelfall nicht zu 
+beobachten. Aus diesem Grund werden default-mäßig 
+**nur die Signale Radius X und Y ausgewertet**. Die Radien der gedrehten Ellipse werden
+ebenfalls defaultmäßig nicht ausgewertet, da nicht wirklich klar ist 
+wieviel unabhängige Informationen diese Signale zusätzlich liefern.
+
+Heuristische Analysen legen nahe das sich die Endergebnisse im Rahmen der 
+Messgenauigkeit nicht änderen wenn man diese Signale hinzunimmt. 
+
+Aus Gründen der Effizienz werden deswegen nur die erwähnten Signale untersucht.
+
+Die aus einem Datensatz (d.h. eine Kamera) geschätzten Viskositäten zu einer Temperatur 
+werden mit einem Standardfehler $se$ als Maß für die Messgenauigkeit 
+angegeben. Umfasst das Intervall Messwert $\pm 2\cdot se$ die Null, so wird dieser 
+Messwert aufgrund der hohen Messungenauigkeit nicht in die Auswertung aufgenommen.
+
+Vergleicht man die empirischen Daten mit simulierten Signalen so erweist es 
+sich als nicht ganz einfach offensichtlich vorhandene Rauschen der Signale zu 
+reproduzieren. Es  scheint als ob das Rauschen amplitudenabhängig ist. D.h. bei 
+großen Amplituden scheint es als ob die Signale stärker verrauscht sind. Die könnte durch die 
+instabile Signalgenerierung durch Tevi verursacht sein. Bei großen Amplituden,
+d.h. am Anfang der Auswertung oszilliert der Tropfen noch sehr stark, wodurch 
+er immer wieder in die Bildberandung läuft und der Algorithmus dann die Signale
+total verfälscht. Ich denke dieses Problem könnte man durch einen stabilen Fit
+einer Ellipse und bessere Kantendetektion beheben. 
+
+## Auffälligkeiten 
+
+1. Es scheint niederfrequentes additives Rauschen zu dominieren. D.h. die Unterstellung
+daß das additive Rauschen weiß ist scheint nicht zuzutreffen.
+
+# Schätzung der Dämpfung aus den Rohsignalen
+
+Zur Bestimmung der Dämpfung aus aus den gemessenen Signalen werden drei Ansätze vorgestellt
+und bzgl. ihrer Eigenschaften in Simulationen verglichen.
+
+Zur Wahl des Simulations-Modells: Oft sind im Signal Modulationen erkennbar, so daß man nicht von dem
+erwarteten idealen Signal $ae^{-bt}sin(2\pi f t)$ ausgehen kann. Außerdem erwartet man
+eine leichte Drift der Frequenz. Zur Untersuchung 
+der Qualität der verschiedenen Ansätze zur Bestimmung der Dämpfungszeitkonstanten
+wird also ein Signal mit dem deterministischen Teil
+$ae^{-bt}sin(2\pi \cdot (f + t/10) \cdot t) \sin(2\pi 0.5t)$
+verwendet.
+
+Um das Signal-Rauschen zu modellieren ist folgendes zu berücksichtigen: Aufgrund
+des Detektions-Algorithmuses von Tevi ist davon auszugehen, dass das Rauschen 
+von der Amplitude abhängt. Konkret: Bei großen Amplituden am Anfang beobachtet man 
+ein strärkeres Signal-Rauschen, da die Probe insgesamt unruhiger ist und oft 
+auch in die Bild-Berandung 'läuft' was sich in einem starken Siganal-Rauschen 
+bemerkbar macht. Aus diesem Grund wird ein multiplikativer und additiver 
+Noise-Term in das Simulations-Modell aufgenommen. Als Ansatz für die Signal-Simulation
+wird deswegen verwendet: 
+\[y(t) = \bigg(ae^{-bt}sin(2\pi \cdot (f + t/10) \cdot t + \pi/2) \sin(2\pi 0.5t + \pi/2)\bigg)\cdot \epsilon_{*}(t) + \epsilon_+(t)\]
+$\epsilon_{*}(t)$ und $\epsilon_+(t)$ sind iid Normalverteilt. Dieses Signal 
+wird mit 200Hz abgetastet.
+
+Zur Veranschaulichung und zum Vergleich der Ansätze werden beispielhaft folgende Parameter verwendet:  
+\[y(t) = \bigg(20e^{-0.7t}sin(2\pi \cdot (30 + t/10) \cdot t + \pi/2) \sin(2\pi 0.5t + \pi/2)\bigg)\cdot \epsilon_{*}(t) + \epsilon_+(t)\]
+\[y(t) = \bigg(20e^{-0.5t}sin(2\pi \cdot (32 + t/10) \cdot t + \pi/2) \sin(2\pi 0.5t + \pi/2)\bigg)\cdot \epsilon_{*}(t) + \epsilon_+(t)\]
+\[y(t) = \bigg(20e^{-0.3t}sin(2\pi \cdot (34 + t/10) \cdot t + \pi/2) \sin(2\pi 0.5t + \pi/2)\bigg)\cdot \epsilon_{*}(t) + \epsilon_+(t)\]
+mit $\epsilon_*(t)$ iid $N(1, 0.5)$ und  $\epsilon_+(t)$ iid $N(0, 2)$
+
+Das Signal wird im Intervall $t \in [0, 4]$ mit einer samplerate = 200Hz generiert und ausgewertet.
+Folgende Plots zeigen jeweils eine Realisierung des Signals mit den unterschiedlichen Parametern:
+```{r sim_parameter, message=FALSE, warning=FALSE}
+sample_signals <- read_csv("~/workspace/Projekt_Metalllegierungsschmelzen/Daten/sample_signals_07_30Hz.csv")
+signal_damping_const = 0.7# [1/s]
+f = 30
+sample_signals %>% mutate(r = s0) %>% 
+  ggplot(aes(x=t, y=r)) + geom_line() + labs(title=paste("damping-const.: ", signal_damping_const, "1/s, f=",f , "Hz"))
+
+sample_signals <- read_csv("~/workspace/Projekt_Metalllegierungsschmelzen/Daten/sample_signals_05_32Hz.csv")
+signal_damping_const = 0.5# [1/s]
+f = 32
+sample_signals %>% mutate(r = s0) %>% 
+  ggplot(aes(x=t, y=r)) + geom_line() + labs(title=paste("damping-const.: ", signal_damping_const, "1/s, f=",f , "Hz"))
+
+sample_signals <- read_csv("~/workspace/Projekt_Metalllegierungsschmelzen/Daten/sample_signals_03_34Hz.csv")
+signal_damping_const = 0.3# [1/s]
+f = 34
+
+sample_signals %>% mutate(r = s0) %>% 
+  ggplot(aes(x=t, y=r)) + geom_line() + labs(title=paste("damping-const.: ", signal_damping_const, "1/s, f=",f , "Hz"))
+```
+
+
+##Ansatz: Signal-Transformation und linearer Fit
+Das Rohsignal $y$ wird quadriert und log-transformiert:
+\[\tilde y(t) = log(y(t)^2) \approx  log(a^2) - 2bt + log(sin(\omega t)^2) + log(\epsilon_*^2)\]
+An dieses Signal wird  eine Gerade gefittet. Eine Schätzung der Dämpfung $b$ bekommt 
+man dann aus der Schätzung der Geradensteigung $m$ durch: $b=-\frac{m}{2}$. 
+Der Standardfehler $se_b$ (Messunsicherheit) von $b$ ergibt sich dann aus dem geschätzten
+Standardfehler $se_m$ von $m$: $se_b = \frac{1}{2}\cdot se_m$. 
+
+Die korrekte Schätzung von $se_m$ beruht dabei auf der Annahme dass das signal von folgender
+Form ist: $y(t) = a + mt + \epsilon(t)$, wobei $\epsilon (t)$ iid normalverteilt ist. 
+
+Aufgrund der Transformation sieht man: $\epsilon (t) = log(sin(\omega t)^2) + \tilde \epsilon (t)$,
+d.h. $\epsilon (t)$ ist bei diesem Ansatz offensichtlich sehr stark (positiv) autokorreliert (dies 
+ist an den nachfolgenden Plots auch offensichtlich erkennbar) wodurch $se_m$ und damit $se_b$ 
+nur bedingt aussagekräftig sind! 
+
+### Beispielhafte Analyse mit b=0.7 und f= 30Hz
+
+**Graphische Veranschaulichung der Methode**
+
+```{r, message=FALSE, warning=FALSE}
+ sample_signals %>% mutate(r = s0, r_t = log(r^2)) %>% 
+  ggplot(aes(x=t, y=r_t)) +
+  geom_line() +
+  stat_smooth(method = 'lm')
+```
+
+**Numerische Analyse **
+
+```{r}
+lm(r_t ~ t, data = sample_signals %>% mutate(r = s0, r_t = log(r^2))) %>% summary()
+```
+Für dieses Beispiel liefert der Ansatz ein Ergebnis welches um den Faktor 2 zu klein ist. 
+An der graphischen Darstellung erkennt man den Grund: Ab ca. 2.5s wird das Signal stark
+durch das additive Rauschen dominiert. Durch die Transformation nivelliert sich das Signal 
+auf den Erwartungswert des log-transformierten quadratischen Rauschens und fällt nicht weiter
+linear ab. Aus diesem Grund wird die Gerade zu End 'angehoben' und dadurch die Steigung 
+und damit die Dämpfung zu klein geschätzt. Dieses Problem wird umso schwerwiegender 
+je größer die 'wahre' Dämpfungskonstante und je größer der Beobachtungszeitraum ist. 
+
+Im folgenden sind die geschätzten Ergebnisse der Dämpfung für 100 Realisierungen in einem 
+Histogramm dargestellt: 
+
+
+```{r, message=FALSE, warning=FALSE}
+sample_signals <- read_csv("~/workspace/Projekt_Metalllegierungsschmelzen/Daten/sample_signals_07_30Hz.csv")
+signal_damping_const = 0.7# [1/s]
+f = 30
+
+sim_res <- tibble('run' = rep(NA_real_, 100), 'b' = rep(NA_real_, 100), 'se_b' = rep(NA_real_))
+
+for (i in 1:100){
+  signal <- tibble(t = sample_signals[['t']],
+                   r_t = log(sample_signals[[paste('s',i-1,sep="")]]^2))
+  
+  (model_res <- lm(r_t ~ t, data = signal) %>%  summary())
+  sim_res[i, 'run'] <- i
+  sim_res[i, 'b'] <- -model_res$coefficients[2,1]/2
+  sim_res[i, 'se_b'] <- model_res$coefficients[2,2]/2
+  }
+
+sim_res <- 
+  sim_res %>% 
+  mutate(low=b-2*se_b, high=b+2*se_b, contains = if_else((low<signal_damping_const) & (signal_damping_const < high), 1, 0))
+
+print(
+sim_res  %>% 
+  ggplot(aes(x=b)) +
+  geom_histogram() + 
+  #geom_histogram(aes(x=high), color="red", fill = "red", alpha=0.5) +
+  #geom_histogram(aes(x=low), color="blue", fill = "blue", alpha=0.5) +
+  geom_vline(xintercept = signal_damping_const, color='red') + 
+  xlim(c(min(sim_res['low'], signal_damping_const), max(sim_res['high'], signal_damping_const))) +
+  labs(
+    x = "Geschätzte Dämpfung",
+    y = "count",
+    title = "Schätzung von mit durch linearen fit an quadriertes log-transformiertes signal",  
+      subtitle = paste("Wahre Dämpfung: ", signal_damping_const, "Auswertungszeitraum:", round(min(signal['t']), 1),
+                      " bis ",round(max(signal['t'],1))),
+      caption = paste("Percent of Intervalls (value +/- 2*sd) that contain the true value: ",
+                       round(sum(sim_res$contains)/dim(sim_res)[1]*100,1))      
+    )
+)
+
+```
+```{r, message=FALSE, warning=FALSE}
+sample_signals <- read_csv("~/workspace/Projekt_Metalllegierungsschmelzen/Daten/sample_signals_05_32Hz.csv")
+signal_damping_const = 0.5# [1/s]
+f = 32
+
+sim_res <- tibble('run' = rep(NA_real_, 100), 'b' = rep(NA_real_, 100), 'se_b' = rep(NA_real_))
+
+for (i in 1:100){
+  signal <- tibble(t = sample_signals[['t']],
+                   r_t = log(sample_signals[[paste('s',i-1,sep="")]]^2))
+  
+  (model_res <- lm(r_t ~ t, data = signal) %>%  summary())
+  sim_res[i, 'run'] <- i
+  sim_res[i, 'b'] <- -model_res$coefficients[2,1]/2
+  sim_res[i, 'se_b'] <- model_res$coefficients[2,2]/2
+  }
+
+sim_res <- 
+  sim_res %>% 
+  mutate(low=b-2*se_b, high=b+2*se_b, contains = if_else((low<signal_damping_const) & (signal_damping_const < high), 1, 0))
+
+print(
+sim_res  %>% 
+  ggplot(aes(x=b)) +
+  geom_histogram() + 
+  #geom_histogram(aes(x=high), color="red", fill = "red", alpha=0.5) +
+  #geom_histogram(aes(x=low), color="blue", fill = "blue", alpha=0.5) +
+  geom_vline(xintercept = signal_damping_const, color='red') + 
+  xlim(c(min(sim_res['low'], signal_damping_const), max(sim_res['high'], signal_damping_const))) +
+  labs(
+    x = "Geschätzte Dämpfung",
+    y = "count",
+    title = "Schätzung von mit durch linearen fit an quadriertes log-transformiertes signal",  
+      subtitle = paste("Wahre Dämpfung: ", signal_damping_const, "Auswertungszeitraum:", round(min(signal['t']), 1),
+                      " bis ",round(max(signal['t'],1))),
+      caption = paste("Percent of Intervalls (value +/- 2*sd) that contain the true value: ",
+                       round(sum(sim_res$contains)/dim(sim_res)[1]*100,1))      
+    )
+)
+
+```
+
+```{r, message=FALSE, warning=FALSE}
+sample_signals <- read_csv("~/workspace/Projekt_Metalllegierungsschmelzen/Daten/sample_signals_03_34Hz.csv")
+signal_damping_const = 0.3# [1/s]
+f = 34
+
+sim_res <- tibble('run' = rep(NA_real_, 100), 'b' = rep(NA_real_, 100), 'se_b' = rep(NA_real_))
+
+for (i in 1:100){
+  signal <- tibble(t = sample_signals[['t']],
+                   r_t = log(sample_signals[[paste('s',i-1,sep="")]]^2))
+  
+  (model_res <- lm(r_t ~ t, data = signal) %>%  summary())
+  sim_res[i, 'run'] <- i
+  sim_res[i, 'b'] <- -model_res$coefficients[2,1]/2
+  sim_res[i, 'se_b'] <- model_res$coefficients[2,2]/2
+  }
+
+sim_res <- 
+  sim_res %>% 
+  mutate(low=b-2*se_b, high=b+2*se_b, contains = if_else((low<signal_damping_const) & (signal_damping_const < high), 1, 0))
+
+print(
+sim_res  %>% 
+  ggplot(aes(x=b)) +
+  geom_histogram() + 
+  #geom_histogram(aes(x=high), color="red", fill = "red", alpha=0.5) +
+  #geom_histogram(aes(x=low), color="blue", fill = "blue", alpha=0.5) +
+  geom_vline(xintercept = signal_damping_const, color='red') + 
+  xlim(c(min(sim_res['low'], signal_damping_const), max(sim_res['high'], signal_damping_const))) +
+  labs(
+    x = "Geschätzte Dämpfung",
+    y = "count",
+    title = "Schätzung von mit durch linearen fit an quadriertes log-transformiertes signal",  
+      subtitle = paste("Wahre Dämpfung: ", signal_damping_const, "Auswertungszeitraum:", round(min(signal['t']), 1),
+                      " bis ",round(max(signal['t'],1))),
+      caption = paste("Percent of Intervalls (value +/- 2*sd) that contain the true value: ",
+                       round(sum(sim_res$contains)/dim(sim_res)[1]*100,1))      
+    )
+)
+```
+
+
+In allen drei Fällen wird also die Dämpfung systematisch unterschätzt. Der systematische Fehler ist
+dabei umso größer, je größer die 'wahre' Dämfung ist. Der Grund hierfür ist oben erklärt.
+
+## Nichtlinearer Fit von einer gedämpften harmonischen Funktion 
+In der Annahme das zu untersuchende Siganl ist von der Form $ae^{-bt}sin(2\pi f t)$
+versucht man dieses Form an das Signal in den Parametern $a, b, f$ zu fitten. 
+
+
+```{r, eval=FALSE, message=FALSE, warning=FALSE, include=FALSE}
+
+sim_res <- tibble('b' = rep(NA_real_, 1000), 'se_b' = rep(NA_real_))
+
+for (i in 1:100){
+  signal <- tibble(t = sample_signals[['t']], 
+                   r = sample_signals[[paste('s',i-1,sep="")]])
+    
+  model_res <- summary(nls(r ~ a * exp(-b*t) * sin(2*pi*f*t), data=signal, start=c(a=200, b=1, f=30)))
+
+  sim_res[i, 'b'] <- model_res$coefficients[2,1]
+  sim_res[i, 'se_b'] <- model_res$coefficients[2,2]
+  }
+
+sim_res <- 
+  sim_res %>% 
+  mutate(low=b-2*se_b, high=b+2*se_b, contains = if_else((low<signal_damping_const) & (signal_damping_const < high), 1, 0))
+
+print(
+sim_res %>% 
+  ggplot(aes(x=b)) +
+  geom_histogram() + 
+  geom_histogram(aes(x=high), color="red", fill = "red", alpha=0.5) +
+  geom_histogram(aes(x=low), color="blue", fill = "blue", alpha=0.5) +
+  geom_vline(xintercept = signal_damping_const, color='red') + 
+  labs(
+    x = "Geschätzte Dämpfung",
+    y = "count",
+    title = "Schätzung von b durch direkten (nicht-linearen) fit einer exp-gedämpften harmonischen Schwingung",
+    subtitle = paste("Wahre Dämpfung: ", signal_damping_const, "Auswertungszeitraum:", round(min(signal['t']), 1),
+                      " bis ",round(max(signal['t'],1))),
+    caption = paste("Percent of Intervalls (value +/- 2*sd) that contain the true value: ",
+                       round(sum(sim_res$contains, na.rm = TRUE)/dim(sim_res)[1]*100,1))      
+    )
+)
+
+```
+
+Im Regelfall konvergiert dieser nichtlineare Fit aber aufgrund der oft vorhanden Modulation
+und Signal-Drift im Regelfall nicht. Deswegen ist die kein gangbarer Weg
+
+Aber: Dieser Methode ist die 'Beste' falls das Signal tatsächlich eine gedämpfte harmonische 
+Schwingung ist! Falls das Signal aber eine leichte Modulation aufweist, oder die Frequenz 
+wegläuft liefert diese Methode extrem schlechte Schätzungen bzw. konvergiert noch nicht
+ein mal.
+
+## Bestimmung aus der Dämpfung der Amplituden der FT-Koeffizienten
+Die Amplituden des Koeffizienten der dominanten Frequenz in aufeinanderfolgenden
+Zeitfenstern können als Maß für die Signalstärke genommen werden wenn *alle Fenster
+gleich lang sind (d.h. man hat immer gleich viele Daten)*.
+
+Bemerkung: Offensichtlich macht es Probleme wenn die Anfangsamplituden der gewählten 
+Signale sehr verschieden sind. Dies könnte insbesondere der Fall sein wenn man 
+Radius und die Summe von Radien in die Auswertung nimmt. Eine genauere Untersuchung diese
+Phänomens steht noch aus. 
+
+```{r, message=FALSE, warning=FALSE}
+vis_for_simulated_data <- read_csv("~/workspace/Projekt_Metalllegierungsschmelzen/Daten/vis_for_simulated_data_07_30Hz.csv")
+signal_damping_const = 0.7# [1/s]
+
+sim_res <- 
+  vis_for_simulated_data %>% 
+  mutate(
+    b = `damp-const[1/s]`,
+    se_b = `sd[1/s]`,
+    low=b-2*se_b, 
+    high=b+2*se_b, 
+    contains = if_else((low<signal_damping_const) & (signal_damping_const < high), 1, 0))
+
+sim_res %>% 
+  ggplot(aes(x=b)) +
+  geom_histogram() + 
+  #geom_histogram(aes(x=high), color="red", fill = "red", alpha=0.5) +
+  #geom_histogram(aes(x=low), color="blue", fill = "blue", alpha=0.5) +
+  xlim(c(min(sim_res['low'], signal_damping_const), max(sim_res['high'], signal_damping_const))) +
+  geom_vline(xintercept = signal_damping_const, color='red') + 
+  labs(
+    x = "Geschätzte Dämpfung",
+    y = "count",
+    title = "Schätzung von b durch den gewählten Algorithmus",
+    subtitle = paste("Wahre Dämpfung: ", signal_damping_const, "Auswertungszeitraum:", round(min(signal['t']), 1),
+                      " bis ",round(max(signal['t'],1))),
+      caption = paste("Percent of Intervalls (value +/- 2*sd) that contain the true value: ",
+                       round(sum(sim_res$contains)/dim(sim_res)[1]*100,1))      
+    )
+
+```
+```{r, message=FALSE, warning=FALSE}
+vis_for_simulated_data <- read_csv("~/workspace/Projekt_Metalllegierungsschmelzen/Daten/vis_for_simulated_data_05_32Hz.csv")
+signal_damping_const = 0.5# [1/s]
+
+sim_res <- 
+  vis_for_simulated_data %>% 
+  mutate(
+    b = `damp-const[1/s]`,
+    se_b = `sd[1/s]`,
+    low=b-2*se_b, 
+    high=b+2*se_b, 
+    contains = if_else((low<signal_damping_const) & (signal_damping_const < high), 1, 0))
+
+sim_res %>% 
+  ggplot(aes(x=b)) +
+  geom_histogram() + 
+  #geom_histogram(aes(x=high), color="red", fill = "red", alpha=0.5) +
+  #geom_histogram(aes(x=low), color="blue", fill = "blue", alpha=0.5) +
+  xlim(c(min(sim_res['low'], signal_damping_const), max(sim_res['high'], signal_damping_const))) +
+  geom_vline(xintercept = signal_damping_const, color='red') + 
+  labs(
+    x = "Geschätzte Dämpfung",
+    y = "count",
+    title = "Schätzung von b durch den gewählten Algorithmus",
+    subtitle = paste("Wahre Dämpfung: ", signal_damping_const, "Auswertungszeitraum:", round(min(signal['t']), 1),
+                      " bis ",round(max(signal['t'],1))),
+      caption = paste("Percent of Intervalls (value +/- 2*sd) that contain the true value: ",
+                       round(sum(sim_res$contains)/dim(sim_res)[1]*100,1))      
+    )
+
+```
+```{r, message=FALSE, warning=FALSE}
+vis_for_simulated_data <- read_csv("~/workspace/Projekt_Metalllegierungsschmelzen/Daten/vis_for_simulated_data_03_34Hz.csv")
+signal_damping_const = 0.3# [1/s]
+
+sim_res <- 
+  vis_for_simulated_data %>% 
+  mutate(
+    b = `damp-const[1/s]`,
+    se_b = `sd[1/s]`,
+    low=b-2*se_b, 
+    high=b+2*se_b, 
+    contains = if_else((low<signal_damping_const) & (signal_damping_const < high), 1, 0))
+
+sim_res %>% 
+  ggplot(aes(x=b)) +
+  geom_histogram() + 
+  #geom_histogram(aes(x=high), color="red", fill = "red", alpha=0.5) +
+  #geom_histogram(aes(x=low), color="blue", fill = "blue", alpha=0.5) +
+  xlim(c(min(sim_res['low'], signal_damping_const), max(sim_res['high'], signal_damping_const))) +
+  geom_vline(xintercept = signal_damping_const, color='red') + 
+  labs(
+    x = "Geschätzte Dämpfung",
+    y = "count",
+    title = "Schätzung von b durch den gewählten Algorithmus",
+    subtitle = paste("Wahre Dämpfung: ", signal_damping_const, "Auswertungszeitraum:", round(min(signal['t']), 1),
+                      " bis ",round(max(signal['t'],1))),
+      caption = paste("Percent of Intervalls (value +/- 2*sd) that contain the true value: ",
+                       round(sum(sim_res$contains)/dim(sim_res)[1]*100,1))      
+    )
+
+```
+
+Wie man sieht ist auch dieser Algorithmus nicht perfekt, da er die Tendenz hat die Dämpfung
+zu überschätzen. D.h. man wird systematisch zu große Viskositäten angeben. 
+
+Im Vergleich mit den anderen beiden Methoden ist er aber derjenige mit den besten Eigenschaften.
+Eine Optimierung dieses Verfahrens um den systematischen Fehler zu verkleinern wäre 
+Aufgabe in der nächsten Programmverbesserung.
+
+
+## Folgerung aus dem Vergleich  
+
+Bis auf die direkte Methode haben die Schätzverfahren die Tendenz die Dämpfung systematisch
+zu unter- oder überschätzen. Insbesondere bei großen Dämpfungen und langen Zeitintervallen
+wird die Dämpfung unterschätzt, da der 
+deterministische Teil dann auf Null abfällt und das Signal-Rauschen den Fit beeinflußt!
+
+Bei der Wahl der Länge des Zeitfensters zur Auswertung sollte man dies berücksichtigen. 
+Eine automatische Wahl wäre wünschenswert. 
+
+
+- Die Simulationsergebnisse zeigen das die im Programm umgesetzte Art die D
+ämpfungszeitkonstante zu schätzen nicht so schlecht ist (d.h. besser als die beiden anderen)
+falls das Signal-rauschverhältnis nicht zu klein wird. D.h. große Dämpfungen
+bei langen beobachtungen sind problematisch. Im Programm sind aber heuristische 
+Regeln angegeben wie man kleine Signal/Rausch-Verhältnisse erkennen kann und diese
+dann aus der Auswertung ausnehmen kann. **Dieser Effekt ist z.B. sehr deutlich im
+Signal R_RadiusX des Datensatzes "LEK94 ISS Batch-1.2b cycle07 rad-2.dat" zu sehen.
+Hier mußte die Auswertung bei ca. 12s abgebrochen werden.**
+
+- Die gewählte Methode scheint relativ stabil gegen moderate Modulationen, 
+Frequenzdrifts und multiplikatives und additives Rauschen.
+
+- Bei der Angabe eines Konfidenzintervalles für die geschätzten Dämpfungen und damit für
+die Viskosität muß man vorsichtig sein, da sich in den Simulationen gezeigt hat das 
+die gewählten 95% Konfidenzintervalle nicht zutreffen. Konservativ sollte man also
+eher 95% Konfidenzintervall das Intervall Schätzwert $\pm 3\cdot$ Standarderror angeben.
+
+# Offene Fragen
+
+## Phase zwischen Ellipsen-Hauptachsen
+
+Wenn eine Ellipse (konstanter Fläche) gefittet wird, **müssen** die Signale 180° phasenverschoben sein!
+D.h. die Lissajou-Figur sollte eine verrauschte Ellipse sein! Das ist offensichtlich nicht der Fall!
+
+Wie kann es sein dass ein Radius der Ellipse langsam auf Null schrumpt? Eigentlich 
+dürfte es das nicht geben!
+
+**Bei raumfesten Hauptachsen kann es sein das es einen Phasensprung gibt!** wenn sich 
+der oszillerende Tropfen wegdreht! Da dann die Zuordnung der Hauptachsen zu den Radien
+springt!
+
+Ich behaupte das überhaupt keine Ellipse angepasst wird! Es wird der Rand detektiert
+(pixel-weise! d.h. ohne räumliche kontinuitäts-randbedingungen) und dieser wird
+dann irgendwie geglättet. 
+
+Die Signale RadiusX ... sind dann einfach der Abstand vom *geschätzten* Kugel-Schwerpunkt
+zum Rand.
+
+

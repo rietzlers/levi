@@ -1,0 +1,581 @@
+---
+title: "Gesamtauswertung der Zyklen 1-6 der Legierung LEK94"
+author: "Stephan Rietzler"
+output:
+  pdf_document: default
+  html_notebook: default
+---
+
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(echo=FALSE, warning=FALSE, message=FALSE, error = FALSE, fig.path='figures/')
+library(tidyverse)
+library(phonTools)
+library(xlsx)
+library(magrittr)
+library(plotly)
+```
+
+
+```{r, message=FALSE, warning=FALSE, include=FALSE}
+visc_raw <- read_csv("~/workspace/Projekt_Metalllegierungsschmelzen/Daten/ISS/LEK94/LEK94_eval_cycle_1_bis_6/LEK94_cycle_1_bis_6_viscosity_results.csv") %>% 
+  select(-(X1))
+visc <- visc_raw %>% 
+  mutate(time = `time[s]`, Temp = `Temp[°C]`, visc = `visc[mPa*s]`, visc_sd = `sd[mPa*s]`) 
+
+st_raw <- read_csv("~/workspace/Projekt_Metalllegierungsschmelzen/Daten/ISS/LEK94/LEK94_eval_cycle_1_bis_6/LEK94_cycle_1_bis_6__surface_tension_results.csv") %>%  select(-(X1))
+
+st <- st_raw %>% mutate(st = `surface-tension[Nm]`)
+```
+
+
+#Auswertung
+## Viscosity
+### Graphische Analyse
+
+```{r}
+visc %>% 
+  ggplot(aes(x=Temp, y=visc)) +
+  geom_point(aes(color=data, shape=plausible)) +
+  stat_smooth(method="lm", col="red") + 
+  stat_smooth(col="blue", alpha=0.3) +
+  labs(
+    caption="rot: linearer fit\nblau: loess-smoother"
+  )
+
+#ggplotly(visc_plot)
+```
+**Folgerung:**  
+
+- Keine Daten fallen extrem auf.
+- Der loess-smoother weicht nicht auffällig vom linearen Fit ab, was als Indiz aufgefasst 
+wird das der Zusammenhang zwischen Viskosität und Temperatur linear ist.
+- Die Viskositäts-Wert die per Konvention als nicht plausibel gelten 
+(d.h. diejenigen bei denen das Intervall viskosität $\pm 3\cdot sd$ die Null enthält)
+liegen alle am 'Rand' des Auswertungsbereichs. Im Regelfall sind dort weniger Daten
+zur Schätzung der Dämfungs-Konstanten vorhanden und deswegen sind die Schätzungen dort
+tendenziell unsicher.
+
+
+### Numerische Analyse
+Analyse mit allen Daten, die als plausibel definiert wurden. D.h. die drei 
+Viskositäts-Werte am Rand des Temperaturbereiches die in obigem Plot als
+Kreise eingezeichnet sind werden ausgenommen.
+
+Vergleichsweise wird ein linearer und ein quadratischer Fit durchgeführt um zu sehen 
+ob durch die Daten ein nichtlinearer Zusammenhang zwischen Viskosität und Temperatur
+nahegelegt wird.
+
+Die Daten werden so umskaliert, das der Temperatur-Nullpunkt der Schmelztemperatur
+von LEK94 (1393°C) entspricht. Die bei 'Intercept' angegebene Größe entspricht damit
+der Viskosität am Schmelzpunkt. 
+
+```{r}
+(visc_lm <- lm(visc ~ I(Temp-1393), data=visc %>% filter(plausible=="yes")) %>% summary())
+```
+**Folgerung:**  
+
+- Vergleich der Resultate ergibt das der Zhg. zwischen Viskosität und Temperatur
+linear ist.
+- Die Viskosität am Schmelzpunkt ist: $9.6 \pm3\cdot0.7 mPa\cdot s$.
+- Der Zhg. zwischen Viskosität und Temperatur ist gegeben durch: $(-2 \pm 3 \cdot 0.9) \cdot 10^{-6}\frac{mPa\cdot s}{K}$
+
+#Surface-Tension
+
+##Graphische Analyse
+Zunächst werden alle im Vorfeld als auswertbar gewertete Datensätze dargestellt: 
+
+
+```{r}
+st  %>% 
+  ggplot(aes(x=Temp, y = st)) +
+  geom_jitter(aes(color=data)) + 
+  stat_smooth(method="lm", col="red") +
+  stat_smooth(col="blue") +
+  labs(
+    caption="rot: linearer fit\nblau: loess-smoother"
+  ) + ylim(c(1.3,2))
+```
+
+
+**Folgerung:**  
+Hier sieht man das die Daten des Datensatzes LEk94_06_ax im Randbereich
+auffällig aus der Datenwolke herausfallen. Da dieser Datensatz eher zur Illustration
+der Möglichkeit der Datenselektion durch das Auswerteprogramm 'Levitator' in die
+Gesamtauswertung aufgenommen wurde (siehe Kommentar im Anhang) wird er jetzt
+aufgrund dieser Auffälligkeiten wieder ausgeschlossen.
+
+Im nachfolgenden Plot sind die Daten des Datensatzes LEK94_06_ax ausgenommen: 
+
+
+```{r}
+st %>% filter(data != 'LEK94_06_ax') %>% 
+  ggplot(aes(x=Temp, y = st)) +
+  geom_jitter(aes(color=data)) + 
+  stat_smooth(method="lm", col="red") +
+  ylim(c(1.3,2))
+```
+
+
+In diesem Plot sind nun keine offensichtlichen Ausreißer mehr zu finden. Die 
+folgende numerische Analyse wird nur mit den sechs Datensätzen der Radial-Kamera
+durchgeführt.
+
+
+##Numerische Analyse
+Auch hier wird wieder ein lineares und quadratisches Modell gefittet um zu untersuchen 
+ob der Zusammenahng zwischen Oberflächenspannung und Temperatur durch ein nichtlineares
+Modell besser beschrieben wird. 
+```{r}
+lm(st ~ I(Temp - 1393), data=st %>% filter(data != 'LEK94_06_ax')) %>% summary()
+lm(st ~ I(Temp - 1393) + I((Temp - 1393)^2), data=st %>% filter(data != 'LEK94_06_ax')) %>% summary()
+```
+**Folgerung:**  
+
+- Wie bei der Viskosität ist der Zusammenhang zwischen Oberflächenspannung und 
+Temperatur durch ein lineares Modell besser beschrieben.
+- Die Oberflächenspannung am Schmelzpunkt und der Temperaturkoeffizeint sind
+der Analyse zu entnehmen. 
+- Aus den erwähnten Gründen sollte man für ein 95% Konfidenzintervall eher
+$\pm 3\cdot sd$ anstelle von $\pm 2\cdot sd$ angeben. 
+
+# Anhang: Summary der verwendeten Datensätze
+**In dem Kommentare zu dem Datensatz der Axial-Kamera des Zyklus 6 habe ich
+einige generelle Bemerkungen gemacht und exemplarisch auch Möglichkeiten des
+Programms aufgezeigt einzelne Datenpunkte bzw. Zeitspannen aus der Auswertung
+auszunehmen.**  
+
+##Summary for LEK94_01_rad
+
+*Sample-Specification:*
+      - Alloy: LEK94
+      - m: 1.1984g
+      - radius: 3.3678mm
+      - Melt.-Temp: 1393.0°C
+
+*Experimental Design: (times are in seconds from start of recording)*
+      - Max. measured Temp. of alloy: 1600.0°C
+    - End of Heatphase to time of solidification: (0.0, 16.2765)
+    - Data-Evaluation-Range: (0.0, 14.0)
+    - Temp-Span: (1600.0, 1275.0)
+    - Heat-pulse-Times at: 2.0/7.0
+    - Temp. at Heat-Pulse-Times: 1540.0/1434.0
+
+*Evaluation Parameters:*
+      - Set Bandpass:  Low: 10.0Hz, High: 200.0Hz
+      - Set smoothing of spectrogramm: smooth = 2, i.e. running mean over 5 adjacent periodogram ordinates
+      - Set amplitude-fraction: 95.0%
+      - Set time-window-size: 1.0s
+      - Set time-window-overlap: 50.0%
+      - Variables used for evaluation: R_RadiusX, R_RadiusY
+      - Time-Intervalls excluded from evaluation: 
+
+
+**Remarks:**
+
+
+Auswertezeit:
+- bis 14s da ab dann signal/noise-ratio zu schlecht, wie man an den 
+signal-plots und dem spektrogram erkennen kann
+
+Spektrogramm:
+- Oberschwingungen schwach erkennbar
+
+Viscosity:
+Viscosity-Value im ersten Auswertesegment nicht ermittelbar, da nur daten für
+zwei verschiedene Zeitpunkte vorhanden; Der erste Heipuls kommt für eine 
+Auswertung also zu früh. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+##Summary for LEK94_02_rad
+
+*Sample-Specification:*
+      - Alloy: LEK94
+      - m: 1.1984g
+      - radius: 3.3678mm
+      - Melt.-Temp: 1393.0°C
+
+*Experimental Design: (times are in seconds from start of recording)*
+      - Max. measured Temp. of alloy: 1605.0°C
+    - End of Heatphase to time of solidification: (0, 15.1172)
+    - Data-Evaluation-Range: (0.0, 15.1172)
+    - Temp-Span: (1605.0, 1295.0)
+    - Heat-pulse-Times at: 3/8
+    - Temp. at Heat-Pulse-Times: 1516.0/1413.0
+
+*Evaluation Parameters:*
+      - Set Bandpass:  Low: 10.0Hz, High: 200.0Hz
+      - Set smoothing of spectrogramm: smooth = 2, i.e. running mean over 5 adjacent periodogram ordinates
+      - Set amplitude-fraction: 95.0%
+      - Set time-window-size: 1.0s
+      - Set time-window-overlap: 50.0%
+      - Variables used for evaluation: R_RadiusX, R_RadiusY
+      - Time-Intervalls excluded from evaluation: 
+
+
+**Remarks:**
+
+Signalqualität und Signal-Rausch-Verhältnis lassen eine Auswertung
+bis zur Erstarrung zu. 
+
+Im Spektrogramm sind Oberschwingungen bis zur Ordnung 2 deutlich erkennbar.
+Bei R_RadiusY legen Signal-Plot und Spektrogramm eine Modulation kurz
+nach Ende der Heizphase nahe. Diese klingt jedoch schnell ab.
+
+Auswertezeit:
+- ab ca. 13s werden die signale schwach; und die frequenzbestimmung wird unsicher, d.h. die dominante freq. kippt auf die omnipräsente niederfrequente schwingung von ca. 4Hz. Ein low-pass-filter bei 10 Hz korrigiert das. 
+Trotzdem nur auswertung bis 14s.
+
+Visc:
+- wert im ersten auswert intervall wird aufgrund der hohen schätzunsicherheit
+default-mäßig verworfen. (Konfidenzintervall aus +/-2*sd umfasst die null)!
+ 
+ST:
+- keine besonderen auffälligkeiten; plausible werte
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+##Summary for LEK94_03_rad
+
+*Sample-Specification:*
+      - Alloy: LEK94
+      - m: 1.1984g
+      - radius: 3.3678mm
+      - Melt.-Temp: 1393.0°C
+
+*Experimental Design: (times are in seconds from start of recording)*
+      - Max. measured Temp. of alloy: 1566.0°C
+    - End of Heatphase to time of solidification: (0, 15.5752)
+    - Data-Evaluation-Range: (0.0, 15.0)
+    - Temp-Span: (1566.0, 1272.0)
+    - Heat-pulse-Times at: 4.0/8.0
+    - Temp. at Heat-Pulse-Times: 1470.0/1387.0
+
+*Evaluation Parameters:*
+      - Set Bandpass:  Low: 3.0Hz, High: 200.0Hz
+      - Set smoothing of spectrogramm: smooth = 2, i.e. running mean over 5 adjacent periodogram ordinates
+      - Set amplitude-fraction: 95.0%
+      - Set time-window-size: 1.0s
+      - Set time-window-overlap: 50.0%
+      - Variables used for evaluation: R_RadiusX, R_RadiusY
+      - Time-Intervalls excluded from evaluation: 
+
+
+**Remarks:**
+
+
+Auswertzeit:
+bis 15s nach ende der Heizphase,d ann sig/noise zu klein, was man 
+vor allem daran erkennt das die dominante Frequenz zu springen anfängt. 
+
+Spektrogramm:
+Oberschwingungen deutlich erkennbar; Nach Ende der Heizphase ist 
+sowohl im signal als auch spectrogramm  eine Signal-Modulation 
+zu erkennen, die jedoch bald abklingt. 
+
+st:
+keine auffälligkeiten; plausible und konsistente werte
+
+visc:
+keine auffälligkeiten; plausible und konsitente werte
+
+Bemerkung:
+Was man hier sehr schön sieht ist wie die Heizpulse den gesamten Tropfen im Versuchsaufbau (bei einer freq. von 6 Hz) zum schwingen anregen:
+Betrachte hierzu das signal R_CenterY mit einem BP von 3-30Hz.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+##Summary for LEK94_04_rad
+
+*Sample-Specification:*
+      - Alloy: None
+      - m: 1.1984g
+      - radius: 3.3678mm
+      - Melt.-Temp: 1393°C
+
+*Experimental Design: (times are in seconds from start of recording)*
+      - Max. measured Temp. of alloy: 1561.0°C
+    - End of Heatphase to time of solidification: (0, 15.6495)
+    - Data-Evaluation-Range: (0.0, 15.0)
+    - Temp-Span: (1561.0, 1273.0)
+    - Heat-pulse-Times at: 6.0/10.0
+    - Temp. at Heat-Pulse-Times: 1426.0/1353.0
+
+*Evaluation Parameters:*
+      - Set Bandpass:  Low: 5.0Hz, High: 200.0Hz
+      - Set smoothing of spectrogramm: smooth = 2, i.e. running mean over 5 adjacent periodogram ordinates
+      - Set amplitude-fraction: 95.0%
+      - Set time-window-size: 1.0s
+      - Set time-window-overlap: 50.0%
+      - Variables used for evaluation: R_RadiusX, R_RadiusY
+      - Time-Intervalls excluded from evaluation: 
+
+
+**Remarks:**
+
+Direkt nach Ende der Heizphase sind die Signale noch sehr 'unruhig'. Eine 
+Modulation ist nicht direkt erkennbar. Evtl. ist direkt nach Ende der 
+Heizphase mit einem starken multiplikativen (niederfrequentem) Rauschen zu
+rechnen. Dieser Effekt ist immer wieder beobachtbar. 
+
+Ein möglicher Grund liegt evtl. in der Signalgenerierung durch die 
+Tevi-Software: Direkt nach der Heizphase oszilliert der Tropfen noch
+sehr stark im Versuchsaufbau und läuft deswegen häufig in die Bildbegrenzung.
+Dadurch steigt der Kanten-Erkennungs und Ellipsen-Fit-Algorithmus
+von Tevi aus und liefert dann verrauschte Signale. Dies ist deutlich in den
+Filmen zu sehen. Dies wäre eine Erklärung für das beobachtete 
+niederfrequente mulitplikative Rauschen: Bei großen Signal-Amplituden springt
+das Signal stärker als bei kleinen.
+ 
+Ausgewertet wird das Signal bis 15s (danach schlechtes signal/rausch-verhältnis)
+mit einem Hochpass ab 5Hz um das niederfrequente Rauschen zu unterdrücken.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+##Summary for LEK94_05_rad
+
+*Sample-Specification:*
+      - Alloy: LEK94
+      - m: 1.1984g
+      - radius: 3.3678mm
+      - Melt.-Temp: 1393°C
+
+*Experimental Design: (times are in seconds from start of recording)*
+      - Max. measured Temp. of alloy: 1534.0°C
+    - End of Heatphase to time of solidification: (0.0, 14.587)
+    - Data-Evaluation-Range: (0.0, 14.587)
+    - Temp-Span: (1534.0, 1273.0)
+    - Heat-pulse-Times at: 6.0/12.0
+    - Temp. at Heat-Pulse-Times: 1411.0/1312.0
+
+*Evaluation Parameters:*
+      - Set Bandpass:  Low: 5.0Hz, High: 200.0Hz
+      - Set smoothing of spectrogramm: smooth = 2, i.e. running mean over 5 adjacent periodogram ordinates
+      - Set amplitude-fraction: 95.0%
+      - Set time-window-size: 1.0s
+      - Set time-window-overlap: 50.0%
+      - Variables used for evaluation: R_RadiusX, R_RadiusY
+      - Time-Intervalls excluded from evaluation: 
+
+
+**Remarks:**
+
+Gute Signalqualität die eine Auswertung über den gesamten aufgezeichneten
+Zeitraum zulässt. Um die omnipräsente niederfrequente Schwingung herauszufiltern wird ein 5Hz high-pass gesetzt (fast schon default).
+
+spectrogramm:
+oberschwingungen deutlich erkennbar; im ersten auswertesegement lassen
+sich modulationen der dominanten schwingung bei ca. 35 Hz erahnen; 
+dies wird durch die signalplots gestützt.
+
+visc:
+das letzte auswerte segment ist zu kurz für eine sichere Auswertung der dämpfungskonstante, was sich in einer hohen sd niederschlägt.
+
+
+
+
+
+
+
+##Summary for LEK94_06_rad
+
+*Sample-Specification:*
+      - Alloy: LEK94
+      - m: 1.1984g
+      - radius: 3.3678mm
+      - Melt.-Temp: 1393°C
+
+*Experimental Design: (times are in seconds from start of recording)*
+      - Max. measured Temp. of alloy: 1618.0°C
+    - End of Heatphase to time of solidification: (0, 17.6158)
+    - Data-Evaluation-Range: (0.0, 15.5)
+    - Temp-Span: (1618.0, 1266.0)
+    - Heat-pulse-Times at: 4.0/11.0
+    - Temp. at Heat-Pulse-Times: 1498.0/1355.0
+
+*Evaluation Parameters:*
+      - Set Bandpass:  Low: 7.0Hz, High: 200.0Hz
+      - Set smoothing of spectrogramm: smooth = 2, i.e. running mean over 5 adjacent periodogram ordinates
+      - Set amplitude-fraction: 95.0%
+      - Set time-window-size: 1.0s
+      - Set time-window-overlap: 50.0%
+      - Variables used for evaluation: R_RadiusX, R_RadiusY
+      - Time-Intervalls excluded from evaluation: 
+
+
+**Remarks:**
+
+
+Auswertsignale:
+radius x and y
+
+Auswertzeit:
+nur bis 15.5s da aufnahme kein signal
+
+Bandpass: 
+hp ab 7hz; da sonst bei ca. 10s aufgrund des schlechten sig/noise ratio
+dominante freq auftauchen die nicht ins bild passen
+
+Auswertzeit: 
+bis 16s da dann signal-noise-ratio zu schwach für Auswertung
+
+Spektrogramm:
+zeigt keine Auffälligkeiten; Oberschwingeungen bis Ordnung 2/3 sind erkennbar
+
+Results Surface-Tension:
+keine auffälligkeiten
+
+Visc:
+keine auffälligkeiten
+
+
+
+
+
+
+
+
+##Summary for LEK94_06_ax
+
+*Sample-Specification:*
+      - Alloy: LEK94
+      - m: 1.1984g
+      - radius: 3.3678mm
+      - Melt.-Temp: 1393°C
+
+*Experimental Design: (times are in seconds from start of recording)*
+      - Max. measured Temp. of alloy: 1627.0°C
+    - End of Heatphase to time of solidification: (0.0, 18.0667)
+    - Data-Evaluation-Range: (0.0, 16.0)
+    - Temp-Span: (1627.0, 1265.0)
+    - Heat-pulse-Times at: 5/12
+    - Temp. at Heat-Pulse-Times: 1498.0/1355.0
+
+*Evaluation Parameters:*
+      - Set Bandpass:  Low: 5.0Hz, High: 75.0Hz
+      - Set smoothing of spectrogramm: smooth = 2, i.e. running mean over 5 adjacent periodogram ordinates
+      - Set amplitude-fraction: 95.0%
+      - Set time-window-size: 1.0s
+      - Set time-window-overlap: 50.0%
+      - Variables used for evaluation: A_RadiusX, A_RadiusY
+      - Time-Intervalls excluded from evaluation: (8.8,9.8),(9.7,10.7),(10.6,11.6)
+
+
+**Remarks:**
+
+Wie alle Datensätze der Axial-Kamera ist auch dieser von sehr schlechter 
+Qualität. Insbesondere im Bereich um 10s kurz vor dem zweiten Heizpuls
+ist das Signal von andauerndem starkem niederfrequenten additivem Rauschen 
+überlagert. 
+
+Dieses Rauschen ist deutlich am 'Springen' der Frequenz in diesem Bereich 
+zu erkennen. Siehe Signal-Plot (Display 'results')  und Ergebnisse 
+Surface-Tension. 
+
+In den Ergebnissen 'Viskosität' führt dieses Rauschen sogar zu einer 
+'negativen' Dämpfung, verursacht durch die dominaten niederfrequenten Störungen mit in diesem Bereich 'anwachsender Amplitude'.
+
+Mehr aus Gründen der Illustration der Programmmöglichkeiten habe ich mich
+entschlossen diesen Datensatz nicht komplett auszunehmen sondern nur
+den Bereich um ca. 10s. Hierzu selektiert man mit der Option 'Data-Selection' 
+Zeitpunkte in diesem Bereich, welcher dann ausgenommen wird. 
+
+Die so erhaltenen Ergebnisse für die Surface-Tension und die Viskosität passen
+dann in das Gesamtbild der ersten sechs Zyklen der Legierung LEK94.
+
+**Generelle Bemerkung zu den Datensätzen:**
+Es fällt auf das wenn das Signal RadiuxX schlecht ist dann ist auch das
+Signal RadiusY schlecht. Das ist verständlich, da beide aufgrund ihrer
+Konstruktion korreliert sind. Man sollte sich also immer bewußt sein
+das diese beiden Signale keine unabhängigen Informationen liefern. 
+
+In unterschiedlichem (nicht genau bekanntem) Ausmaß gilt dies für alle
+vorhandenen Signale. Verwendet man zwei oder mehr der vorhandenen Signale 
+zur Schätzung der Dämpfung oder Frequenz des Signales zu einem Zeitpunkt 
+so ist dies strenggenommen eine Datenvervielfachung die dann den 
+Standardfehler reduziert. Aus dieser Perspektive betrachtet ist der 
+angegebenen Standardfehler also systematisch zu klein falls man 
+mehrere Signale verwendet. Ich habe mich entschieden default-mäßig 
+immer zwei Signale zu verwenden, nämlich RadiusX und RadiusY. 
+Primär aus Gründen der *Auswerte-Effizienz*: Die mühevolle, zeitaufwendige
+und immer **subjektive Auswahl der 'besten' Signale** ist im Effekt auf die
+Qualität der Ergebnisse schwer abzuschätzen. 
+
+
+
+
+Report generated on Sun Aug 13 12:27:31 2017
+
+
+\newpage
+# Rohdaten
+## Viskosität
+```{r, message=FALSE, warning=FALSE}
+visc_raw %>% print(dim(visc_raw)[1])
+```
+
+\newpage
+## Surface-Tension
+```{r, message=FALSE, warning=FALSE}
+st_raw %>% print(dim(st_raw)[1])
+```

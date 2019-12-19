@@ -1,0 +1,595 @@
+---
+title: "Gesamtauswertung der Zyklen 1-6 der Legierung MC2"
+author: "Stephan Rietzler"
+output:
+  pdf_document: default
+  html_notebook: default
+---
+
+
+```{r, doc_setup, include=FALSE}
+knitr::opts_chunk$set(echo=FALSE, warning=FALSE, message=FALSE, error = FALSE, fig.path='figures/')
+library(tidyverse)
+library(phonTools)
+library(xlsx)
+library(magrittr)
+library(plotly)
+```
+
+
+```{r, load_data,  message=FALSE, warning=FALSE, include=FALSE}
+T_melt = 1388
+visc_raw <- read_csv("/home/stephan/workspace/Projekt_Metalllegierungsschmelzen/Daten/ISS/MC2/MC2_eval_cycle_1_bis_6/MC2_cycle_1_bis_6_viscosity_results.csv") %>% 
+  select(-(X1))
+visc <- visc_raw %>% 
+  mutate(time = `time[s]`, Temp = `Temp[°C]`, Temp_c = Temp-T_melt, visc = `visc[mPa*s]`, visc_sd = `sd[mPa*s]`) 
+
+st_raw <- read_csv("/home/stephan/workspace/Projekt_Metalllegierungsschmelzen/Daten/ISS/MC2/MC2_eval_cycle_1_bis_6/MC2_cycle_1_bis_6_surface_tension_results.csv") %>%  select(-(X1))
+
+st <- st_raw %>% mutate(st = `surface-tension[Nm]`, Temp_c = Temp-T_melt)
+```
+
+
+# Viscosity
+
+## Graphische Analyse
+
+In folgendem Plot sind die ermittelten Viskositäts-Wert gegen die
+Temperatur aufgetragen. Zusätzlich eingezeichnet ist ein in der Temperatur
+linearer und quadratischer Fit an die Daten. 
+
+```{r}
+visc %>% 
+  ggplot(aes(x=Temp, y=visc)) +
+  geom_point(aes(color=data, shape=plausible)) +
+  stat_smooth(method="lm", formula = y ~ x, col="red") + 
+  stat_smooth(method="lm", formula = y ~ poly(x,2), col="blue", fill="blue", alpha=0.3) +
+  geom_vline(xintercept = T_melt, linetype = "dashed") +
+  labs(
+    caption="rot: Anpassung einer linearen Fkt.\nblau: Anpassung einer quad. Fkt.",
+    y="Viscosity [mPa*s]",
+    x="Alloy-Temperatur[°C]"
+  )
+
+#ggplotly(visc_plot)
+```
+
+**Folgerung:**  
+
+- Der Zusammenhang zwischen Viskosität und Temperatur scheint bei der Legierung
+MC2 durch den quadratischen Fit besser beschrieben zu sein. Bei Temperaturen deutlich
+über dem Schmelzpunkt nimmt die Viskosität mit abnehmenden Temperaturen
+nur wenig zu. Ab dem Schmelzpunkt scheint die Viskositätszunahme mit abnehmender Temperatur
+deutlich größer.
+- Etwas vom allgeimnen Trend abzuweichen scheinen die Viskositäts-Daten der Axialkamera
+aus Zyklus 6. Da in der Kontrolle der Daten in der Auswertungs-Software kein offensichtlicher
+Grund hierfür zu erkenne ist werden sie in der weiteren Analyse nicht ausgeschlossen.
+- Die als nicht plausible markierten Daten fallen nicht aus dem Trend. Aus Konsistenz-Gründen
+werden sie hier trotzdem von der weiteren Analyse ausgenommen.
+
+
+##Numerische Analyse
+
+Wie im Plot angedeutet wird wird ein linearer und ein quadratischer Fit durchgeführt 
+um zu überprüfen ob die numerische Analyse die Vermutung eines nichtlinearen 
+Zusammenhanges bestätigt. 
+
+Die Daten werden so umskaliert, das der Temperatur-Nullpunkt der Schmelztemperatur
+von MC2 (1388°C) entspricht. Die bei 'Intercept' angegebene Größe entspricht damit
+der Viskosität am Schmelzpunkt. 
+
+**Anpassung einer linearen Funktion:**
+
+```{r}
+(visc_lm <- lm(visc ~ Temp_c, data=visc %>% filter(plausible=="yes")) %>% summary())
+```
+
+**Anpassung einer quadratischen Funktion:**
+
+```{r}
+(visc_lmq <- lm(visc ~  Temp_c + I(Temp_c^2), data=visc %>% filter(plausible=="yes")) %>% summary())
+```
+
+**Folgerung:**  
+
+Wie bereits vermutet beschreibt das Modell mit quadratischem Term die Daten 
+besser was auf einen nichtlinearen Zusammenhang hindeutet. 
+Damit bekommt man folgende Ergebnisse:
+
+ * Die Viskosität am Schmelzpunkt ist: $11.9 \ mPa\cdot s \pm 3 \cdot 0.3 \ mPa\cdot s$.
+ * Die Daten deuten auf einen nichtlinearen Zusammenhang zwischen Viskosität und Temperatur
+ der Legierung MC2 hin.  
+
+
+#Surface-Tension
+
+##Graphische Analyse
+
+In der folgenden Graphik sind die ermittelten Oberflächenspannungen
+aus den (auswertbaren) Daten der ersten sechs Zyklen von MC2 dargestellt.
+
+```{r}
+st  %>% 
+  ggplot(aes(x=Temp, y = st)) +
+  geom_jitter(aes(color=data)) + 
+  stat_smooth(method="lm", formula = y ~ x, col="red") + 
+  stat_smooth(method="lm", formula = y ~ poly(x,2), col="blue", fill="blue", alpha=0.3) +
+  geom_vline(xintercept = T_melt, linetype = "dashed") +
+  labs(
+    caption="rot: Anpassung einer linearen Fkt.\nblau: Anpassung einer quad. Fkt.",
+    y="Surface-Tension [Nm]",
+    x="Alloy-Temperature [°C]"
+  ) + 
+  ylim(c(1.45,1.85))
+```
+
+**Folgerung:** 
+
+ * Die graphische Darstellung legt die Vermutung nahe das die Oberflächenspannung
+bei MC2 nur wenig von der Temperatur abhängt. 
+ * Erst bei Temperaturen deutlich überhalb des Schmelzpunktes scheint die
+Oberlächenspannung mit zunehmender Temperatur etwas abzunehmen. 
+
+
+##Numerische Analyse
+
+Auch hier wird wieder ein lineares und quadratisches Modell gefittet um zu untersuchen 
+ob der Zusammenahng zwischen Oberflächenspannung und Temperatur durch ein nichtlineares
+Modell besser beschrieben wird. 
+
+**Anpassung einer linearen Funktion**
+
+```{r}
+lm(st ~ Temp_c, data=st) %>% summary()
+```
+
+**Anpassung einer quadratischen Funktion**
+
+```{r}
+lm(st ~ Temp_c + I(Temp_c^2), data=st) %>% summary()
+```
+
+**Folgerung:**  
+
+- Auch hier bestätigt sich die Vermutung aus der graphischen Analyse: Die 
+Anpassung des quadratischen Modells liefert ein höheres $R^2$. 
+-  D.h. die Oberflächenspannung von MC2 ist in der Nähe des Schmelzpunktes 
+nahezu von der Temperatur unabhängig. 
+- Erst bei hohen Temperaturen nimmt die Oberflächenspannung etwas ab.
+- Beide Modell sind aber offensichtlich keine 'optimale' Anpassung an die 
+Daten. Die Ergebnisse über den Zusammenhang zwischen Oberflächenspannung und 
+Temperatur sollten also eher qualtiativ bewertet werden. 
+
+
+# Anhang: Summary der verwendeten Datensätze
+
+ * In der Auswertungssoftware gesetzte Parameter und dort vermerkte
+Kommentare zur Auswertung sind in den folgenden Abschnitten 
+für jeden untersuchten Datensatz aus den Zyklen 1-6 gelistet.
+
+* Die verwendeten Rohdaten (Ergebnisse aus der Auswertungssoftware)
+sind als csv Dateien anghängt.
+
+
+**Bemerkung**
+
+ * Zu Zyklus 1 sind keine Datensätze vorhanden.
+ * Der Datensatz der Radial-Kamera aus Zyklus zwei enthält keine
+ Signale.
+ * Im Vergleich zu den LEk94-Daten sind die Datensätze der Axial-Kameras
+ hier alle auswertbar. *Das wirft die Frage auf, warum die Axial-Kamera-Daten
+ bie LEK94 durch die Bank unbrauchbar waren? An der Legierung kann es kaum 
+ gelgen haben.*
+**Report of dataset-summaries generated on Sat Aug 19 10:45:25 2017**
+
+##Summary for MC2_ISS_Batch-1_2b_cycle02_ax
+
+*Sample-Specification:*
+  
+   * Alloy: MC2
+   * m: 1.225g
+   * radius: 3.246mm
+   * Melt.-Temp: 1388.0°C
+
+*Experimental Design: (times are in seconds from start of recording)*
+  
+   * Max. measured Temp. of alloy: 1643.0°C
+   * Measured Temp. at solidification of alloy: 1339.0°C
+   * End of Heatphase to time of solidification: (18.1059, 32.026)
+   * Data-Evaluation-Range: (19.0, 30.0)
+   * Temp-Span: (1643.0, 1339.0)
+   * Heat-pulse-Times at: 23/27
+   * Temp. at Heat-Pulse-Times: 1500.0/1417.0
+
+*Evaluation Parameters:*
+  
+   * Set Bandpass:  Low: 5.0Hz, High: 75.0Hz
+   * Set smoothing of spectrogramm: smooth = 2, i.e. running mean over 5 adjacent periodogram ordinates
+   * Set amplitude-fraction: 95.0%
+   * Set time-window-size: 1.0s
+   * Set time-window-overlap: 50.0%
+   * Variables used for evaluation: A_RadiusX, A_RadiusY
+   * Time-Intervalls excluded from evaluation: 
+
+
+**Remarks:**
+
+Bandpass bei 5Hz um niederfrequente Störung (hauptsächlich am Ende der Aufnahme)
+zu unterdrücken; Zuätzlich wird das signal am ende abgeschnitten.
+
+am anfang wird 1s abgeschnitten wegen schlechtem sig/noise.
+
+
+
+
+
+
+
+
+
+
+
+
+##Summary for MC2_ISS_Batch-1_2b_cycle02_rad
+
+*Sample-Specification:*
+  
+   * Alloy: MC2
+   * m: 1.225g
+   * radius: 3.246mm
+   * Melt.-Temp: 1388.0°C
+
+*Experimental Design: (times are in seconds from start of recording)*
+  
+   * Max. measured Temp. of alloy: 1599.0°C
+   * Measured Temp. at solidification of alloy: 1335.0°C
+   * End of Heatphase to time of solidification: (0.0, 12.8633)
+   * Data-Evaluation-Range: (0.0, 12.5)
+   * Temp-Span: (1599.0, 1335.0)
+   * Heat-pulse-Times at: 4/8
+   * Temp. at Heat-Pulse-Times: 1500.0/1418.0
+
+*Evaluation Parameters:*
+  
+   * Set Bandpass:  Low: 5.0Hz, High: 200.0Hz
+   * Set smoothing of spectrogramm: smooth = 2, i.e. running mean over 5 adjacent periodogram ordinates
+   * Set amplitude-fraction: 95.0%
+   * Set time-window-size: 1.0s
+   * Set time-window-overlap: 50.0%
+   * Variables used for evaluation: R_RadiusX, R_RadiusY
+   * Time-Intervalls excluded from evaluation: 
+
+
+**Remarks:**
+
+Kurz vor der Ende ist das signal von niederfrequentem Rauschen überlagert.
+Deswegen wird die Auswertung bei 12.5s abgebrochen und ein Hochpass von
+5Hz gesetzt.
+
+
+
+
+
+
+
+##Summary for MC2_ISS_Batch-1_2b_cycle03_ax
+
+*Sample-Specification:*
+  
+   * Alloy: MC2
+   * m: 1.225g
+   * radius: 3.246mm
+   * Melt.-Temp: 1388.0°C
+
+*Experimental Design: (times are in seconds from start of recording)*
+  
+   * Max. measured Temp. of alloy: 1651.0°C
+   * Measured Temp. at solidification of alloy: 1294.0°C
+   * End of Heatphase to time of solidification: (16.874, 34.0333)
+   * Data-Evaluation-Range: (16.9, 29.0)
+   * Temp-Span: (1651.0, 1294.0)
+   * Heat-pulse-Times at: 21/25
+   * Temp. at Heat-Pulse-Times: 1532.0/1444.0
+
+*Evaluation Parameters:*
+  
+   * Set Bandpass:  Low: 5.0Hz, High: 75.0Hz
+   * Set smoothing of spectrogramm: smooth = 2, i.e. running mean over 5 adjacent periodogram ordinates
+   * Set amplitude-fraction: 95.0%
+   * Set time-window-size: 1.0s
+   * Set time-window-overlap: 50.0%
+   * Variables used for evaluation: A_RadiusX, A_RadiusY
+   * Time-Intervalls excluded from evaluation: 
+
+
+**Remarks:**
+
+Einschränkung auf t_max=30s und Hochpass von 5Hz um schwaches Signal am versuchsende zu kompensieren.
+
+
+
+
+
+
+
+
+##Summary for MC2_ISS_Batch-1_2b_cycle03_rad
+
+*Sample-Specification:*
+  
+   * Alloy: MC2
+   * m: 1.225g
+   * radius: 3.246mm
+   * Melt.-Temp: 1388°C
+
+*Experimental Design: (times are in seconds from start of recording)*
+  
+   * Max. measured Temp. of alloy: 1648.0°C
+   * Measured Temp. at solidification of alloy: 1292.0°C
+   * End of Heatphase to time of solidification: (0.0, 17.2203)
+   * Data-Evaluation-Range: (0.0, 17.2203)
+   * Temp-Span: (1648.0, 1292.0)
+   * Heat-pulse-Times at: 4/8
+   * Temp. at Heat-Pulse-Times: 1533.0/1444.0
+
+*Evaluation Parameters:*
+  
+   * Set Bandpass:  Low: 0.0Hz, High: 200.0Hz
+   * Set smoothing of spectrogramm: smooth = 2, i.e. running mean over 5 adjacent periodogram ordinates
+   * Set amplitude-fraction: 95.0%
+   * Set time-window-size: 1.0s
+   * Set time-window-overlap: 50.0%
+   * Variables used for evaluation: R_RadiusX, R_RadiusY
+   * Time-Intervalls excluded from evaluation: 
+
+
+**Remarks:**
+
+keine Signale vorhanden 
+
+
+
+
+
+
+##Summary for MC2_ISS_Batch-1_2b_cycle04_ax
+
+*Sample-Specification:*
+  
+   * Alloy: MC2
+   * m: 1.225g
+   * radius: 3.246mm
+   * Melt.-Temp: 1388°C
+
+*Experimental Design: (times are in seconds from start of recording)*
+  
+   * Max. measured Temp. of alloy: 1616.0°C
+   * Measured Temp. at solidification of alloy: 1297.0°C
+   * End of Heatphase to time of solidification: (17.2721, 33.4203)
+   * Data-Evaluation-Range: (17.3, 33.4203)
+   * Temp-Span: (1616.0, 1297.0)
+   * Heat-pulse-Times at: 23/27
+   * Temp. at Heat-Pulse-Times: 1470.0/1393.0
+
+*Evaluation Parameters:*
+  
+   * Set Bandpass:  Low: 5.0Hz, High: 75.0Hz
+   * Set smoothing of spectrogramm: smooth = 2, i.e. running mean over 5 adjacent periodogram ordinates
+   * Set amplitude-fraction: 95.0%
+   * Set time-window-size: 1.0s
+   * Set time-window-overlap: 50.0%
+   * Variables used for evaluation: A_RadiusX, A_RadiusY
+   * Time-Intervalls excluded from evaluation: 
+
+
+**Remarks:**
+
+Wegen schlechtem sig/noise werden am ende 2s abgschnitten;
+
+Am Anfang wird ca. 1s wegen schlechtem sig/noise abgeschnitten
+
+
+
+
+
+
+
+##Summary for MC2_ISS_Batch-1_2b_cycle04_rad
+
+*Sample-Specification:*
+  
+   * Alloy: MC2
+   * m: 1.225g
+   * radius: 3.246mm
+   * Melt.-Temp: 1388°C
+
+*Experimental Design: (times are in seconds from start of recording)*
+  
+   * Max. measured Temp. of alloy: 1613.0°C
+   * Measured Temp. at solidification of alloy: 1296.0°C
+   * End of Heatphase to time of solidification: (0.0, 16.031)
+   * Data-Evaluation-Range: (1.0, 15.0)
+   * Temp-Span: (1613.0, 1296.0)
+   * Heat-pulse-Times at: 6/10
+   * Temp. at Heat-Pulse-Times: 1470.0/1393.0
+
+*Evaluation Parameters:*
+  
+   * Set Bandpass:  Low: 10.0Hz, High: 100.0Hz
+   * Set smoothing of spectrogramm: smooth = 2, i.e. running mean over 5 adjacent periodogram ordinates
+   * Set amplitude-fraction: 95.0%
+   * Set time-window-size: 1.0s
+   * Set time-window-overlap: 50.0%
+   * Variables used for evaluation: R_RadiusX, R_RadiusY
+   * Time-Intervalls excluded from evaluation: 
+
+
+**Remarks:**
+
+Datensatz scheint mit 200Hz gesamplet!? 
+Am Anfang riesige Amplitude von RadiusY, deswegen Auswertung erst ab 1s.
+Wegen schlechtem sig/noise ratio wird am Ende 1s abgeschnitten
+
+
+
+
+
+
+
+##Summary for MC2_ISS_Batch-1_2b_cycle05_ax
+
+*Sample-Specification:*
+  
+   * Alloy: MC2
+   * m: 1.225g
+   * radius: 3.246mm
+   * Melt.-Temp: 1388°C
+
+*Experimental Design: (times are in seconds from start of recording)*
+  
+   * Max. measured Temp. of alloy: 1592.0°C
+   * Measured Temp. at solidification of alloy: 1270.0°C
+   * End of Heatphase to time of solidification: (15.201, 32.503)
+   * Data-Evaluation-Range: (17.0, 31.0)
+   * Temp-Span: (1592.0, 1270.0)
+   * Heat-pulse-Times at: 22/27
+   * Temp. at Heat-Pulse-Times: 1432.0/1354.0
+
+*Evaluation Parameters:*
+  
+   * Set Bandpass:  Low: 5.0Hz, High: 75.0Hz
+   * Set smoothing of spectrogramm: smooth = 2, i.e. running mean over 5 adjacent periodogram ordinates
+   * Set amplitude-fraction: 95.0%
+   * Set time-window-size: 1.0s
+   * Set time-window-overlap: 50.0%
+   * Variables used for evaluation: A_RadiusX, A_RadiusY
+   * Time-Intervalls excluded from evaluation: 
+
+
+**Remarks:**
+
+Wegen schlechtem sig/noise wird am ende 1.5s abgeschnitten und ein 
+Hochpass von 5Hz gesetzt.
+
+Am Anfang werden 2s wegen schlechtem sig/noise abgeschnitten
+
+
+
+
+
+
+##Summary for MC2_ISS_Batch-1_2b_cycle05_rad
+
+*Sample-Specification:*
+  
+   * Alloy: MC2
+   * m: 1.225g
+   * radius: 3.246mm
+   * Melt.-Temp: 1388°C
+
+*Experimental Design: (times are in seconds from start of recording)*
+  
+   * Max. measured Temp. of alloy: 1592.0°C
+   * Measured Temp. at solidification of alloy: 1271.0°C
+   * End of Heatphase to time of solidification: (0.0, 17.2408)
+   * Data-Evaluation-Range: (0.5, 17.2408)
+   * Temp-Span: (1592.0, 1271.0)
+   * Heat-pulse-Times at: 7/11
+   * Temp. at Heat-Pulse-Times: 1432.0/1354.0
+
+*Evaluation Parameters:*
+  
+   * Set Bandpass:  Low: 5.0Hz, High: 200.0Hz
+   * Set smoothing of spectrogramm: smooth = 2, i.e. running mean over 5 adjacent periodogram ordinates
+   * Set amplitude-fraction: 95.0%
+   * Set time-window-size: 1.0s
+   * Set time-window-overlap: 50.0%
+   * Variables used for evaluation: R_RadiusX, R_RadiusY
+   * Time-Intervalls excluded from evaluation: 
+
+
+**Remarks:**
+
+Am Anfang wird 0.5s abgeschnitten wegen Hochfrequenter Störung;
+Am Ende wird 1.5s wegen schlechtem sig/noise abgeschnitten.
+Zusätzlich Hp ab 5Hz
+
+
+
+
+##Summary for MC2_ISS_Batch-1_2b_cycle06_ax
+
+*Sample-Specification:*
+  
+   * Alloy: MC2
+   * m: 1.225g
+   * radius: 3.246mm
+   * Melt.-Temp: 1388°C
+
+*Experimental Design: (times are in seconds from start of recording)*
+  
+   * Max. measured Temp. of alloy: 1568.0°C
+   * Measured Temp. at solidification of alloy: 1275.0°C
+   * End of Heatphase to time of solidification: (14.5459, 30.6903)
+   * Data-Evaluation-Range: (16.0, 30.0)
+   * Temp-Span: (1568.0, 1275.0)
+   * Heat-pulse-Times at: 21/26
+   * Temp. at Heat-Pulse-Times: 1416.0/1335.0
+
+*Evaluation Parameters:*
+  
+   * Set Bandpass:  Low: 10.0Hz, High: 75.0Hz
+   * Set smoothing of spectrogramm: smooth = 2, i.e. running mean over 5 adjacent periodogram ordinates
+   * Set amplitude-fraction: 95.0%
+   * Set time-window-size: 1.0s
+   * Set time-window-overlap: 50.0%
+   * Variables used for evaluation: A_RadiusX, A_RadiusY
+   * Time-Intervalls excluded from evaluation: 
+
+
+**Remarks:**
+
+Schlechtes sig/noise kurz vor begin des zweiten Heizpulses wird durch 
+HP von 10Hz korrigiert.
+Am Ende werden ca. 1.5s abgeschnitten wegen schlechtem sig/noise.
+
+Am Anfang werden 1.5s abgeschnitten wegen schlechtem sig/noise.
+
+
+
+##Summary for MC2_ISS_Batch-1_2b_cycle06_rad
+
+*Sample-Specification:*
+  
+   * Alloy: MC2
+   * m: 1.225g
+   * radius: 3.246mm
+   * Melt.-Temp: 1388°C
+
+*Experimental Design: (times are in seconds from start of recording)*
+  
+   * Max. measured Temp. of alloy: 1537.0°C
+   * Measured Temp. at solidification of alloy: 1274.0°C
+   * End of Heatphase to time of solidification: (0.0, 15.1033)
+   * Data-Evaluation-Range: (0.0, 14.0)
+   * Temp-Span: (1537.0, 1274.0)
+   * Heat-pulse-Times at: 6/11
+   * Temp. at Heat-Pulse-Times: 1417.0/1335.0
+
+*Evaluation Parameters:*
+  
+   * Set Bandpass:  Low: 10.0Hz, High: 200.0Hz
+   * Set smoothing of spectrogramm: smooth = 2, i.e. running mean over 5 adjacent periodogram ordinates
+   * Set amplitude-fraction: 95.0%
+   * Set time-window-size: 1.0s
+   * Set time-window-overlap: 50.0%
+   * Variables used for evaluation: R_RadiusX, R_RadiusY
+   * Time-Intervalls excluded from evaluation: 
+
+
+**Remarks:**
+
+Signal ist von niederfrequenter störung überlagert. 
+HP von 10Hz filtert diese Störung heraus.
+
+Wegen schlechtem sig/noise wird am ende eine sekunde abgeschnitten
