@@ -20,14 +20,14 @@ header <-
 sidebar <-
   dashboardSidebar(sidebarMenu(
     menuItem("Import Tevi Data", tabName = "importTeviData", icon = icon("dashboard")),
-    menuItem("Signal Analysis", tabName = "signal_analysis", icon = icon("bar-chart-o"))
+    menuItem("Signal Analysis", tabName = "signalAnalysis", icon = icon("bar-chart-o"))
   ))
 
 
 body <-
   dashboardBody(tabItems(
     tabItem(tabName = "importTeviData", importTeviDataUI("tdi")),
-    tabItem(tabName = "signal_analysis", signalAnalysisUI("analysis"))
+    tabItem(tabName = "signalAnalysis", signalAnalysisUI("sa"))
   ))
 
 ui <- dashboardPage(header, sidebar, body, title = "Alloy-EML-Analysis")
@@ -39,7 +39,7 @@ server <-
     c(signals, frame_rate) %<-%
       callModule(importTeviData, "tdi")
 
-    callModule(signalAnalysis, "analysis", signals, frame_rate)
+    callModule(signalAnalysis, "sa", signals, frame_rate)
 
   }
 
