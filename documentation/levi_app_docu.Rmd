@@ -55,26 +55,32 @@ Im folgenden sollen mögliche Methoden an einfachen Beispielen kurz verglichen w
 
 [Lorentz-Kurve](https://de.wikipedia.org/wiki/Lorentzkurve)
 
-Ein gedämpfter harmonischer Oszillator lässt sich durch folgende Gleichung 
-beschreiben:
+Ein gedämpfter harmonischer Oszillator 
+\[x(t) = A \cdot e^{-\gamma\cdot t}\cdot e^{i \sqrt{\omega_0^2 - \gamma^2}\cdot t} \] 
+gnügt folgender Gleichung:
 \[\ddot{x} + 2\gamma \dot{x} + \omega_0^2 x = f(t)\]
-\[f(\omega) = \frac{A}{(\omega^2 - \omega_0²)² + \gamma^2\omega^2} \]
+
+Das **Betragsquadrat** der Fourier-Transformierten ist proportional folgendem Term:
+\[f(\omega) \sim \frac{A(\omega)}{(\omega^2 - \omega_0^2)^2 + \large(\frac{\gamma}{2}\large)^2\omega^2} \]
 
 Der gefittete Parameter $\omega_0$ ist dann die gesuchte dominante Freq. im gewählten Zeitfenster.
 
 
 ```{r}
 
-summary_plot <- function(sig_data, spec_data, freq_range, sample_rate = 400, f0 = 30, d = 0.5){
-  
-  freq_range = c(freq_range[1], min(c(freq_range[2], sample_rate/2)))
-    
-  sig_plot <-
+signalPlot <- function(sig_data){
     sig_data %>% 
     ggplot(aes(x = t)) +
     geom_line(aes(y = sig)) +
     geom_line(aes(y = sig_re, color = equal))
-  
+}
+
+
+
+summary_plot <- function(sig_data, spec_data, freq_range, sample_rate = 400, f0 = 30, d = 0.5 ){
+
+    freq_range = c(freq_range[1], min(c(freq_range[2], sample_rate/2)))
+    
   fft_plot <-
     sig_data %>% 
     filter(f < sample_rate / 2) %>%
@@ -83,7 +89,7 @@ summary_plot <- function(sig_data, spec_data, freq_range, sample_rate = 400, f0 
     xlim(freq_range) 
   
   c(fitted_params, fitted_data) %<-% fit_lorentz(sig_data, c0 = c(A = 1000, f0 = f0, g = d))
-  validate(need(fitted_params, "lorentz-fit did not succed"))
+  #validate(need(fitted_params, "lorentz-fit did not succed"))
   
   if (!is.null(fitted_params)) {
     c(estimate, ...rest) %<-% fitted_params
@@ -94,7 +100,7 @@ summary_plot <- function(sig_data, spec_data, freq_range, sample_rate = 400, f0 
         max_freq(sig_data) %$% str_glue(
           "Max. Amp at: {round(f, 3)} Hz, Amp: {round(fc_amp)} (calc. with fft)"
         )),
-        title = str_glue("Lorentz: {round(estimate[2], 2)} Hz;  d = {round(estimate[3], 1)/2} ")
+        title = str_glue("Lorentz: {round(estimate[2], 1)} Hz;  d = {round(estimate[3], 1)} ")
       ) +
       geom_line(
         data = fitted_data,
@@ -107,7 +113,7 @@ summary_plot <- function(sig_data, spec_data, freq_range, sample_rate = 400, f0 
       fft_plot +
       labs(subtitle = (
         max_freq(sig_data) %$% str_glue(
-          "Max. Amp at: {round(f, 3)} Hz, Amp: {round(fc_amp)} (calc. with fft)"
+          "Max. Amp at: {round(f,1)} Hz, Amp: {round(fc_amp)} (calc. with fft)"
         )
       ))
   }  
@@ -120,7 +126,7 @@ summary_plot <- function(sig_data, spec_data, freq_range, sample_rate = 400, f0 
       subtitle = (max_freq(spec_data) %$% str_glue("Max. Amp at: {round(f, 3)} Hz, Amp: {round(fc_amp)} (calc. spectrogram)"))
       )
   
-  plot_grid(sig_plot, fft_plot, spec_plot, nrow = 3)
+  plot_grid(fft_plot, spec_plot, nrow = 2)
 }
 
 max_freq <- function(data, sample_rate = 400){
@@ -145,9 +151,11 @@ spec_data <- reactive({get_spectrum(sig_data(), sr = 400)})
 fluidRow(
 column(width = 3, numericInput("f0", "Signal-Freq [Hz]", value = 30, min = 0, max = 50, step = 1)),
 column(width = 3, numericInput("dc", "Dämpfung", value = 0.3, min = 0, max = 2, step = 0.05)),
-column(width = 3, numericInput("fs", "freq-shift[Hz/s]", value = 2)),
+column(width = 3, numericInput("fs", "freq-shift[Hz/s]", value = 0, min = 0, max = 10, step = 0.5)),
 column(width = 3, numericInput("noise", "Signal-Noise", value = 0.1, min = 0, max = 1, step = 0.1))
 )
+renderPlot(signalPlot(sig_data()))
+
 fluidRow(
   column(width = 4, sliderInput("wr", "Window-Range", value = c(1, 2), min = 0, max = 10)),
   column(width = 4, sliderInput("bp", "Band-Pass", min = 0, max = 400, value = c(0,400)))
@@ -157,8 +165,7 @@ fluidRow(
   column(width = 4, numericInput("f0_start", "fO start", value = 30)),
   column(width = 4, numericInput("d_start", "damping start", value = 0.3, step = 0.05))
 )
-
-renderPlot({summary_plot(sig_data(),  spec_data(), input$bp, f0 = input$f0_start, d = 2 * input$d_start)})
+renderPlot({summary_plot(sig_data(),  spec_data(), input$bp, f0 = input$f0_start, d = input$d_start)})
 
 ```
 
