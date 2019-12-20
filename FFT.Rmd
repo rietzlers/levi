@@ -1,0 +1,74 @@
+---
+title: "FFT"
+output: 
+  html_notebook:
+    code_folding: hide
+runtime: shiny
+---
+
+```{r include=FALSE}
+library(tidyverse)
+library(magrittr)
+library(zeallot)
+library(cowplot)
+library(plotly)
+library(shiny)
+library(janitor)
+library(levi)
+```
+
+```{r}
+fluidRow(
+column(width = 10,
+       textInput("signal", "Signal", width = "100%", 
+          value = "100 * exp(-3 * t) * (sin(2 * pi * (30 - 2 * t) * t))")),
+column(width = 2, numericInput("noise", "Signal-Noise", value = 0, min = 0, max = 100, step = 1))
+)
+
+
+
+fluidRow(
+  column(width = 2, numericInput("sr", "Sample-Rate", value = 100, min = 0, max = 400)),
+  column(width = 2, numericInput("T", "Frame-Size", value = 1, min = 0, max = 10)),
+  column(width = 2, numericInput("lp", "Low-Pass", min = 0, max = 400, value = 0)),
+  column(width = 2, numericInput("hp", "high-Pass", min = 0, max = 400, value = 400))
+)
+
+observeEvent(input$sr, updateNumericInput(session, "hp", value = input$sr/2, max = input$sr/2))
+renderPlot({
+  sr <- input$sr
+  
+  
+  ex_data <-
+    gen_example_data(
+      T = input$T,
+      sr = input$sr,
+      signal = input$signal,
+      noise_sd = input$noise
+    )
+  ex_data # tibble with columns t and s
+  sig_plot <- ex_data %>% ggplot(aes(x = t, y = s)) + geom_line()
+  
+  # calculate fc
+  bp_values = tibble(cut = c(input$lp, input$hp, sr-input$hp, sr-input$lp))
+  sig_fc <- levi::get_fc(ex_data, "s", sr)
+  fcp <- sig_fc %>% ggplot(aes(x = f)) +
+    geom_vline(data = bp_values, aes(xintercept = cut)) + xlim(c(0, sr / 2))
+  
+  # bp filter
+  bp_signal <- levi::bp_filter(ex_data, "s", bp = c(input$lp, input$hp), sr)
+  sig_plot <-
+    sig_plot + geom_line(data = bp_signal, aes(x = t, y = s), color = "red")
+  
+  # max amplitude
+  c(f_max, fmax_amp) %<-% max_freq(sig_fc, sr)
+  fcp <-
+    fcp + labs(subtitle = str_glue("Dom. Freq. {round(f_max, 2)} Hz / Amp: {round(fmax_amp, 1)}"))
+  
+  # visualize
+  fcp <-
+    plot_grid(fcp + geom_line(aes(y = fc_amp)), fcp + geom_line(aes(y = fc_arg)))
+  plot_grid(sig_plot, fcp, nrow = 2)
+})
+```
+
