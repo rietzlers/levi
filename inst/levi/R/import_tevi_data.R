@@ -10,8 +10,8 @@ importTeviDataUI <- function(id) {
         signalUI(ns("temp")),
         signalUI(ns("heating")),
         fluidRow(
-          column(2, selectInput(ns("hp"), label = NULL, choices = c("one" = "hp1", "two" = "hp2", "three" = "hp3"))),
-          column(8, verbatimTextOutput(ns("exp_timing")))))
+          column(6, selectInput(ns("hp"), label = NULL, choices = c("one" = "hp1", "two" = "hp2", "three" = "hp3"))),
+          column(6, verbatimTextOutput(ns("exp_timing")))))
     )
 }
 
@@ -37,7 +37,6 @@ importTeviData <- function(input, output, session){
 
     reactive(as_tibble(reactiveValuesToList(exp_timing)) %>% select(lc, hp1, hp2, hp3))
   }
-
   exp_timing <- gen_exp_timing()
 
   output$plot_center_xy <-
