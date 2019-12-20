@@ -4,10 +4,12 @@
 \alias{periodogram}
 \title{Berechnung des Stichprobenspektrums}
 \usage{
-periodogram(ts, sr, type)
+periodogram(data, sr, signal, type)
 }
 \arguments{
-\item{ts}{}
+\item{sr}{sample-rate}
+
+\item{ts}{datensatz mit mind den variablen t und signal}
 }
 \value{
 

@@ -4,10 +4,10 @@
 \alias{max_freq}
 \title{ermittle die dominante Frequenz eines signals aus dem Periodogramm}
 \usage{
-max_freq(data, sample_rate = 400)
+max_freq(fft_data, sample_rate = 400)
 }
 \arguments{
-\item{data}{datensatz mit variablen f und fc_amp}
+\item{fft_data}{datensatz mit variablen f und fc_amp}
 
 \item{sample_rate}{sample-rate}
 }

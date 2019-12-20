@@ -4,7 +4,7 @@
 \alias{get_spectrum}
 \title{get_spectrum}
 \usage{
-get_spectrum(data, sr, type = "spec")
+get_spectrum(data, signal, sr)
 }
 \arguments{
 \item{data}{tibble with variable sig}
