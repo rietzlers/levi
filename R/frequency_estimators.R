@@ -5,13 +5,13 @@
 #' \deqn{I(\lambda) = N\cdot |D(\lambda)|^2}
 #' \eqn{D(\lambda)}: Fouriertransformierte der Zeitreihe.
 #'
-#' @param sr
-#' @param ts
+#' @param sr sample-rate
+#' @param ts datensatz mit mind den variablen t und signal
 #'
 #' @return
 #' @export
-periodogram <- function(ts, sr, type){
-# check for missing observations!!
+periodogram <- function(data, sr, signal, type){
+  if(!regular_ts(data, sr, signal)) stop("keine reguläre zeitreihe")
 }
 
 #' fit_lorentz
@@ -57,41 +57,102 @@ fit_lorentz <- function(data, sr = 400, c0 = c(A = 1000, f0 = 30, g = 0.1) ) {
 #'
 #' @return
 #' @export
-get_spectrum <- function(data, sr, type = "spec"){
-  if (type == "spec")
-  {
+get_spectrum <- function(data, signal, sr){
     data %$%
       tibble(
-        f = spectrum(ts(sig), frequncy = sr, plot = FALSE)$freq * sr,
-        fc_amp = spectrum(ts(sig), frequncy = sr, plot = FALSE)$spec
+        f = spectrum(ts(!!sym(signal)), frequncy = sr, plot = FALSE)$freq * sr,
+        fc_amp = spectrum(ts(!!sym(signal)), frequncy = sr, plot = FALSE)$spec
       )
-  }else{
-    data %>%
-      mutate(
-        fc = fft(sig),
-        f = seq(0, length(t) - 1) / length(t) * sr,
-        fc_amp = Mod(fc),
-        fc_phase = Arg(fc)
-      ) %>%
-      mutate(
-        bp = if_else(bp[1] <= f & f <= bp[2], fc, 0i),
-        sig_re = Re(fft(bp, inverse = TRUE)) / length(t),
-        equal = factor(if_else(near(sig, sig_re), "yes", "no"), levels = c("yes", "no"))
-      )
-  }
+}
+
+#' calculate fourier-koeffs. with fft
+#'
+#' The function \code{fft} returns the \bold{unnormalized} Fourier-Coefficients!
+#' To be consistent with Schlittgen and
+#'
+#' @param data tibble with var "signal"
+#' @param signal character: name of signal
+#' @param sr samplerate
+#'
+#' @return tibble with vars f, fc, fc_amp and fc_arg
+#'
+#' @export
+get_fc <- function(data, signal, sr){
+  if(!regular_ts(data, signal, sr)) stop("no regular ts")
+
+  signal = sym(signal)
+  N <- length(data[[signal]])
+
+  data %>%
+    transmute(
+      fc = fft(!!signal) / N, # Normalisierung !!!
+      f = 0:(N - 1) / N * sr,
+      fc_amp = Mod(fc),
+      fc_arg = Arg(fc)
+    )
+}
+
+#' Band-Pass-Filter signal
+#'
+#' @param sig_data tibble with var signal
+#' @param signal character: name of signal to be filtered
+#' @param bp numeric vector: lower and upper bp-Freqs
+#' @param sr samplerate
+#'
+#' @return tibble with
+#' @export
+bp_filter <- function(sig_data, signal, bp, sr){
+  get_fc(sig_data, signal, sr) %>%
+    mutate(
+      t = sig_data$t,
+      fc = if_else(
+        between(f, bp[1], bp[2]) | between(f, (sr - bp[2]), (sr - bp[1])),
+        fc * length(t),
+        0i
+        ),
+      !!sym(signal) := Re(fft(fc, inverse = TRUE)) / length(t)
+    )
 }
 
 #' ermittle die dominante Frequenz eines signals aus dem Periodogramm
 #'
 #'
-#' @param data datensatz mit variablen f und fc_amp
+#' @param fft_data datensatz mit variablen f und fc_amp
 #' @param sample_rate sample-rate
 #'
 #' @return tibble with variables f and fc_amp mit einer observation
 #' @export
-max_freq <- function(data, sample_rate = 400){
-  data %>%
-    filter(near(fc_amp, max(fc_amp)))  %>%
+max_freq <- function(fft_data, sample_rate = 400){
+  fft_data %>%
     filter(f < sample_rate/2) %>% # spiegelsymmetrie an der nyquist-freq!
+    filter(near(fc_amp, max(fc_amp)))  %>%
     transmute(f = mean(f), fc_amp = mean(fc_amp))
+}
+
+
+#' checks if sampling-interval is equidistant and no
+#' observations are missing
+#'
+#' @param data tibble with var t
+#' @param sr samplerate
+#' @param signal character: Name of the signal to check
+#'
+#' @return boolean: true if ts is regular
+#' @export
+regular_ts <- function(data, signal, sr) {
+  if (any(is.na(data$t))) {
+    warning("NA values in t")
+    return(FALSE)
+  }
+  if (any(!near(data %$% diff(t), 1 / sr))) {
+    warning("t_i are not equidistant or inconsistent with samplerate")
+    return(FALSE)
+  }
+
+  if (any(is.na(data[[signal]]))) {
+    warning("NA values in signal")
+    return(FALSE)
+  }
+
+  return(TRUE)
 }
