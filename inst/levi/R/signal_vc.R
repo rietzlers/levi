@@ -4,7 +4,10 @@ signalUI <- function(id, height = 200){
   ns <- NS(id)
 
   tagList(
-    selectInput(ns("selected_signal"), label = "select signal", choices = NULL),
+    fluidRow(
+      column(width = 4, selectInput(ns("selected_signal"), label = NULL, choices = NULL)),
+      column(width = 4, sliderInput("bp", "Band-Pass", min = 0, max = 400, value = c(0,400)))
+    ),
     plotOutput(
       ns("signal"), height = height,
       brush = brushOpts(id = ns("brush"), fill = "#ccc", direction = "x", resetOnNew = TRUE))
