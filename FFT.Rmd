@@ -42,10 +42,11 @@ renderPlot({
   ex_data <-
     gen_example_data(
       T = input$T,
-      sr = input$sr,
+      sr = sr,
       signal = input$signal,
       noise_sd = input$noise
     )
+  
   ex_data # tibble with columns t and s
   sig_plot <- ex_data %>% ggplot(aes(x = t, y = s)) + geom_line()
   
@@ -64,6 +65,7 @@ renderPlot({
   c(f_max, fmax_amp) %<-% max_freq(sig_fc, sr)
   fcp <-
     fcp + labs(subtitle = str_glue("Dom. Freq. {round(f_max, 2)} Hz / Amp: {round(fmax_amp, 1)}"))
+  
   
   # visualize
   fcp <-
