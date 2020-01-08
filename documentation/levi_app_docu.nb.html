@@ -1731,7 +1731,7 @@ summary {
 
 
 
-<div class="fluid-row" id="section-header">
+<div class="fluid-row" id="header">
 
 <div class="btn-group pull-right">
 <button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span>Code</span> <span class="caret"></span></button>
@@ -1755,18 +1755,18 @@ summary {
 <!-- rnb-text-begin -->
 <!-- rnb-text-end -->
 <!-- rnb-text-begin -->
-<div id="section-dashboard" class="section level1">
+<div id="dashboard" class="section level1">
 <h1>Dashboard</h1>
 <p>Zentrales UI zum laden und aufbereiten der Tevi-Datensätze.</p>
 <ul>
 <li>festlegung der heizpulse und abkühlungsphase</li>
 </ul>
 </div>
-<div id="section-signal-analysis" class="section level1">
+<div id="signal-analysis" class="section level1">
 <h1>Signal-Analysis</h1>
 <p>Auswahl eines Signals und Zeitfensters. Bestimmung der dominanten Frequenz in diesem Zeitfenster</p>
 </div>
-<div id="section-frequenz-schätzer" class="section level1">
+<div id="frequenz-schätzer" class="section level1">
 <h1>Frequenz-Schätzer</h1>
 <p>Die <em>Schwingungs-Frequenz</em> der Kugel kann aus den zur Verfügung stehenden Signalen auf unterschiedliche Art ermittelt werden:</p>
 <ul>
@@ -1781,86 +1781,17 @@ ber die Standard-Funktion <code>spectrum</code> oder mit der Funktion <code>fft<
 </ul>
 <p>Im folgenden sollen mögliche Methoden an einfachen Beispielen kurz verglichen werden.</p>
 </div>
-<div id="section-fit-lorentz-to-amps-of-fourier-coefficients" class="section level1">
+<div id="fit-lorentz-to-amps-of-fourier-coefficients" class="section level1">
 <h1>Fit Lorentz to Amps of Fourier-Coefficients</h1>
 <p><a href="https://de.wikipedia.org/wiki/Lorentzkurve">Lorentz-Kurve</a></p>
-<p>Ein gedämpfter harmonischer Oszillator <span class="math display">\[x(t) = A \cdot e^{-\gamma\cdot t}\cdot e^{i \sqrt{\omega_0^2 - \gamma^2}\cdot t} \]</span> gnügt folgender Gleichung: <span class="math display">\[\ddot{x} + 2\gamma \dot{x} + \omega_0^2 x = f(t)\]</span></p>
-<p>Das <strong>Betragsquadrat</strong> der Fourier-Transformierten ist proportional folgendem Term: <span class="math display">\[f(\omega) \sim \frac{A(\omega)}{(\omega^2 - \omega_0^2)^2 + \large(\frac{\gamma}{2}\large)^2\omega^2} \]</span></p>
-<p>Der gefittete Parameter <span class="math inline">\(\omega_0\)</span> ist dann die gesuchte dominante Freq. im gewählten Zeitfenster.</p>
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuXG5zaWduYWxQbG90IDwtIGZ1bmN0aW9uKHNpZ19kYXRhKXtcbiAgICBzaWdfZGF0YSAlPiUgXG4gICAgZ2dwbG90KGFlcyh4ID0gdCkpICtcbiAgICBnZW9tX2xpbmUoYWVzKHkgPSBzaWcpKSArXG4gICAgZ2VvbV9saW5lKGFlcyh5ID0gc2lnX3JlLCBjb2xvciA9IGVxdWFsKSlcbn1cblxuc3VtbWFyeV9wbG90IDwtIGZ1bmN0aW9uKHNpZ19kYXRhLCBzcGVjX2RhdGEsIGZyZXFfcmFuZ2UsIHNhbXBsZV9yYXRlID0gNDAwLCBmMCA9IDMwLCBkID0gMC41ICl7XG5cbiAgZnJlcV9yYW5nZSA9IGMoZnJlcV9yYW5nZVsxXSwgbWluKGMoZnJlcV9yYW5nZVsyXSwgc2FtcGxlX3JhdGUvMikpKVxuICAgIFxuICBmZnRfcGxvdCA8LVxuICAgIHNpZ19kYXRhICU+JSBcbiAgICBmaWx0ZXIoZiA8IHNhbXBsZV9yYXRlIC8gMikgJT4lXG4gICAgZ2dwbG90KGFlcyh4ID0gZikpICsgXG4gICAgZ2VvbV9saW5lKGFlcyh5ID0gZmNfYW1wKSkgKyBcbiAgICB4bGltKGZyZXFfcmFuZ2UpIFxuICBcbiAgc1xuICBzcGVjX3Bsb3QgPC1cbiAgICBzcGVjX2RhdGEgICU+JVxuICAgIGdncGxvdCgpICtcbiAgICBnZW9tX2xpbmUoYWVzKHggPSBmLCB5ID0gZmNfYW1wKSkgK1xuICAgIHhsaW0oZnJlcV9yYW5nZSkgK1xuICAgIGxhYnMoXG4gICAgICBzdWJ0aXRsZSA9IChtYXhfZnJlcShzcGVjX2RhdGEpICUkJSBzdHJfZ2x1ZShcIk1heC4gQW1wIGF0OiB7cm91bmQoZiwgMyl9IEh6LCBBbXA6IHtyb3VuZChmY19hbXApfSAoY2FsYy4gc3BlY3Ryb2dyYW0pXCIpKVxuICAgICAgKVxuICBcbiAgcGxvdF9ncmlkKGZmdF9wbG90LCBzcGVjX3Bsb3QsIG5yb3cgPSAyKVxufVxuXG5gYGAifQ== -->
-<pre class="r"><code>
-signalPlot &lt;- function(sig_data){
-    sig_data %&gt;% 
-    ggplot(aes(x = t)) +
-    geom_line(aes(y = sig)) +
-    geom_line(aes(y = sig_re, color = equal))
-}
-
-summary_plot &lt;- function(sig_data, spec_data, freq_range, sample_rate = 400, f0 = 30, d = 0.5 ){
-
-  freq_range = c(freq_range[1], min(c(freq_range[2], sample_rate/2)))
-    
-  fft_plot &lt;-
-    sig_data %&gt;% 
-    filter(f &lt; sample_rate / 2) %&gt;%
-    ggplot(aes(x = f)) + 
-    geom_line(aes(y = fc_amp)) + 
-    xlim(freq_range) 
-  
-  s
-  spec_plot &lt;-
-    spec_data  %&gt;%
-    ggplot() +
-    geom_line(aes(x = f, y = fc_amp)) +
-    xlim(freq_range) +
-    labs(
-      subtitle = (max_freq(spec_data) %$% str_glue(&quot;Max. Amp at: {round(f, 3)} Hz, Amp: {round(fc_amp)} (calc. spectrogram)&quot;))
-      )
-  
-  plot_grid(fft_plot, spec_plot, nrow = 2)
-}
-</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
-<!-- rnb-text-end -->
-<!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuXG5zaWdfZGF0YSA8LSByZWFjdGl2ZSh7aW5wdXQkcmVzYW1wbGVcbiAgZ2VuX2V4YW1wbGVfZGF0YShUID0gMTAsIHNyID0gaW5wdXQkc3IsIGRjID0gaW5wdXQkZGMsIGYwID0gaW5wdXQkZjAsIGZzID0gaW5wdXQkZnMsIG5vaXNlX3NkID0gaW5wdXQkbm9pc2UpIFxufSlcbnNwZWNfZGF0YSA8LSByZWFjdGl2ZSh7Z2V0X3NwZWN0cnVtKHNpZ19kYXRhKCksIHNyID0gNDAwKX0pXG5cblxuZmx1aWRSb3coXG5jb2x1bW4od2lkdGggPSAzLCBudW1lcmljSW5wdXQoXCJmMFwiLCBcIlNpZ25hbC1GcmVxIFtIel1cIiwgdmFsdWUgPSAzMCwgbWluID0gMCwgbWF4ID0gNTAsIHN0ZXAgPSAxKSksXG5jb2x1bW4od2lkdGggPSAzLCBudW1lcmljSW5wdXQoXCJkY1wiLCBcIkTDpG1wZnVuZ1wiLCB2YWx1ZSA9IDAuMywgbWluID0gMCwgbWF4ID0gMiwgc3RlcCA9IDAuMDUpKSxcbmNvbHVtbih3aWR0aCA9IDMsIG51bWVyaWNJbnB1dChcImZzXCIsIFwiZnJlcS1zaGlmdFtIei9zXVwiLCB2YWx1ZSA9IDAsIG1pbiA9IDAsIG1heCA9IDEwLCBzdGVwID0gMC41KSksXG5jb2x1bW4od2lkdGggPSAzLCBudW1lcmljSW5wdXQoXCJub2lzZVwiLCBcIlNpZ25hbC1Ob2lzZVwiLCB2YWx1ZSA9IDAuMSwgbWluID0gMCwgbWF4ID0gMSwgc3RlcCA9IDAuMSkpXG4pXG5cbmZsdWlkUm93KFxuICBjb2x1bW4od2lkdGggPSA0LCBzbGlkZXJJbnB1dChcInNyXCIsIFwiU2FtcGxlLVJhdGVcIiwgdmFsdWUgPSA0MDAsIG1pbiA9IDAsIG1heCA9IDQwMCkpLFxuICBjb2x1bW4od2lkdGggPSA0LCBzbGlkZXJJbnB1dChcIndyXCIsIFwiV2luZG93LVJhbmdlXCIsIHZhbHVlID0gYygxLCAyKSwgbWluID0gMCwgbWF4ID0gMTApKSxcbiAgY29sdW1uKHdpZHRoID0gNCwgc2xpZGVySW5wdXQoXCJicFwiLCBcIkJhbmQtUGFzc1wiLCBtaW4gPSAwLCBtYXggPSA0MDAsIHZhbHVlID0gYygwLDQwMCkpKVxuKVxucmVuZGVyUGxvdChzaWduYWxQbG90KHNpZ19kYXRhKCkpKVxucmVuZGVyUGxvdCh7c3VtbWFyeV9wbG90KHNpZ19kYXRhKCksICBzcGVjX2RhdGEoKSwgaW5wdXQkYnAsIGYwID0gaW5wdXQkZjBfc3RhcnQsIGQgPSBpbnB1dCRkX3N0YXJ0KX0pXG5mbHVpZFJvdyhcbiAgY29sdW1uKHdpZHRoID0gMiwgYWN0aW9uQnV0dG9uKFwicmVzYW1wbGVcIiwgXCJSZXNhbXBsZVwiKSksXG4gIGNvbHVtbih3aWR0aCA9IDQsIG51bWVyaWNJbnB1dChcImYwX3N0YXJ0XCIsIFwiZk8gc3RhcnRcIiwgdmFsdWUgPSAzMCkpLFxuICBjb2x1bW4od2lkdGggPSA0LCBudW1lcmljSW5wdXQoXCJkX3N0YXJ0XCIsIFwiZGFtcGluZyBzdGFydFwiLCB2YWx1ZSA9IDAuMywgc3RlcCA9IDAuMDUpKVxuKVxuYGBgIn0= -->
-<pre class="r"><code>
-sig_data &lt;- reactive({input$resample
-  gen_example_data(T = 10, sr = input$sr, dc = input$dc, f0 = input$f0, fs = input$fs, noise_sd = input$noise) 
-})
-spec_data &lt;- reactive({get_spectrum(sig_data(), sr = 400)})
-
-
-fluidRow(
-column(width = 3, numericInput(&quot;f0&quot;, &quot;Signal-Freq [Hz]&quot;, value = 30, min = 0, max = 50, step = 1)),
-column(width = 3, numericInput(&quot;dc&quot;, &quot;Dämpfung&quot;, value = 0.3, min = 0, max = 2, step = 0.05)),
-column(width = 3, numericInput(&quot;fs&quot;, &quot;freq-shift[Hz/s]&quot;, value = 0, min = 0, max = 10, step = 0.5)),
-column(width = 3, numericInput(&quot;noise&quot;, &quot;Signal-Noise&quot;, value = 0.1, min = 0, max = 1, step = 0.1))
-)
-
-fluidRow(
-  column(width = 4, sliderInput(&quot;sr&quot;, &quot;Sample-Rate&quot;, value = 400, min = 0, max = 400)),
-  column(width = 4, sliderInput(&quot;wr&quot;, &quot;Window-Range&quot;, value = c(1, 2), min = 0, max = 10)),
-  column(width = 4, sliderInput(&quot;bp&quot;, &quot;Band-Pass&quot;, min = 0, max = 400, value = c(0,400)))
-)
-renderPlot(signalPlot(sig_data()))
-renderPlot({summary_plot(sig_data(),  spec_data(), input$bp, f0 = input$f0_start, d = input$d_start)})
-fluidRow(
-  column(width = 2, actionButton(&quot;resample&quot;, &quot;Resample&quot;)),
-  column(width = 4, numericInput(&quot;f0_start&quot;, &quot;fO start&quot;, value = 30)),
-  column(width = 4, numericInput(&quot;d_start&quot;, &quot;damping start&quot;, value = 0.3, step = 0.05))
-)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-chunk-end -->
-<!-- rnb-text-begin -->
+<p>Ein gedämpfter harmonischer Oszillator gnügt folgender Gleichung: <span class="math display">\[\ddot{x} + 2\gamma \dot{x} + \omega_0^2 x = f(t)\]</span> Eine partikuläre Lösung ist: <span class="math display">\[x(t) = A \cdot e^{-\gamma\cdot t}\cdot e^{i \sqrt{\omega_0^2 - \gamma^2}\cdot t} \]</span></p>
+<p>Das <strong>Betragsquadrat</strong> der Fourier-Transformierten ist: <span class="math display">\[f(\omega) = \frac{|A(\omega)|^2}{(\omega^2 - \omega_0^2)^2 + \large(2\gamma\large)^2\omega^2} \]</span></p>
+<p>Wobei <span class="math inline">\(A(\omega)\)</span> die Fouriertransformierte von <span class="math inline">\(f(t)\)</span> ist. Unterstellt man eine Impulsanregung so kann <span class="math inline">\(A(\omega)\)</span> als näherungsweise unabhängig von <span class="math inline">\(\omega\)</span> angesetzt werden.</p>
+<p>Die theoretische Spektraldichte dieses Signals ist damit porportional zu: <span class="math display">\[f(\omega) \sim \frac{A}{(\omega^2 - \omega_0^2)^2 + \large(2\gamma\large)^2\omega^2} \]</span></p>
 <!-- rnb-text-end -->
 </div>
 
-<div id="rmd-source-code">LS0tCnRpdGxlOiAiU3RydWt0dXIgdW5kIEJlZGllbnVuZyBkZXIgQXBwIgphdXRob3I6ICJTdGVwaGFuIFJpZXR6bGVyIgpkYXRlOiAiMTIvMTcvMjAxOSIKb3V0cHV0OiAKICBodG1sX25vdGVib29rOgogICAgY29kZV9mb2xkaW5nOiBoaWRlCnJ1bnRpbWU6IHNoaW55Ci0tLQoKYGBge3IgaW5jbHVkZT1GQUxTRX0KbGlicmFyeSh0aWR5dmVyc2UpCmxpYnJhcnkobWFncml0dHIpCmxpYnJhcnkoemVhbGxvdCkKbGlicmFyeShjb3dwbG90KQpsaWJyYXJ5KHBsb3RseSkKbGlicmFyeShzaGlueSkKbGlicmFyeShqYW5pdG9yKQpsaWJyYXJ5KGxldmkpCmBgYAoKIyBEYXNoYm9hcmQKClplbnRyYWxlcyBVSSB6dW0gbGFkZW4gdW5kIGF1ZmJlcmVpdGVuIGRlciBUZXZpLURhdGVuc8OkdHplLgoKKiBmZXN0bGVndW5nIGRlciBoZWl6cHVsc2UgdW5kIGFia8O8aGx1bmdzcGhhc2UKCgojIFNpZ25hbC1BbmFseXNpcwoKQXVzd2FobCBlaW5lcyBTaWduYWxzIHVuZCBaZWl0ZmVuc3RlcnMuIEJlc3RpbW11bmcgZGVyIGRvbWluYW50ZW4gCkZyZXF1ZW56IGluIGRpZXNlbSBaZWl0ZmVuc3RlcgoKIyBGcmVxdWVuei1TY2jDpHR6ZXIKCkRpZSAqU2Nod2luZ3VuZ3MtRnJlcXVlbnoqIGRlciBLdWdlbCBrYW5uIGF1cyBkZW4genVyIFZlcmbDvGd1bmcgc3RlaGVuZGVuIFNpZ25hbGVuCmF1ZiB1bnRlcnNjaGllZGxpY2hlIEFydCBlcm1pdHRlbHQgd2VyZGVuOiAKCiogRGllIHp1ciBtYXhpbWFsZW4gQW1wbGl0dWRlIGRlciBGb3VyaWVyLUtvZWZmaXppZW50ZW4gZ2Vow7ZyZW5kZSBGcmVxdWVuei4KKiBMb3JlbnR6LUZpdCBhbmQgZGllc2UgQW1wbGl0dWRlbi4KCkRhYmVpIGlzdCBmb2xnZW5kZXMgenUgYmVhY2h0ZW46IAoKKiBEYXMgU2lnbmFsIGthbm4gdm9yaGVyIGF1ZmJlcmVpdGV0IHdlcmRlbiAoR2zDpHR0dW5nLCBNaXR0ZWx1bmcgdXN3LiApCiogRGllIEZvdXJpZXItS29lZmZpemVpZW50ZW4ga8O2bm5lbiB2ZXJzY2hpZWRlbiBiZXJlY2huZXQgd2VyZGVuOiAgCmJlciBkaWUgU3RhbmRhcmQtRnVua3Rpb24gYGBgc3BlY3RydW0gYGBgIG9kZXIgbWl0ICAgZGVyIEZ1bmt0aW9uIGBgYGZmdGBgYC4KCkltIGZvbGdlbmRlbiBzb2xsZW4gbcO2Z2xpY2hlIE1ldGhvZGVuIGFuIGVpbmZhY2hlbiBCZWlzcGllbGVuIGt1cnogdmVyZ2xpY2hlbiB3ZXJkZW4uCgoKIyBGaXQgTG9yZW50eiB0byBBbXBzIG9mIEZvdXJpZXItQ29lZmZpY2llbnRzCgpbTG9yZW50ei1LdXJ2ZV0oaHR0cHM6Ly9kZS53aWtpcGVkaWEub3JnL3dpa2kvTG9yZW50emt1cnZlKQoKRWluIGdlZMOkbXBmdGVyIGhhcm1vbmlzY2hlciBPc3ppbGxhdG9yIApcW3godCkgPSBBIFxjZG90IGVeey1cZ2FtbWFcY2RvdCB0fVxjZG90IGVee2kgXHNxcnR7XG9tZWdhXzBeMiAtIFxnYW1tYV4yfVxjZG90IHR9IFxdIApnbsO8Z3QgZm9sZ2VuZGVyIEdsZWljaHVuZzoKXFtcZGRvdHt4fSArIDJcZ2FtbWEgXGRvdHt4fSArIFxvbWVnYV8wXjIgeCA9IGYodClcXQoKRGFzICoqQmV0cmFnc3F1YWRyYXQqKiBkZXIgRm91cmllci1UcmFuc2Zvcm1pZXJ0ZW4gaXN0IHByb3BvcnRpb25hbCBmb2xnZW5kZW0gVGVybToKXFtmKFxvbWVnYSkgXHNpbSBcZnJhY3tBKFxvbWVnYSl9eyhcb21lZ2FeMiAtIFxvbWVnYV8wXjIpXjIgKyBcbGFyZ2UoXGZyYWN7XGdhbW1hfXsyfVxsYXJnZSleMlxvbWVnYV4yfSBcXQoKRGVyIGdlZml0dGV0ZSBQYXJhbWV0ZXIgJFxvbWVnYV8wJCBpc3QgZGFubiBkaWUgZ2VzdWNodGUgZG9taW5hbnRlIEZyZXEuIGltIGdld8OkaGx0ZW4gWmVpdGZlbnN0ZXIuCgoKYGBge3J9CgpzaWduYWxQbG90IDwtIGZ1bmN0aW9uKHNpZ19kYXRhKXsKICAgIHNpZ19kYXRhICU+JSAKICAgIGdncGxvdChhZXMoeCA9IHQpKSArCiAgICBnZW9tX2xpbmUoYWVzKHkgPSBzaWcpKSArCiAgICBnZW9tX2xpbmUoYWVzKHkgPSBzaWdfcmUsIGNvbG9yID0gZXF1YWwpKQp9CgpzdW1tYXJ5X3Bsb3QgPC0gZnVuY3Rpb24oc2lnX2RhdGEsIHNwZWNfZGF0YSwgZnJlcV9yYW5nZSwgc2FtcGxlX3JhdGUgPSA0MDAsIGYwID0gMzAsIGQgPSAwLjUgKXsKCiAgZnJlcV9yYW5nZSA9IGMoZnJlcV9yYW5nZVsxXSwgbWluKGMoZnJlcV9yYW5nZVsyXSwgc2FtcGxlX3JhdGUvMikpKQogICAgCiAgZmZ0X3Bsb3QgPC0KICAgIHNpZ19kYXRhICU+JSAKICAgIGZpbHRlcihmIDwgc2FtcGxlX3JhdGUgLyAyKSAlPiUKICAgIGdncGxvdChhZXMoeCA9IGYpKSArIAogICAgZ2VvbV9saW5lKGFlcyh5ID0gZmNfYW1wKSkgKyAKICAgIHhsaW0oZnJlcV9yYW5nZSkgCiAgCiAgcwogIHNwZWNfcGxvdCA8LQogICAgc3BlY19kYXRhICAlPiUKICAgIGdncGxvdCgpICsKICAgIGdlb21fbGluZShhZXMoeCA9IGYsIHkgPSBmY19hbXApKSArCiAgICB4bGltKGZyZXFfcmFuZ2UpICsKICAgIGxhYnMoCiAgICAgIHN1YnRpdGxlID0gKG1heF9mcmVxKHNwZWNfZGF0YSkgJSQlIHN0cl9nbHVlKCJNYXguIEFtcCBhdDoge3JvdW5kKGYsIDMpfSBIeiwgQW1wOiB7cm91bmQoZmNfYW1wKX0gKGNhbGMuIHNwZWN0cm9ncmFtKSIpKQogICAgICApCiAgCiAgcGxvdF9ncmlkKGZmdF9wbG90LCBzcGVjX3Bsb3QsIG5yb3cgPSAyKQp9CgpgYGAKCgpgYGB7cn0KCnNpZ19kYXRhIDwtIHJlYWN0aXZlKHtpbnB1dCRyZXNhbXBsZQogIGdlbl9leGFtcGxlX2RhdGEoVCA9IDEwLCBzciA9IGlucHV0JHNyLCBkYyA9IGlucHV0JGRjLCBmMCA9IGlucHV0JGYwLCBmcyA9IGlucHV0JGZzLCBub2lzZV9zZCA9IGlucHV0JG5vaXNlKSAKfSkKc3BlY19kYXRhIDwtIHJlYWN0aXZlKHtnZXRfc3BlY3RydW0oc2lnX2RhdGEoKSwgc3IgPSA0MDApfSkKCgpmbHVpZFJvdygKY29sdW1uKHdpZHRoID0gMywgbnVtZXJpY0lucHV0KCJmMCIsICJTaWduYWwtRnJlcSBbSHpdIiwgdmFsdWUgPSAzMCwgbWluID0gMCwgbWF4ID0gNTAsIHN0ZXAgPSAxKSksCmNvbHVtbih3aWR0aCA9IDMsIG51bWVyaWNJbnB1dCgiZGMiLCAiRMOkbXBmdW5nIiwgdmFsdWUgPSAwLjMsIG1pbiA9IDAsIG1heCA9IDIsIHN0ZXAgPSAwLjA1KSksCmNvbHVtbih3aWR0aCA9IDMsIG51bWVyaWNJbnB1dCgiZnMiLCAiZnJlcS1zaGlmdFtIei9zXSIsIHZhbHVlID0gMCwgbWluID0gMCwgbWF4ID0gMTAsIHN0ZXAgPSAwLjUpKSwKY29sdW1uKHdpZHRoID0gMywgbnVtZXJpY0lucHV0KCJub2lzZSIsICJTaWduYWwtTm9pc2UiLCB2YWx1ZSA9IDAuMSwgbWluID0gMCwgbWF4ID0gMSwgc3RlcCA9IDAuMSkpCikKCmZsdWlkUm93KAogIGNvbHVtbih3aWR0aCA9IDQsIHNsaWRlcklucHV0KCJzciIsICJTYW1wbGUtUmF0ZSIsIHZhbHVlID0gNDAwLCBtaW4gPSAwLCBtYXggPSA0MDApKSwKICBjb2x1bW4od2lkdGggPSA0LCBzbGlkZXJJbnB1dCgid3IiLCAiV2luZG93LVJhbmdlIiwgdmFsdWUgPSBjKDEsIDIpLCBtaW4gPSAwLCBtYXggPSAxMCkpLAogIGNvbHVtbih3aWR0aCA9IDQsIHNsaWRlcklucHV0KCJicCIsICJCYW5kLVBhc3MiLCBtaW4gPSAwLCBtYXggPSA0MDAsIHZhbHVlID0gYygwLDQwMCkpKQopCnJlbmRlclBsb3Qoc2lnbmFsUGxvdChzaWdfZGF0YSgpKSkKcmVuZGVyUGxvdCh7c3VtbWFyeV9wbG90KHNpZ19kYXRhKCksICBzcGVjX2RhdGEoKSwgaW5wdXQkYnAsIGYwID0gaW5wdXQkZjBfc3RhcnQsIGQgPSBpbnB1dCRkX3N0YXJ0KX0pCmZsdWlkUm93KAogIGNvbHVtbih3aWR0aCA9IDIsIGFjdGlvbkJ1dHRvbigicmVzYW1wbGUiLCAiUmVzYW1wbGUiKSksCiAgY29sdW1uKHdpZHRoID0gNCwgbnVtZXJpY0lucHV0KCJmMF9zdGFydCIsICJmTyBzdGFydCIsIHZhbHVlID0gMzApKSwKICBjb2x1bW4od2lkdGggPSA0LCBudW1lcmljSW5wdXQoImRfc3RhcnQiLCAiZGFtcGluZyBzdGFydCIsIHZhbHVlID0gMC4zLCBzdGVwID0gMC4wNSkpCikKYGBgCgoKCg==</div>
+<div id="rmd-source-code">LS0tCnRpdGxlOiAiU3RydWt0dXIgdW5kIEJlZGllbnVuZyBkZXIgQXBwIgphdXRob3I6ICJTdGVwaGFuIFJpZXR6bGVyIgpkYXRlOiAiMTIvMTcvMjAxOSIKb3V0cHV0OiAKICBodG1sX25vdGVib29rOgogICAgY29kZV9mb2xkaW5nOiBoaWRlCi0tLQoKYGBge3IgaW5jbHVkZT1GQUxTRX0KbGlicmFyeSh0aWR5dmVyc2UpCmxpYnJhcnkobWFncml0dHIpCmxpYnJhcnkoemVhbGxvdCkKbGlicmFyeShjb3dwbG90KQpsaWJyYXJ5KHBsb3RseSkKbGlicmFyeShzaGlueSkKbGlicmFyeShqYW5pdG9yKQpsaWJyYXJ5KGxldmkpCmBgYAoKIyBEYXNoYm9hcmQKClplbnRyYWxlcyBVSSB6dW0gbGFkZW4gdW5kIGF1ZmJlcmVpdGVuIGRlciBUZXZpLURhdGVuc8OkdHplLgoKKiBmZXN0bGVndW5nIGRlciBoZWl6cHVsc2UgdW5kIGFia8O8aGx1bmdzcGhhc2UKCgojIFNpZ25hbC1BbmFseXNpcwoKQXVzd2FobCBlaW5lcyBTaWduYWxzIHVuZCBaZWl0ZmVuc3RlcnMuIEJlc3RpbW11bmcgZGVyIGRvbWluYW50ZW4gCkZyZXF1ZW56IGluIGRpZXNlbSBaZWl0ZmVuc3RlcgoKIyBGcmVxdWVuei1TY2jDpHR6ZXIKCkRpZSAqU2Nod2luZ3VuZ3MtRnJlcXVlbnoqIGRlciBLdWdlbCBrYW5uIGF1cyBkZW4genVyIFZlcmbDvGd1bmcgc3RlaGVuZGVuIFNpZ25hbGVuCmF1ZiB1bnRlcnNjaGllZGxpY2hlIEFydCBlcm1pdHRlbHQgd2VyZGVuOiAKCiogRGllIHp1ciBtYXhpbWFsZW4gQW1wbGl0dWRlIGRlciBGb3VyaWVyLUtvZWZmaXppZW50ZW4gZ2Vow7ZyZW5kZSBGcmVxdWVuei4KKiBMb3JlbnR6LUZpdCBhbmQgZGllc2UgQW1wbGl0dWRlbi4KCkRhYmVpIGlzdCBmb2xnZW5kZXMgenUgYmVhY2h0ZW46IAoKKiBEYXMgU2lnbmFsIGthbm4gdm9yaGVyIGF1ZmJlcmVpdGV0IHdlcmRlbiAoR2zDpHR0dW5nLCBNaXR0ZWx1bmcgdXN3LiApCiogRGllIEZvdXJpZXItS29lZmZpemVpZW50ZW4ga8O2bm5lbiB2ZXJzY2hpZWRlbiBiZXJlY2huZXQgd2VyZGVuOiAgCmJlciBkaWUgU3RhbmRhcmQtRnVua3Rpb24gYGBgc3BlY3RydW0gYGBgIG9kZXIgbWl0ICAgZGVyIEZ1bmt0aW9uIGBgYGZmdGBgYC4KCkltIGZvbGdlbmRlbiBzb2xsZW4gbcO2Z2xpY2hlIE1ldGhvZGVuIGFuIGVpbmZhY2hlbiBCZWlzcGllbGVuIGt1cnogdmVyZ2xpY2hlbiB3ZXJkZW4uCgoKIyBGaXQgTG9yZW50eiB0byBBbXBzIG9mIEZvdXJpZXItQ29lZmZpY2llbnRzCgpbTG9yZW50ei1LdXJ2ZV0oaHR0cHM6Ly9kZS53aWtpcGVkaWEub3JnL3dpa2kvTG9yZW50emt1cnZlKQoKRWluIGdlZMOkbXBmdGVyIGhhcm1vbmlzY2hlciBPc3ppbGxhdG9yIGduw7xndCBmb2xnZW5kZXIgR2xlaWNodW5nOgpcW1xkZG90e3h9ICsgMlxnYW1tYSBcZG90e3h9ICsgXG9tZWdhXzBeMiB4ID0gZih0KVxdCkVpbmUgcGFydGlrdWzDpHJlIEzDtnN1bmcgaXN0OgpcW3godCkgPSBBIFxjZG90IGVeey1cZ2FtbWFcY2RvdCB0fVxjZG90IGVee2kgXHNxcnR7XG9tZWdhXzBeMiAtIFxnYW1tYV4yfVxjZG90IHR9IFxdIAoKCkRhcyAqKkJldHJhZ3NxdWFkcmF0KiogZGVyIEZvdXJpZXItVHJhbnNmb3JtaWVydGVuIGlzdDoKXFtmKFxvbWVnYSkgPSBcZnJhY3t8QShcb21lZ2EpfF4yfXsoXG9tZWdhXjIgLSBcb21lZ2FfMF4yKV4yICsgXGxhcmdlKDJcZ2FtbWFcbGFyZ2UpXjJcb21lZ2FeMn0gXF0KCldvYmVpICRBKFxvbWVnYSkkIGRpZSBGb3VyaWVydHJhbnNmb3JtaWVydGUgdm9uICRmKHQpJCBpc3QuIFVudGVyc3RlbGx0IG1hbiBlaW5lIEltcHVsc2FucmVndW5nIHNvIGthbm4KJEEoXG9tZWdhKSQgYWxzIG7DpGhlcnVuZ3N3ZWlzZSB1bmFiaMOkbmdpZyB2b24gJFxvbWVnYSQgYW5nZXNldHp0IHdlcmRlbi4KCkRpZSB0aGVvcmV0aXNjaGUgU3Bla3RyYWxkaWNodGUgZGllc2VzIFNpZ25hbHMgaXN0IGRhbWl0IHBvcnBvcnRpb25hbCB6dToKXFtmKFxvbWVnYSkgXHNpbSBcZnJhY3tBfXsoXG9tZWdhXjIgLSBcb21lZ2FfMF4yKV4yICsgXGxhcmdlKDJcZ2FtbWFcbGFyZ2UpXjJcb21lZ2FeMn0gXF0KCgoK</div>
 
 
 
@@ -1894,7 +1825,7 @@ $(document).ready(function () {
 
 <script>
 $(document).ready(function () {
-  window.buildTabsets("section-TOC");
+  window.buildTabsets("TOC");
 });
 
 $(document).ready(function () {

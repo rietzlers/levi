@@ -51,15 +51,20 @@ Im folgenden sollen mögliche Methoden an einfachen Beispielen kurz verglichen w
 
 [Lorentz-Kurve](https://de.wikipedia.org/wiki/Lorentzkurve)
 
-Ein gedämpfter harmonischer Oszillator 
-\[x(t) = A \cdot e^{-\gamma\cdot t}\cdot e^{i \sqrt{\omega_0^2 - \gamma^2}\cdot t} \] 
-gnügt folgender Gleichung:
+Ein gedämpfter harmonischer Oszillator gnügt folgender Gleichung:
 \[\ddot{x} + 2\gamma \dot{x} + \omega_0^2 x = f(t)\]
+Eine partikuläre Lösung ist:
+\[x(t) = A \cdot e^{-\gamma\cdot t}\cdot e^{i \sqrt{\omega_0^2 - \gamma^2}\cdot t} \] 
 
-Das **Betragsquadrat** der Fourier-Transformierten ist proportional folgendem Term:
-\[f(\omega) \sim \frac{A(\omega)}{(\omega^2 - \omega_0^2)^2 + \large(\frac{\gamma}{2}\large)^2\omega^2} \]
 
-Der gefittete Parameter $\omega_0$ ist dann die gesuchte dominante Freq. im gewählten Zeitfenster.
+Das **Betragsquadrat** der Fourier-Transformierten ist:
+\[f(\omega) = \frac{|A(\omega)|^2}{(\omega^2 - \omega_0^2)^2 + \large(2\gamma\large)^2\omega^2} \]
+
+Wobei $A(\omega)$ die Fouriertransformierte von $f(t)$ ist. Unterstellt man eine Impulsanregung so kann
+$A(\omega)$ als näherungsweise unabhängig von $\omega$ angesetzt werden.
+
+Die theoretische Spektraldichte dieses Signals ist damit porportional zu:
+\[f(\omega) \sim \frac{A}{(\omega^2 - \omega_0^2)^2 + \large(2\gamma\large)^2\omega^2} \]
 
 
 
