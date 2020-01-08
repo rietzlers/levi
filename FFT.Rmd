@@ -21,24 +21,25 @@ library(levi)
 fluidRow(
 column(width = 10,
        textInput("signal", "Signal", width = "100%", 
-          value = "100 * exp(-3 * t) * (sin(2 * pi * (30 - 2 * t) * t))")),
-column(width = 2, numericInput("noise", "Signal-Noise", value = 0, min = 0, max = 100, step = 1))
+          value = "100 * exp(-3 * t) * (sin(2 * pi * (30) * t))")),
+column(width = 2, numericInput("noise", "Signal-Noise", value = 10, min = 0, max = 100, step = 1))
 )
 
 
 
 fluidRow(
-  column(width = 2, numericInput("sr", "Sample-Rate", value = 100, min = 0, max = 400)),
-  column(width = 2, numericInput("T", "Frame-Size", value = 1, min = 0, max = 10)),
+  column(width = 2, actionButton("resample", "resample")), 
+  column(width = 2, numericInput("sr", "Sample-Rate", value = 400, min = 0, max = 400)),
+  column(width = 2, numericInput("T", "Frame-Size", value = 10, min = 0, max = 10)),
   column(width = 2, numericInput("lp", "Low-Pass", min = 0, max = 400, value = 0)),
   column(width = 2, numericInput("hp", "high-Pass", min = 0, max = 400, value = 400))
 )
 
 observeEvent(input$sr, updateNumericInput(session, "hp", value = input$sr/2, max = input$sr/2))
 renderPlot({
+  input$resample
   sr <- input$sr
-  
-  
+
   ex_data <-
     gen_example_data(
       T = input$T,
@@ -47,7 +48,7 @@ renderPlot({
       noise_sd = input$noise
     )
   
-  ex_data # tibble with columns t and s
+  #print(ex_data) # tibble with columns t and s
   sig_plot <- ex_data %>% ggplot(aes(x = t, y = s)) + geom_line()
   
   # calculate fc
@@ -66,7 +67,15 @@ renderPlot({
   fcp <-
     fcp + labs(subtitle = str_glue("Dom. Freq. {round(f_max, 2)} Hz / Amp: {round(fmax_amp, 1)}"))
   
+  #print(sr)
+  c(fit_params, fitted) %<-% 
+    (ex_data %>% fit_lorentz("s", sr))
   
+  if(!is.null(fitted)) 
+    {
+      fcp <- fcp + geom_line(data = fitted, aes(x = f, y = lf_amp), color = "red")
+      print(fit_params)    
+      }
   # visualize
   fcp <-
     plot_grid(fcp + geom_line(aes(y = fc_amp)), fcp + geom_line(aes(y = fc_arg)))
