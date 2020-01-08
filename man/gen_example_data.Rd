@@ -7,7 +7,7 @@
 gen_example_data(
   T = 10,
   sr = 400,
-  noise_sd = 0.1,
+  noise_sd = 10,
   signal = "100 * exp(-3 * t) * sin(2*pi*30*t)"
 )
 }

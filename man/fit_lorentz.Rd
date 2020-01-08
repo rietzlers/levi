@@ -4,17 +4,19 @@
 \alias{fit_lorentz}
 \title{fit_lorentz}
 \usage{
-fit_lorentz(data, sr = 400, c0 = c(A = 1000, f0 = 30, g = 0.1))
+fit_lorentz(data, signal, sr = 400, c0 = c(A = 1000, f0 = 30, g = 0.1))
 }
 \arguments{
 \item{data}{tibble with columns f and fc_amp}
+
+\item{signal}{character}
 
 \item{sr}{sample-rate}
 
 \item{c0}{vector with start-parameters}
 }
 \value{
-list(fit_params, fitted[[lf_amp]]) NULL if nls did not converge
+list(fit_params, fitted[[f, lf_amp]]) NULL if nls did not converge
 }
 \description{
 fit_lorentz
