@@ -46,7 +46,7 @@
 #' plot_grid(sig_plot, fcp, nrow = 2)
 #' @export
 gen_example_data <-
-  function(T = 10, sr = 400, noise_sd = 10 , signal = "100 * exp(-3 * t) * sin(2*pi*30*t)") {
+  function(T = 10, sr = 400, noise_sd = 10 , signal = "100 * exp(-3 * t) * sin(2*pi*sqrt(30^2 - 3^2)*t)") {
     tibble(
       t = seq(0, T, by = 1 / sr),
       s = !!rlang::parse_expr(signal) + rnorm(n = length(t), sd = noise_sd)

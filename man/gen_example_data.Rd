@@ -8,7 +8,7 @@ gen_example_data(
   T = 10,
   sr = 400,
   noise_sd = 10,
-  signal = "100 * exp(-3 * t) * sin(2*pi*30*t)"
+  signal = "100 * exp(-3 * t) * sin(2*pi*sqrt(30^2 - 3^2)*t)"
 )
 }
 \arguments{
