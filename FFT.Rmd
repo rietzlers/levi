@@ -35,8 +35,7 @@ fluidRow(
   column(width = 2, numericInput("sr", "Sample-Rate", value = 400, min = 0, max = 400)),
   column(width = 2, numericInput("T", "Frame-Size", value = 10, min = 0, max = 10)),
   column(width = 2, numericInput("lp", "Low-Pass", min = 0, max = 400, value = 0)),
-  column(width = 2, numericInput("hp", "high-Pass", min = 0, max = 400, value = 400)),
-  column(width = 2, numericInput("span", "daniell-smoother", value = 3, min = 0))
+  column(width = 2, numericInput("hp", "high-Pass", min = 0, max = 400, value = 400))
 )
 
 observeEvent(input$sr, updateNumericInput(session, "hp", value = input$sr/2, max = input$sr/2))
@@ -97,7 +96,7 @@ renderPlot({
 
 renderPlot({
   ex_data <- ex_data()
-  spectrum(ts(ex_data$s, frequency = input$sr), spans = c(input$span))
+  spectrum(ts(ex_data$s, frequency = input$sr))
 })
 
 renderPlot({
