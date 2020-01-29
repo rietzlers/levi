@@ -1,32 +1,44 @@
-
-#' Berechnung des Stichprobenspektrums
+#' calculate fourier-koeffs. with fft
 #'
-#' periodogram berechnet das Stichprobenspektrum  (Schlittgen Seite 68) einer gegebenen Zeitreihe:
-#' \deqn{I(\lambda) = N\cdot |D(\lambda)|^2}
-#' \eqn{D(\lambda)}: Fouriertransformierte der Zeitreihe.
+#' The function \code{fft} returns the \bold{unnormalized} Fourier-Coefficients
+#' for the Fourier-Frequencies 0/N, ... (N-1)/N, where N = T/dT ist the Number of samples.
 #'
-#' @param sr sample-rate
-#' @param ts datensatz mit mind den variablen t und signal
 #'
-#' @return
+#' @param data tibble with var "signal"
+#' @param signal character: name of signal
+#' @param sr samplerate
+#'
+#' @return tibble with vars f, fc, fc_amp and fc_arg
+#'
 #' @export
-periodogram <- function(data, sr, signal, type){
-  if(!regular_ts(data, sr, signal)) stop("keine reguläre zeitreihe")
+fftc <- function(data, signal, sr){
+  if(!regular_ts(data, signal, sr)) stop("no regular ts")
+
+  signal = sym(signal)
+  N <- length(data[[signal]])
+
+  data %>%
+    transmute(
+      fc = fft(!!signal) / N, # Normalisierung !!!
+      f = 0:(N - 1) / N * sr,
+      fc_amp = Mod(fc),
+      fc_arg = Arg(fc)
+    )
 }
+
 
 #' fit_lorentz
 #'
 #' @param data tibble with columns f and fc_amp
 #' @param sr sample-rate
-#' @param c0 vector with start-parameters
 #' @param signal character
 #'
 #' @return list(fit_params, fitted[[f, lf_amp]]) NULL if nls did not converge
 #' @export
-fit_lorentz <- function(data, signal, sr = 400, c0 = c(A = 1000, f0 = 30, g = 0.1) ) {
+fit_lorentz <- function(data, signal, sr = 400 ) {
   # falls nicht konvergiert: ändere Startwerte und versuche erneut. ca. 20 mal.
   fft_data <-
-    data %>% get_fc(signal, sr) %>%
+    data %>% fftc(signal, sr) %>%
     mutate(
       fc_squared = (fc_amp * 2)^2 # siehe schlittgen seite 56
     )
@@ -39,16 +51,16 @@ fit_lorentz <- function(data, signal, sr = 400, c0 = c(A = 1000, f0 = 30, g = 0.
     lfit <-
       nls(
         fc_squared ~ A / ((f ^ 2 - f0 ^ 2) ^ 2 + (2*g) ^ 2 * f ^ 2),
-        data = fft_data %>% filter(between(f, f_dom - 10, f_dom + 10)),
+        data = fft_data,# %>% filter(between(f, f_dom - 10, f_dom + 10)),
         start =  c0,
-        trace = TRUE,
+        trace = FALSE,
         control = list(minFactor = 1/1024^2)
       )
     fit_params <-
       as_tibble(summary(lfit)$coeff) %>% janitor::clean_names()
     fitted <-
       fft_data %>%
-      filter(between(f, f_dom - 10, f_dom + 10)) %>%
+      #filter(between(f, f_dom - 10, f_dom + 10)) %>%
       mutate(lf_amp = sqrt(predict(lfit)) / 2)
 
     return(list(fit_params = fit_params,
@@ -65,47 +77,6 @@ fit_lorentz <- function(data, signal, sr = 400, c0 = c(A = 1000, f0 = 30, g = 0.
 }
 
 
-#' get_spectrum
-#'
-#' @param data tibble with variable sig
-#' @param sr sample-rate
-#'
-#' @return
-#' @export
-get_spectrum <- function(data, signal, sr){
-    data %$%
-      tibble(
-        f = spectrum(ts(!!sym(signal)), frequncy = sr, plot = FALSE)$freq * sr,
-        fc_amp = spectrum(ts(!!sym(signal)), frequncy = sr, plot = FALSE)$spec
-      )
-}
-
-#' calculate fourier-koeffs. with fft
-#'
-#' The function \code{fft} returns the \bold{unnormalized} Fourier-Coefficients!
-#' To be consistent with Schlittgen and
-#'
-#' @param data tibble with var "signal"
-#' @param signal character: name of signal
-#' @param sr samplerate
-#'
-#' @return tibble with vars f, fc, fc_amp and fc_arg
-#'
-#' @export
-get_fc <- function(data, signal, sr){
-  if(!regular_ts(data, signal, sr)) stop("no regular ts")
-
-  signal = sym(signal)
-  N <- length(data[[signal]])
-
-  data %>%
-    transmute(
-      fc = fft(!!signal) / N, # Normalisierung !!!
-      f = 0:(N - 1) / N * sr,
-      fc_amp = Mod(fc),
-      fc_arg = Arg(fc)
-    )
-}
 
 #' Band-Pass-Filter signal
 #'
@@ -118,7 +89,7 @@ get_fc <- function(data, signal, sr){
 #' @export
 bp_filter <- function(sig_data, signal, bp, sr){
   N <- length(sig_data$t)
-  get_fc(sig_data, signal, sr) %>%
+  levi::fftc(sig_data, signal, sr) %>%
     mutate(
       t = sig_data$t,
       fc = if_else(
@@ -131,7 +102,11 @@ bp_filter <- function(sig_data, signal, bp, sr){
 }
 
 #' ermittle die dominante Frequenz eines signals aus dem Periodogramm
-#'
+#' Ist das signal ein reines cosinoid, d.h. eine evtl. verrauschte
+#' harmonische Schwingung so liefert die Theorie: Der Betrag des betragsmäßig
+#' größten Foruierkoeffizienten ist die halbe Amplitude des Signals.
+#' Aus diesem Grund wird der zurückgegebene Wert der Amplitude mit 2
+#' multipliziert.
 #'
 #' @param fft_data datensatz mit variablen f und fc_amp
 #' @param sample_rate sample-rate
@@ -140,9 +115,9 @@ bp_filter <- function(sig_data, signal, bp, sr){
 #' @export
 max_freq <- function(fft_data, sample_rate = 400){
   fft_data %>%
-    filter(f < sample_rate/2) %>% # spiegelsymmetrie an der nyquist-freq!
-    filter(near(fc_amp, max(fc_amp)))  %>%
-    transmute(f = mean(f), fc_amp = mean(fc_amp))
+    dplyr::filter(f < sample_rate/2) %>% # spiegelsymmetrie an der nyquist-freq!
+    dplyr::filter(near(fc_amp, max(fc_amp)))  %>%
+    dplyr::transmute(f = mean(f), fc_amp = mean(fc_amp) * 2)
 }
 
 
@@ -160,15 +135,13 @@ regular_ts <- function(data, signal, sr) {
     warning("NA values in t")
     return(FALSE)
   }
-  if (any(!near(diff(data$t), 1 / sr))) {
-    warning("t_i are not equidistant or inconsistent with samplerate")
-    return(FALSE)
-  }
-
   if (any(is.na(data[[signal]]))) {
     warning("NA values in signal")
     return(FALSE)
   }
-
+  if (any(!near(diff(data$t), 1 / sr))) {
+    warning("t_i are not equidistant or inconsistent with samplerate")
+    return(FALSE)
+  }
   return(TRUE)
 }

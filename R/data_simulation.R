@@ -22,11 +22,11 @@
 #' sr <- 100
 #' ex_data <- gen_example_data(T = 1, sr = sr, noise_sd = 0)
 #'
-#'   ex_data # tibble with columns t and s
+#' ex_data # tibble with columns t and s
 #' sig_plot <- ex_data %>% ggplot(aes(x = t, y = s)) + geom_line()
 #'
 # calculate fc
-#' sig_fc <- levi::get_fc(ex_data, "s", sr)
+#' sig_fc <- levi::fftc(ex_data, "s", sr)
 #' fcp <- sig_fc %>% ggplot(aes(x = f)) + xlim(c(0, sr / 2))
 
 # bp filter

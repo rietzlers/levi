@@ -2,7 +2,12 @@
 % Please edit documentation in R/frequency_estimators.R
 \name{max_freq}
 \alias{max_freq}
-\title{ermittle die dominante Frequenz eines signals aus dem Periodogramm}
+\title{ermittle die dominante Frequenz eines signals aus dem Periodogramm
+Ist das signal ein reines cosinoid, d.h. eine evtl. verrauschte
+harmonische Schwingung so liefert die Theorie: Der Betrag des betragsmäßig
+größten Foruierkoeffizienten ist die halbe Amplitude des Signals.
+Aus diesem Grund wird der zurückgegebene Wert der Amplitude mit 2
+multipliziert.}
 \usage{
 max_freq(fft_data, sample_rate = 400)
 }
@@ -16,4 +21,9 @@ tibble with variables f and fc_amp mit einer observation
 }
 \description{
 ermittle die dominante Frequenz eines signals aus dem Periodogramm
+Ist das signal ein reines cosinoid, d.h. eine evtl. verrauschte
+harmonische Schwingung so liefert die Theorie: Der Betrag des betragsmäßig
+größten Foruierkoeffizienten ist die halbe Amplitude des Signals.
+Aus diesem Grund wird der zurückgegebene Wert der Amplitude mit 2
+multipliziert.
 }
