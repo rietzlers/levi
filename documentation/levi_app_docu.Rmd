@@ -32,11 +32,11 @@ Frequenz in diesem Zeitfenster
 
 # Frequenz-Schätzer
 
-Die *Schwingungs-Frequenz* der Kugel kann aus den zur Verfügung stehenden Signalen
+Die *dominante Schwingungs-Frequenz* der Kugel kann aus den zur Verfügung stehenden Signalen
 auf unterschiedliche Art ermittelt werden: 
 
 * Die zur maximalen Amplitude der Fourier-Koeffizienten gehörende Frequenz.
-* Lorentz-Fit and diese Amplituden.
+* Lorentz-Fit an das Betragsquadrat der Amplituden.
 
 Dabei ist folgendes zu beachten: 
 
@@ -44,14 +44,10 @@ Dabei ist folgendes zu beachten:
 * Die Fourier-Koeffizeienten können verschieden berechnet werden:  
 ber die Standard-Funktion ```spectrum ``` oder mit   der Funktion ```fft```.
 
-Im folgenden sollen mögliche Methoden an einfachen Beispielen kurz verglichen werden.
 
+# Fit Lorentz to Amps der Fourier-Coefficients
 
-# Fit Lorentz to Amps of Fourier-Coefficients
-
-[Lorentz-Kurve](https://de.wikipedia.org/wiki/Lorentzkurve)
-
-Ein gedämpfter harmonischer Oszillator gnügt folgender Gleichung:
+Ein gedämpfter harmonischer Oszillator gnügt folgender Gleichung: (siehe [Lorentz-Kurve](https://de.wikipedia.org/wiki/Lorentzkurve))
 \[\ddot{x} + 2\gamma \dot{x} + \omega_0^2 x = f(t)\]
 Eine partikuläre Lösung ist:
 \[x(t) = A \cdot e^{-\gamma\cdot t}\cdot e^{i \sqrt{\omega_0^2 - \gamma^2}\cdot t} \] 
@@ -60,11 +56,15 @@ Eine partikuläre Lösung ist:
 Das **Betragsquadrat** der Fourier-Transformierten ist:
 \[f(\omega) = \frac{|A(\omega)|^2}{(\omega^2 - \omega_0^2)^2 + \large(2\gamma\large)^2\omega^2} \]
 
-Wobei $A(\omega)$ die Fouriertransformierte von $f(t)$ ist. Unterstellt man eine Impulsanregung so kann
+Wobei $A(\omega)$ die Fouriertransformierte von $f(t)$ ist. Unterstellt man eine kurze Impulsanregung so kann
 $A(\omega)$ als näherungsweise unabhängig von $\omega$ angesetzt werden.
 
 Die theoretische Spektraldichte dieses Signals ist damit porportional zu:
 \[f(\omega) \sim \frac{A}{(\omega^2 - \omega_0^2)^2 + \large(2\gamma\large)^2\omega^2} \]
 
+Ein heuristischen Ansatz für die Modellierung der Oszillation der Kugeloberfläche ist der gedämpfte
+harmonische Oszillator.  Aus diesem Grund wird einel Lorentz-Kurve an die quadrierten 
+Amplituden der Fourier-Frequenzen gefittet und daraus die Eigen-Frequenz $\omega_0$ 
+und die Dämpfung $\lambda$ ermittelt.
 
 
