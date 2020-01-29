@@ -29,29 +29,15 @@ fftc <- function(data, signal, sr){
 
 #' fit_lorentz
 #'
-#' @param data tibble with columns f and fc_amp
-#' @param sr sample-rate
-#' @param signal character
-#'
+#' @param fc_data tibble with columns f and fc_amp, wobei f Werte bis max. der Nyquist-Freq enthält
 #' @return list(fit_params, fitted[[f, lf_amp]]) NULL if nls did not converge
 #' @export
-fit_lorentz <- function(data, signal, sr = 400 ) {
-  # falls nicht konvergiert: ändere Startwerte und versuche erneut. ca. 20 mal.
-  fft_data <-
-    data %>% fftc(signal, sr) %>%
-    mutate(
-      fc_squared = (fc_amp * 2)^2 # siehe schlittgen seite 56
-    )
-  c(f_dom, fc_amp) %<-% max_freq(fft_data, sample_rate = sr)
-  c0 <- c(A = (fc_amp * 2)^2, f0 = f_dom, g = 0.1)
-
-  print(c0)
-
-  # tryCatch({
+fit_lorentz <- function(fc_data, c0)
+  {
     lfit <-
       nls(
         fc_squared ~ A / ((f ^ 2 - f0 ^ 2) ^ 2 + (2*g) ^ 2 * f ^ 2),
-        data = fft_data,# %>% filter(between(f, f_dom - 10, f_dom + 10)),
+        data = fc_data %>% mutate(fc_squared = fc_amp^2),
         start =  c0,
         trace = FALSE,
         control = list(minFactor = 1/1024^2)
@@ -59,21 +45,11 @@ fit_lorentz <- function(data, signal, sr = 400 ) {
     fit_params <-
       as_tibble(summary(lfit)$coeff) %>% janitor::clean_names()
     fitted <-
-      fft_data %>%
-      #filter(between(f, f_dom - 10, f_dom + 10)) %>%
+      fc_data %>%
       mutate(lf_amp = sqrt(predict(lfit)) / 2)
 
     return(list(fit_params = fit_params,
                 fitted = fitted))
-  # },
-  # warning = function(cond) {
-  #   print("warning: nls of lorentz-fit")
-  #   return(list(fit_params = NULL, fitted = NULL))
-  # },
-  # error = function(cond) {
-  #   print("error: nls of lorentz-fit")
-  #   return(list(fit_params = NULL, fitted = NULL))
-  # })
 }
 
 

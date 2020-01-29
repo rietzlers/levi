@@ -4,14 +4,10 @@
 \alias{fit_lorentz}
 \title{fit_lorentz}
 \usage{
-fit_lorentz(data, signal, sr = 400)
+fit_lorentz(fc_data, c0)
 }
 \arguments{
-\item{data}{tibble with columns f and fc_amp}
-
-\item{signal}{character}
-
-\item{sr}{sample-rate}
+\item{fc_data}{tibble with columns f and fc_amp, wobei f Werte bis max. der Nyquist-Freq enthält}
 }
 \value{
 list(fit_params, fitted[[f, lf_amp]]) NULL if nls did not converge

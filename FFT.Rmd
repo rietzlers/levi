@@ -76,7 +76,10 @@ renderPlot({
   c(f_max, fmax_amp) %<-% max_freq(sig_fc, sr)
   #print(sr)
   c(fit_params, fitted) %<-% 
-    (ex_data %>% fit_lorentz("s", sr))
+    (ex_data %>% 
+       fftc("s", sr) %>% 
+       dplyr::filter(between(f, input$lp, input$hp)) %>% 
+       fit_lorentz(c0 = c(A = 10000, f0 = 30, g = .5)))
   
   print(fit_params)    
     
