@@ -14,14 +14,17 @@ library(cowplot)
 library(plotly)
 library(shiny)
 library(janitor)
+library(dplR)
 library(levi)
+library(seewave)
+library(fBasics)
 ```
 
 ```{r}
 fluidRow(
 column(width = 10,
        textInput("signal", "Signal", width = "100%", 
-          value = "100 * exp(-3 * t) * (sin(2 * pi * sqrt(30^2 - 3^2) * t))")),
+          value = "100 * exp(-.5 * t) * (sin(2 * pi * (30 - 2*t) * t))")),
 column(width = 2, numericInput("noise", "Signal-Noise", value = 10, min = 0, max = 100, step = 1))
 )
 
@@ -32,30 +35,38 @@ fluidRow(
   column(width = 2, numericInput("sr", "Sample-Rate", value = 400, min = 0, max = 400)),
   column(width = 2, numericInput("T", "Frame-Size", value = 10, min = 0, max = 10)),
   column(width = 2, numericInput("lp", "Low-Pass", min = 0, max = 400, value = 0)),
-  column(width = 2, numericInput("hp", "high-Pass", min = 0, max = 400, value = 400))
+  column(width = 2, numericInput("hp", "high-Pass", min = 0, max = 400, value = 400)),
+  column(width = 2, numericInput("span", "daniell-smoother", value = 3, min = 0))
 )
 
 observeEvent(input$sr, updateNumericInput(session, "hp", value = input$sr/2, max = input$sr/2))
-renderPlot({
+ex_data <- 
+reactive({
   input$resample
-  sr <- input$sr
-
-  ex_data <-
-    gen_example_data(
+  gen_example_data(
       T = input$T,
-      sr = sr,
+      sr = input$sr,
       signal = input$signal,
       noise_sd = input$noise
     )
-  
-  #print(ex_data) # tibble with columns t and s
-  sig_plot <- ex_data %>% ggplot(aes(x = t, y = s)) + geom_line()
+})
+renderPlot({
+  input$resample
+  sr <- input$sr
+  ex_data <- ex_data()
+
+  sig_plot <- 
+    ex_data %>% 
+    ggplot(aes(x = t, y = s)) + geom_line() +
+    geom_line(aes(y = seewave::env(s, f = input$sr, plot = FALSE)), color = "blue") +
+    geom_line(aes(y = seewave::env(s, f = input$sr, envt = "abs", plot = FALSE)), color = "green")
   
   # calculate fc
   bp_values = tibble(cut = c(input$lp, input$hp, sr-input$hp, sr-input$lp))
-  sig_fc <- levi::get_fc(ex_data, "s", sr)
+  sig_fc <- levi::fftc(ex_data, "s", sr)
   fcp <- sig_fc %>% ggplot(aes(x = f)) +
-    geom_vline(data = bp_values, aes(xintercept = cut)) + xlim(c(0, sr / 2))
+    geom_vline(data = bp_values, aes(xintercept = cut)) + 
+    xlim(c(input$lp, input$hp))
   
   # bp filter
   bp_signal <- levi::bp_filter(ex_data, "s", bp = c(input$lp, input$hp), sr)
@@ -64,22 +75,42 @@ renderPlot({
   
   # max amplitude
   c(f_max, fmax_amp) %<-% max_freq(sig_fc, sr)
-  fcp <-
-    fcp + labs(subtitle = str_glue("Dom. Freq. {round(f_max, 2)} Hz / Amp: {round(fmax_amp, 1)}"))
-  
   #print(sr)
   c(fit_params, fitted) %<-% 
     (ex_data %>% fit_lorentz("s", sr))
   
-  if(!is.null(fitted)) 
-    {
-      fcp <- fcp + geom_line(data = fitted, aes(x = f, y = lf_amp), color = "red")
-      print(fit_params)    
-      }
+  print(fit_params)    
+    
   # visualize
   fcp <-
-    plot_grid(fcp + geom_line(aes(y = fc_amp)), fcp + geom_line(aes(y = fc_arg)))
-  plot_grid(sig_plot, fcp, nrow = 2)
+    plot_grid(
+      fcp + 
+        geom_point(aes(y = log(fc_amp))) + 
+        geom_point(data = fitted, aes(x = f, y = log(lf_amp)), color = "red") +
+        labs(subtitle = str_glue("Dom. Freq. {round(f_max, 2)} Hz / Amp: {round(fmax_amp, 1)} / damping: {round(fit_params$estimate[3], 2)}")), 
+      fcp + geom_point(aes(y = fc_arg)))
+  plot_grid(
+    sig_plot, 
+    fcp, 
+    nrow = 2)
 })
+
+renderPlot({
+  ex_data <- ex_data()
+  spectrum(ts(ex_data$s, frequency = input$sr), spans = c(input$span))
+})
+
+renderPlot({
+ spectro(ex_data()$s, f=input$sr, ovlp=50, zp=8, osc = TRUE, flim = c(input$lp, input$hp -1)/1000)
+ 
+# dfreq(ex_data()$s, f=input$sr, ovlp=50, threshold=10, bandpass = c(input$lp, input$hp), type="l", col="red", lwd=2)
+ })
+
 ```
 
+Sieht so aus als würde die Dämpfung systematisch um einen Faktor 10 *unterschätzt*
+werden! Eine Verbreiterung der Lorentzkurve (hier also des Periodogramms) sollte aber 
+dazu führen das die Dämpfung überschätzt wird!
+
+Wie lässt sich das erklären? Das theoretisch Spektrum sollte durch das Fejer-Fenster
+verbreitert werden. Das Spektrum wird aber nur an den Fourier-Frequenzen gesampelt!
