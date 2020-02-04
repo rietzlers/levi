@@ -45,7 +45,9 @@ Dabei ist folgendes zu beachten:
 ber die Standard-Funktion ```spectrum ``` oder mit   der Funktion ```fft```.
 
 
-# Fit Lorentz to Amps der Fourier-Coefficients
+# Verbesserung der Freq.-Bestimmung durch Lorentz-Fit
+
+## Motivation
 
 Ein gedämpfter harmonischer Oszillator gnügt folgender Gleichung: (siehe [Lorentz-Kurve](https://de.wikipedia.org/wiki/Lorentzkurve))
 \[\ddot{x} + 2\gamma \dot{x} + \omega_0^2 x = f(t)\]
@@ -66,5 +68,22 @@ Ein heuristischen Ansatz für die Modellierung der Oszillation der Kugeloberflä
 harmonische Oszillator.  Aus diesem Grund wird einel Lorentz-Kurve an die quadrierten 
 Amplituden der Fourier-Frequenzen gefittet und daraus die Eigen-Frequenz $\omega_0$ 
 und die Dämpfung $\lambda$ ermittelt.
+
+## Einschränkungen
+
+* Für $\omega \rightarrow \infty$ geht die Lorentz-Kurve gegen Null. Die
+Amplituden-Werte der Fourie-Koeffizeinten repräsentieren aber hochfrequentes
+Rauschen und bleiben deswegen (statistisch) positiv endlich. Die Anpassung der
+Lorentz-Kurve muß auf ein Frequenz-Band um die dominante Freq. beschränkt werden.
+**Wie soll diese Breite festgelegt werden?**
+
+* Das endliche sampling führt zu einer Verbreiterung des theoretischen 
+Spektrums: Ein Rechteck-Taper hat die Fejer-Funktion als Spektralfenster.
+Und diese Fällt 
+
+
+
+
+
 
 
