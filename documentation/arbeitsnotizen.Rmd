@@ -1,5 +1,5 @@
 ---
-title: "Struktur und Bedienung der App"
+title: "Arbeitsnotizen"
 author: "Stephan Rietzler"
 date: "12/17/2019"
 output: 
@@ -18,11 +18,14 @@ library(janitor)
 library(levi)
 ```
 
-# Dashboard
 
-Zentrales UI zum laden und aufbereiten der Tevi-Datensätze.
+# Signal- und Legierungsdaten
 
-* festlegung der heizpulse und abkühlungsphase
+ - Laden der axial-oder radial-datensätze:
+    * festlegung der heizpulse und abkühlungsphase
+    * Mittelwert-Zentrierung/Glättung !?
+ - Einlesen/Eingabe der Proben-Daten
+    * radius, masse, schmelztemperatur
 
 
 # Signal-Analysis
@@ -35,17 +38,17 @@ Frequenz in diesem Zeitfenster
 Die *dominante Schwingungs-Frequenz* der Kugel kann aus den zur Verfügung stehenden Signalen
 auf unterschiedliche Art ermittelt werden: 
 
-* Die zur maximalen Amplitude der Fourier-Koeffizienten gehörende Frequenz.
-* Lorentz-Fit an das Betragsquadrat der Amplituden.
+ - Die zur maximalen Amplitude der Fourier-Koeffizienten gehörende Frequenz.
+ - Lorentz-Fit an das Betragsquadrat der Amplituden.
 
 Dabei ist folgendes zu beachten: 
 
-* Das Signal kann vorher aufbereitet werden (Glättung, Mittelung usw. )
-* Die Fourier-Koeffizeienten können verschieden berechnet werden:  
-ber die Standard-Funktion ```spectrum ``` oder mit   der Funktion ```fft```.
+ -  Das Signal kann vorher aufbereitet werden (Glättung, Mittelung usw. )
+ -  Die Fourier-Koeffizeienten können verschieden berechnet werden: 
+ über die Standard-Funktion ```spectrum ``` oder mit   der Funktion ```fft```.
 
 
-# Verbesserung der Freq.-Bestimmung durch Lorentz-Fit
+# Freq.-Bestimmung durch Lorentz-Fit
 
 ## Motivation
 
