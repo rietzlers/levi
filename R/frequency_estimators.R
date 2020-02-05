@@ -46,8 +46,7 @@ fit_lorentz <- function(fc_data, c0)
       as_tibble(summary(lfit)$coeff) %>% janitor::clean_names()
     fitted <-
       fc_data %>%
-      mutate(lf_amp = sqrt(predict(lfit)) / 2)
-
+      mutate(lf_amp = sqrt(predict(lfit)))
     return(list(fit_params = fit_params,
                 fitted = fitted))
 }
