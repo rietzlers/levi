@@ -25,15 +25,15 @@ fluidRow(
 column(width = 10,
        textInput("signal", "Signal", width = "100%", 
           value = "100 * exp(-.5 * t) * (sin(2 * pi * (30 - 2*t) * t))")),
-column(width = 2, numericInput("noise", "Signal-Noise", value = 10, min = 0, max = 100, step = 1))
+column(width = 2, numericInput("noise", "Signal-Noise", value = 0, min = 0, max = 100, step = 1))
 )
 
 
 
 fluidRow(
   column(width = 2, actionButton("resample", "resample")), 
-  column(width = 2, numericInput("sr", "Sample-Rate", value = 400, min = 0, max = 400)),
-  column(width = 2, numericInput("T", "Frame-Size", value = 10, min = 0, max = 10)),
+  column(width = 2, numericInput("sr", "Sample-Rate", value = 100, min = 0, max = 400)),
+  column(width = 2, numericInput("T", "Frame-Size", value = 1, min = 0, max = 10)),
   column(width = 2, numericInput("lp", "Low-Pass", min = 0, max = 400, value = 0)),
   column(width = 2, numericInput("hp", "high-Pass", min = 0, max = 400, value = 400))
 )
@@ -75,21 +75,21 @@ renderPlot({
   # max amplitude
   c(f_max, fmax_amp) %<-% max_freq(sig_fc, sr)
   #print(sr)
-  c(fit_params, fitted) %<-% 
-    (ex_data %>% 
-       fftc("s", sr) %>% 
-       dplyr::filter(between(f, input$lp, input$hp)) %>% 
-       fit_lorentz(c0 = c(A = 10000, f0 = 30, g = .5)))
-  
-  print(fit_params)    
+  c(fit_params, fitted) %<-%
+    (ex_data %>%
+       fftc("s", sr) %>%
+       dplyr::filter(between(f, input$lp, input$hp)) %>%
+       fit_lorentz(c0 = c(A = 10^8, f0 = 30, g = .5)))
+
+  print(fit_params)
     
   # visualize
   fcp <-
     plot_grid(
       fcp + 
-        geom_point(aes(y = log(fc_amp))) + 
-        geom_point(data = fitted, aes(x = f, y = log(lf_amp)), color = "red") +
-        labs(subtitle = str_glue("Dom. Freq. {round(f_max, 2)} Hz / Amp: {round(fmax_amp, 1)} / damping: {round(fit_params$estimate[3], 2)}")), 
+        geom_point(aes(y = fc_amp)) +
+        geom_point(data = fitted, aes(x = f, y = lf_amp), color = "red") +
+        labs(subtitle = str_glue("Dom. Freq. {round(f_max, 2)} Hz / Amp: {round(fmax_amp, 1)} / damping: {round(fit_params$estimate[3], 2)}")),
       fcp + geom_point(aes(y = fc_arg)))
   plot_grid(
     sig_plot, 
@@ -103,16 +103,20 @@ renderPlot({
 })
 
 renderPlot({
- spectro(ex_data()$s, f=input$sr, ovlp=50, zp=8, osc = TRUE, flim = c(input$lp, input$hp -1)/1000)
+ spectro(ex_data()$s, f=input$sr, ovlp=50, wl = 2^8, osc = TRUE)
  
 # dfreq(ex_data()$s, f=input$sr, ovlp=50, threshold=10, bandpass = c(input$lp, input$hp), type="l", col="red", lwd=2)
  })
 
 ```
 
+Folgerungen:
+
 Sieht so aus als würde die Dämpfung systematisch um einen Faktor 10 *unterschätzt*
 werden! Eine Verbreiterung der Lorentzkurve (hier also des Periodogramms) sollte aber 
 dazu führen das die Dämpfung überschätzt wird!
+ 
+Wie lässt sich das erklären? Das theoretisch Spektrum sollte durch das Fejer-Fenster 
+verbreitert werden. 
 
-Wie lässt sich das erklären? Das theoretisch Spektrum sollte durch das Fejer-Fenster
-verbreitert werden. Das Spektrum wird aber nur an den Fourier-Frequenzen gesampelt!
+Ich glaube der Punkt ist: 
