@@ -129,28 +129,35 @@ d(r, m)
 Erwartungswert direkter Spektralschätzer
 
 ```{r}
-sr <- 10
+sr <- 400
+srn <- nextn(sr, factors = c(2))
+w0 <- 32
 fejer <- function(w, N){if_else(w==0, N, 1/N*(sin(pi*w*N)/sin(pi*w))^2)}
-#spec <- function(w){w <- w*sr; 1000/((w^2 - 10^2)^2 + (2*0.5)^2*w^2)}
-spec <- function(w){
-  if_else(between(w, 0.1, 0.11), 
-          1000, 
-          if_else(between(w, 0.3, 0.31), 20, 0)
-          )}
-ep <- function(l){
-  integrand <- function(w){spec(w)*fejer(l-w, sr)}
-  integrate(Vectorize(integrand), -.5, .5)$value
+
+lorentz_spec <- function(w){w <- w*sr; 1000/((w^2 - (w0)^2)^2 + (2*0.5)^2*w^2)}
+
+exp_spec <- function(l, spec){
+  integrand <- Vectorize(function(w){spec(w)*fejer(l-w, sr)}, vectorize.args = c("w"))
+  integrate(integrand, -.5, .5, stop.on.error = FALSE)$value
 }
+
+
 ep_data <- 
   tibble(
-    w = seq(0, 0.5, by = .005),
-    spec = spec(w),
-    ep = map_dbl(w, ep)
+    w = seq(0, .5, by = 1/srn),
+    th_spec = lorentz_spec(w),
+    expected_spec = map_dbl(w, exp_spec, lorentz_spec)
     )
+
 (ep_data %>% 
-  ggplot(aes(x = w, y = ep)) +
+  ggplot(aes(x = w, y = log(expected_spec))) +
   geom_line() +
-  geom_line(aes(y = spec), color = "red")) %>% 
-  ggplotly()
+  geom_line(aes(y = log(th_spec)), color = "red") +
+  geom_point(data = tibble(w = (0:(sr/2-1))/sr, fcamp = map_dbl(w, exp_spec, lorentz_spec)),
+             aes(x = w, y = log(fcamp))) +
+    geom_point(data = tibble(w = (0:(srn/2-1))/srn, fcamp = map_dbl(w, exp_spec, lorentz_spec)),
+             aes(x = w, y = log(fcamp)), color = "blue", shape = "x")
+) %>% ggplotly()
+
 ```
 
