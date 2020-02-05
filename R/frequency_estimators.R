@@ -30,6 +30,8 @@ fftc <- function(data, signal, sr){
 #' fit_lorentz
 #'
 #' @param fc_data tibble with columns f and fc_amp, wobei f Werte bis max. der Nyquist-Freq enthält
+#' @param c0 numeric vector c(A, f0, d) with start-values for nls
+#'
 #' @return list(fit_params, fitted[[f, lf_amp]]) NULL if nls did not converge
 #' @export
 fit_lorentz <- function(fc_data, c0)
@@ -46,7 +48,7 @@ fit_lorentz <- function(fc_data, c0)
       as_tibble(summary(lfit)$coeff) %>% janitor::clean_names()
     fitted <-
       fc_data %>%
-      mutate(lf_amp = sqrt(predict(lfit)))
+      mutate(lf_amp = sqrt(predict(lfit, newdata = f)))
     return(list(fit_params = fit_params,
                 fitted = fitted))
 }

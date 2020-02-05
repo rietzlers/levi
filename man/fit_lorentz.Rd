@@ -8,6 +8,8 @@ fit_lorentz(fc_data, c0)
 }
 \arguments{
 \item{fc_data}{tibble with columns f and fc_amp, wobei f Werte bis max. der Nyquist-Freq enthält}
+
+\item{c0}{numeric vector c(A, f0, d) with start-values for nls}
 }
 \value{
 list(fit_params, fitted[[f, lf_amp]]) NULL if nls did not converge
