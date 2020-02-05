@@ -82,11 +82,75 @@ Lorentz-Kurve muß auf ein Frequenz-Band um die dominante Freq. beschränkt werd
 
 * Das endliche sampling führt zu einer Verbreiterung des theoretischen 
 Spektrums: Ein Rechteck-Taper hat die Fejer-Funktion als Spektralfenster.
-Und diese Fällt 
+Als 'Maß' für die Breite des Fejer-Fensters kann man als richtwert eine
+Fourier-Frequenz setzen. Also 1/N $\cdot$ samplerate = $1/T$ wobei T die 
+Beobachtungs-Dauer bzw. Länge des Taper-Fensters ist.
 
+```{r}
+fejer <- function(w, N){if_else(w==0, N, 1/N*(sin(pi*w*N)/sin(pi*w))^2)}
+w <- seq(-0.5, 0.5, by = .0001)
 
+d <- tidyr::expand_grid(w, N = 2^seq(6,9)) %>% mutate(famps = fejer(w,N))
 
+fejer_graph <- 
+  d %>% 
+  group_by(N) %>%  
+  mutate(
+    f = w*N, # alle signale werden eine sekunde aufgezeichnet -> sr = 1/N 
+    damping = log10(famps/max(famps, na.rm = TRUE))
+    ) %>% 
+  ungroup() %>% 
+  filter(!(near(abs(w), 0.5))) %>% 
+  ggplot(aes(x = f, y = damping)) + 
+  geom_line(aes(color = factor(N))) +
+ylim(c(-40, 0))
 
+fejer_graph %>% plotly::ggplotly()
+```
 
+Typische Werte der Frequenz sind von ca. 34 - 32Hz
 
+```{r}
+f_s <- function(st, m){sqrt(8/3*st/(pi*m))}
+m <- 1.29224 / 1000
+st <- 1.6
+f_s(st, m)
+```
+
+Typische werte der Dämpfung: 0.5 - 0.3 
+
+```{r}
+eta <- 8.47/1000
+r <- 3.264/1000
+d <- function(r,m ){20*pi/3*r/m * eta}
+d(r, m)
+```
+
+Erwartungswert direkter Spektralschätzer
+
+```{r}
+sr <- 10
+fejer <- function(w, N){if_else(w==0, N, 1/N*(sin(pi*w*N)/sin(pi*w))^2)}
+#spec <- function(w){w <- w*sr; 1000/((w^2 - 10^2)^2 + (2*0.5)^2*w^2)}
+spec <- function(w){
+  if_else(between(w, 0.1, 0.11), 
+          1000, 
+          if_else(between(w, 0.3, 0.31), 20, 0)
+          )}
+ep <- function(l){
+  integrand <- function(w){spec(w)*fejer(l-w, sr)}
+  integrate(Vectorize(integrand), -.5, .5)$value
+}
+ep_data <- 
+  tibble(
+    w = seq(0, 0.5, by = .005),
+    spec = spec(w),
+    ep = map_dbl(w, ep)
+    )
+(ep_data %>% 
+  ggplot(aes(x = w, y = ep)) +
+  geom_line() +
+  geom_line(aes(y = spec), color = "red")) %>% 
+  ggplotly()
+```
 
