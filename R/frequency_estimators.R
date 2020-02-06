@@ -29,31 +29,32 @@ fftc <- function(data, signal, sr){
 
 #' fit_lorentz
 #'
-#' @param fc_data tibble with columns f and fc_amp, wobei f Werte bis max. der Nyquist-Freq enthält
+#' @param fc tibble with columns f and fc_amp, wobei f Werte bis max. der Nyquist-Freq enthält
 #' @param c0 numeric vector c(A, f0, d) with start-values for nls
 #'
 #' @return list(fit_params, fitted[[f, lf_amp]]) NULL if nls did not converge
 #' @export
-fit_lorentz <- function(fc_data, c0)
+fit_lorentz <- function(fc, c0)
   {
     lfit <-
       nls(
         fc_squared ~ A / ((f ^ 2 - f0 ^ 2) ^ 2 + (2*g) ^ 2 * f ^ 2),
-        data = fc_data %>% mutate(fc_squared = fc_amp^2),
+        data = fc %>% mutate(fc_squared = fc_amp^2),
         start =  c0,
         trace = FALSE,
         control = list(minFactor = 1/1024^2)
       )
+
     fit_params <-
       as_tibble(summary(lfit)$coeff) %>% janitor::clean_names()
+
     fitted <-
-      fc_data %>%
+      fc %>%
       mutate(lf_amp = sqrt(predict(lfit, newdata = f)))
+
     return(list(fit_params = fit_params,
                 fitted = fitted))
 }
-
-
 
 #' Band-Pass-Filter signal
 #'

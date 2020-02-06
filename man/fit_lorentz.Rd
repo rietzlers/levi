@@ -4,10 +4,10 @@
 \alias{fit_lorentz}
 \title{fit_lorentz}
 \usage{
-fit_lorentz(fc_data, c0)
+fit_lorentz(fc, c0)
 }
 \arguments{
-\item{fc_data}{tibble with columns f and fc_amp, wobei f Werte bis max. der Nyquist-Freq enthält}
+\item{fc}{tibble with columns f and fc_amp, wobei f Werte bis max. der Nyquist-Freq enthält}
 
 \item{c0}{numeric vector c(A, f0, d) with start-values for nls}
 }
