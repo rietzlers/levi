@@ -14,14 +14,20 @@ testthat::test_that("non-regular ts are detected", {
     sig_na = replace(t_c, sample(length(t_c), size = 10), NA_real_)
   )
 
-  expect_warning(regular_ts(ts %>% transmute(t = t_na), sr = 400),
-                 regexp = "NA values in t")
+  expect_warning(
+    regular_ts(
+      ts %>% transmute(t = t_na),
+      signal = "sig_c",
+      sr = 400
+      ),
+    regexp = "NA values in t"
+    )
   #expect_false(regular_ts(ts %>% transmute(t = t_na), sr = 400))
 
-  expect_warning(regular_ts(tibble(t = c(1,2,4)), sr = 400),
+  expect_warning(regular_ts(tibble(t = c(1,2,4), s = 3), signal = "s", sr = 400),
                  regexp = "t_i are not equidistant or inconsistent with samplerate")
 
-  expect_warning(regular_ts(ts %>% transmute(t = t_c), sr = 401),
+  expect_warning(regular_ts(ts %>% transmute(t = t_c, s = 3), signal = "s", sr = 401),
                  regexp = "t_i are not equidistant or inconsistent with samplerate")
 
   expect_warning(regular_ts(ts %>% transmute(t = t_c, signal = sig_na),
