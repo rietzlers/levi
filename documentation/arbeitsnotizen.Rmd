@@ -48,6 +48,13 @@ Dabei ist folgendes zu beachten:
  -  Die Fourier-Koeffizeienten können verschieden berechnet werden: 
  über die Standard-Funktion ```spectrum ``` oder mit   der Funktion ```fft```.
 
+Numerische Probleme:
+```{r}
+N <- 2^3
+phase <- seq(0, 2*pi, by = 0.01)
+max_amp <- function(phase){max(abs(fft(20 * cos(2*pi*1.1*( seq(0, N-1) + phase ))))) * 2 / N}
+plot(phase, purrr::map_dbl(phase, max_amp))
+```
 
 # Freq.-Bestimmung durch Lorentz-Fit
 
@@ -55,8 +62,9 @@ Dabei ist folgendes zu beachten:
 
 Ein gedämpfter harmonischer Oszillator gnügt folgender Gleichung: (siehe [Lorentz-Kurve](https://de.wikipedia.org/wiki/Lorentzkurve))
 \[\ddot{x} + 2\gamma \dot{x} + \omega_0^2 x = f(t)\]
-Eine partikuläre Lösung ist:
-\[x(t) = A \cdot e^{-\gamma\cdot t}\cdot e^{i \sqrt{\omega_0^2 - \gamma^2}\cdot t} \] 
+Die allgemeine Lösung ist:
+\[x(t) = A \cdot e^{-\gamma\cdot t}\cdot sin\bigg(\sqrt{\omega_0^2 - \gamma^2}\cdot t) + \phi\bigg) + x_p(t) \]
+wobei $x_p(t) \rightarrow 0$ für $t\rightarrow \infty$.   
 
 
 Das **Betragsquadrat** der Fourier-Transformierten ist:
@@ -130,10 +138,11 @@ d(r, m)
 Erwartungswert direkter Spektralschätzer
 
 ```{r}
-sr <- 200
+sr <- 50
 srn <- nextn(sr, factors = c(2))
-w0 <- 30
-d <- 0.5
+w0 <- 10.5
+d <- 0.1
+bp = c(w0 - 2 , w0 + 2)
 
 fejer <- function(w, N){if_else(w==0, as.double(N), 1/N*(sin(pi*w*N)/sin(pi*w))^2)}
 
@@ -153,26 +162,54 @@ ep_data <-
     fc_amp = sqrt(rexp(n=length(f), r = 1/th_spec))
     )
   
-fitted <- (ep_data %>%  fit_lorentz(c0 = c(A = 10^4, f0 = w0, g = d)))$fitted
+c(params_complete, lf_complete, lfm_complete) %<-% (ep_data %>%  fit_lorentz(c0 = c(A = 10^4, f0 = w0, g = d)))
+c(params_bp, lf_bp, lfm_bp) %<-% 
+  (ep_data %>%  
+     transmute(
+       f = f,
+       fc_amp =  if_else(
+        between(f,  bp[1], bp[2]),
+        fc_amp , # N = lenght(t): Normierung wieder rückgängig machen.
+        NA_real_
+        )
+       ) %>% 
+     filter(!is.na(fc_amp)) %>%
+     # mutate(
+     #   fc_amp = if_else(between(fc_amp, w0-2, w0+2), fc_amp * 4, fc_amp)
+     # ) %>% 
+     fit_lorentz(c0 = c(A = 10^4, f0 = w0, g = d)))
 
-(
+specs_plot <- 
   ep_data %>% 
   ggplot(aes(x = w)) +
   geom_line(data = tibble(w = seq(0, .5, by = 1/10^5), th_spec = lorentz_spec(w)), aes(y = th_spec), color = "red") +
   geom_vline(xintercept = w0/srn) +
   # expected at paded fourier-frequencies
   geom_point(aes(y = expected_spec), color = "blue", shape = "x") +
+  geom_line(data = tibble(w = seq(0, .5, by = 1/10^3), expected_spec = map_dbl(w, exp_spec, lorentz_spec)),
+            aes(x = w, y = expected_spec), color = "blue") +
   #expected at "sample-rate"-ff
-  geom_point(data = tibble(w = (0:(sr/2))/sr, fcamp = map_dbl(w, exp_spec, lorentz_spec)),
-             aes(x = w, y = fcamp), color = "blue") +
+  # geom_point(data = tibble(w = (0:(sr/2))/sr, fcamp = map_dbl(w, exp_spec, lorentz_spec)),
+  #            aes(x = w, y = fcamp), color = "blue") +
   geom_point(aes(y= fc_amp^2), color = "green" , shape = "+") +
-  geom_line(data = fitted, aes(y = lf_amp^2), color = "green") +
-  scale_x_continuous(sec.axis = sec_axis(~ .*sr)) +
-  scale_y_continuous(trans = "log10")
-) %>% 
-  ggplotly()
+  geom_line(data = tibble(w = seq(0, .5, by = 1/10^5) , lf_amp = sqrt(predict(lfm_complete, newdata = list(f = w*srn)))), 
+            aes(x = w, y = lf_amp^2), color = "green", linetype = "dashed") +
+  geom_line(data = tibble(w = seq(0, .5, by = 1/10^5) , lf_amp = sqrt(predict(lfm_bp, newdata = list(f = w*srn)))), 
+            aes(x = w, y = lf_amp^2), color = "orange") +
+  scale_x_continuous(sec.axis = sec_axis(~ .*srn)) +
+  #scale_y_continuous(trans = "log10") + 
+  labs(
+    title = str_glue("Estimates: f = {round(params_complete$estimate[2], 1)}/{round(params_bp$estimate[2],1)}, d = {round(params_complete$estimate[3], 1)}/{round(params_bp$estimate[3],1)}"))
+    
+#specs_plot #+ xlim(c(w0 - 10, w0 + 10)/srn)
+specs_plot %>% ggplotly()
 
 
 ```
 
+resultate:
 
+ - Typische breite der Lorentz-kurve ist etw 1 Hz (bei d = 0.5). 
+ D.h. bei einer Taper-Breite von ca. 1s liegt nur etwa ein 'Frequenz-Messwert'
+ im 'nicht-null'-Teil der Kurve. Ist dieser Wert nicht gleich w0 so ...
+ 
