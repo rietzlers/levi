@@ -76,7 +76,7 @@ bp_filter <- function(sig_data, signal, bp, sr){
         fc * N, # N = lenght(t): Normierung wieder rückgängig machen.
         0i
         ),
-      !!sym(signal) := Re(fft(fc, inverse = TRUE)) / N
+      !!sym(signal) := Re(fft(fc, inverse = TRUE)) / N # Normierung!
     )
 }
 
