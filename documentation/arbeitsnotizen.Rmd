@@ -19,19 +19,20 @@ library(levi)
 ```
 
 
-# Signal- und Legierungsdaten
+# Daten-Handling
 
- - Laden der axial-oder radial-datensätze:
-    * festlegung der heizpulse und abkühlungsphase
-    * Mittelwert-Zentrierung/Glättung !?
- - Einlesen/Eingabe der Proben-Daten
-    * radius, masse, schmelztemperatur
-
+ - Laden der axial-oder radial-datensätze; 
+ Momentan nur jeweils einen Datensatz
+ - Festlegung der Heizpulse und Abkühlungsphase
+ - Einlesen/Eingabe der Proben-Daten: 
+ radius, masse, schmelztemperatur
+ - Möglichkeit die bearbeiteten Datensätze mit gewählten 
+ Parameter zu speichern. 
 
 # Signal-Analysis
 
 Auswahl eines Signals und Zeitfensters. Bestimmung der dominanten 
-Frequenz in diesem Zeitfenster
+Frequenz in diesem Zeitfenster. Glättung!?
 
 # Frequenz-Schätzer
 
