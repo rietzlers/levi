@@ -73,9 +73,9 @@ renderPlot({
     sig_plot + geom_line(data = bp_signal, aes(x = t, y = s), color = "red")
   
   # max amplitude
-  c(f_max, fmax_amp) %<-% max_freq(sig_fc, sr)
+  c(f_max, fmax_amp, sig_phase) %<-% dom_harmonic_params(sig_fc, sr)
   #print(sr)
-  c(fit_params, fitted) %<-%
+  c(fit_params, fitted, model) %<-%
     (ex_data %>%
        fftc("s", sr) %>%
        dplyr::filter(between(f, input$lp, input$hp)) %>%
