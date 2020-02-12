@@ -8,7 +8,7 @@
 #' @param signal character: name of signal
 #' @param sr samplerate
 #'
-#' @return tibble with vars f, fc, fc_amp and fc_arg
+#' @return tibble with vars f (Kreisfrequenz, d.h. cycles per unit-time), fc, fc_amp and fc_arg
 #'
 #' @export
 fftc <- function(data, signal, sr){
@@ -92,11 +92,11 @@ bp_filter <- function(sig_data, signal, bp, sr){
 #'
 #' @return tibble with variables f and fc_amp mit einer observation
 #' @export
-max_freq <- function(fft_data, sample_rate = 400){
+dom_harmonic_params <- function(fft_data, sample_rate = 400){
   fft_data %>%
     dplyr::filter(f < sample_rate/2) %>% # spiegelsymmetrie an der nyquist-freq!
     dplyr::filter(near(fc_amp, max(fc_amp)))  %>%
-    dplyr::transmute(f = mean(f), fc_amp = mean(fc_amp) * 2)
+    dplyr::transmute(f = f, fc_amp = fc_amp, fc_arg = fc_arg)
 }
 
 

@@ -14,7 +14,7 @@ fftc(data, signal, sr)
 \item{sr}{samplerate}
 }
 \value{
-tibble with vars f, fc, fc_amp and fc_arg
+tibble with vars f (Kreisfrequenz, d.h. cycles per unit-time), fc, fc_amp and fc_arg
 }
 \description{
 The function \code{fft} returns the \bold{unnormalized} Fourier-Coefficients
