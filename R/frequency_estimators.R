@@ -53,7 +53,8 @@ fit_lorentz <- function(fc, c0)
       mutate(lf_amp = sqrt(predict(lfit, newdata = f)))
 
     return(list(fit_params = fit_params,
-                fitted = fitted))
+                fitted = fitted,
+                lorentz_fit = lfit))
 }
 
 #' Band-Pass-Filter signal
