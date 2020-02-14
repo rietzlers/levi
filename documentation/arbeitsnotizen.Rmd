@@ -100,6 +100,28 @@ tibble(ff = 1:N, fc_amp = abs(fft(signal(t, 10.5)))) %>%
   )
 ```
 
+```{r}
+N <- 20
+t = 1:N
+signal <- function(t, f){
+  50 + 200*sin(2*pi*f*t/N)
+}
+
+a <- function(f){
+  as.numeric(sin(2*pi*f*t/N) %*% signal(t, 5)) * 2/N
+  }
+
+tibble(f = seq(0, 10, by = .01), scalarp = map_dbl(f, ~ a(.x))) %>% 
+  ggplot(aes(x = f, y = scalarp)) +
+  scale_x_continuous(breaks = seq(0, N, by = 1)) +
+  geom_line() +
+  labs(
+    y = "Kreuzkovarianz: Signal mit harmonischer Schwingung 
+    der angegebenen Frequenz",
+    x = "Frequenz der harmonischen an die das Signal 'gefittet' wird."
+  )
+```
+
 # Freq.-Bestimmung durch Lorentz-Fit
 
 ## Motivation
