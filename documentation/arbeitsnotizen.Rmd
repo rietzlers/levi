@@ -22,7 +22,7 @@ library(levi)
 # Daten-Handling
 
  - Laden der axial-oder radial-datensätze; 
- Momentan nur jeweils einen Datensatz
+ Momentan nur jeweils einen Datensatz aus den tevi-csv dateien.
  - Festlegung der Heizpulse und Abkühlungsphase
  - Einlesen/Eingabe der Proben-Daten: 
  radius, masse, schmelztemperatur
@@ -40,7 +40,8 @@ Die *dominante Schwingungs-Frequenz* der Kugel kann aus den zur Verfügung stehe
 auf unterschiedliche Art ermittelt werden: 
 
  - Die zur maximalen Amplitude der Fourier-Koeffizienten gehörende Frequenz.
- - Lorentz-Fit an das Betragsquadrat der Amplituden.
+ - Lorentz-Fit an das Betragsquadrat der Amplituden; 
+ - Instantanous Frequency; 
 
 Dabei ist folgendes zu beachten: 
 
@@ -48,12 +49,55 @@ Dabei ist folgendes zu beachten:
  -  Die Fourier-Koeffizeienten können verschieden berechnet werden: 
  über die Standard-Funktion ```spectrum ``` oder mit   der Funktion ```fft```.
 
-Numerische Probleme:
+# FFT
+
+## Leakage
+
+Erhöhung der Periodogram-Ordinaten in der Nähe der Frequenz des periodischen Trends!
+Siehe Schlittgen Seite 128. Dieses Problem ist für die vorliegende Untersuchung relevant,
+da bei einem Zeit-Fenster (Taper) von ca. 1s die Frequenz-Auflösung bei ca. einem Herz liegt!
+
+Zusammen mit der Tatsache das die Periodogram-Ordinaten an den Fourier-Frequenzen exponential-verteilt
+sind kann es durchaus vorkommen das zwei Peaks im Abstand von wenigen Hz auftauchen, 
+selbst wenn das 'wahre' aber verrauschte Signal nur eine dominante Frequenz besitzt.
+
 ```{r}
-N <- 2^3
-phase <- seq(0, 2*pi, by = 0.01)
-max_amp <- function(phase){max(abs(fft(20 * cos(2*pi*1.1*( seq(0, N-1) + phase ))))) * 2 / N}
-plot(phase, purrr::map_dbl(phase, max_amp))
+N <- 500
+t <- (0:(N-1))/N
+signal <- function(t, f0){
+ 200 + 100 * cos(2*pi*f0*(t + runif(1, min = 0, max = 10))) + rnorm(N, sd = 20) 
+}
+
+f0 <- seq(5, 15, by = 0.001)
+
+tibble(f0 = f0 , est_sig_amp = purrr::map_dbl(f0, ~ max(abs(fft(signal(t = t, .x)))[2:N]) * 2 / N)) %>% 
+  ggplot(aes(x = f0, y = est_sig_amp)) +
+  geom_point() +
+  labs(
+    subtitle = "Die geschätzte Signal-Amplitude (100) ist: 2/N mal 'maximaler Fourierkoeffizient'.
+    Beachte: Der Offset muß berücksichtigt werden! Entweder indem man den ersten Fourierkoeffizienten ausnimmt,
+    oder die Reihe Mittelwert-Zentriert.",
+    caption = "Also immer wenn die Frequenz des Signals gleich einer Fourier-Frequenz ist (unit-time ist eine sekunde,
+d.h. die Fourier-Frequenzen sind 1, 2, 3 ...Hz) wird die Signal-Amplitude korrekt geschätzt. Liegt
+die Signal-Frequenz zwischen zwei Fourier-Frequenzen, so wird die Signal-Amplitude unterschätzt. 
+Dies ist der Leakage-Effekt aufgrund des endlichen Samples."
+  )
+```
+
+```{r}
+
+tibble(ff = 1:N, fc_amp = abs(fft(signal(t, 10.5)))) %>% 
+  filter(ff %>% between(1, 15)) %>% 
+  ggplot(aes(x = ff - 1, y = fc_amp * 2/N)) +
+  geom_point() +
+  scale_x_continuous(breaks = 0:N) +
+  labs(
+    subtitle = "Signal: sinus mit Amplitude 100 und f = 10.5",
+    y = "Estimated Signal-Amplitude",
+    x = "Fourier-Frequencies",
+    caption = "Auch hier wird der Leakage-Effekt deutlich. 
+    "
+  )
 ```
 
 # Freq.-Bestimmung durch Lorentz-Fit
@@ -138,7 +182,7 @@ d(r, m)
 Erwartungswert direkter Spektralschätzer
 
 ```{r}
-sr <- 50
+sr <- 200
 srn <- nextn(sr, factors = c(2))
 w0 <- 10.5
 d <- 0.1
@@ -182,16 +226,17 @@ c(params_bp, lf_bp, lfm_bp) %<-%
 specs_plot <- 
   ep_data %>% 
   ggplot(aes(x = w)) +
-  geom_line(data = tibble(w = seq(0, .5, by = 1/10^5), th_spec = lorentz_spec(w)), aes(y = th_spec), color = "red") +
   geom_vline(xintercept = w0/srn) +
   # expected at paded fourier-frequencies
   geom_point(aes(y = expected_spec), color = "blue", shape = "x") +
-  geom_line(data = tibble(w = seq(0, .5, by = 1/10^3), expected_spec = map_dbl(w, exp_spec, lorentz_spec)),
-            aes(x = w, y = expected_spec), color = "blue") +
   #expected at "sample-rate"-ff
   # geom_point(data = tibble(w = (0:(sr/2))/sr, fcamp = map_dbl(w, exp_spec, lorentz_spec)),
   #            aes(x = w, y = fcamp), color = "blue") +
   geom_point(aes(y= fc_amp^2), color = "green" , shape = "+") +
+    geom_line(data = tibble(w = seq(0, .5, by = 1/10^3), expected_spec = map_dbl(w, exp_spec, lorentz_spec)),
+            aes(x = w, y = expected_spec), color = "blue") +
+  geom_line(data = tibble(w = seq(0, .5, by = 1/10^5), th_spec = lorentz_spec(w)), 
+            aes(y = th_spec), color = "red") +
   geom_line(data = tibble(w = seq(0, .5, by = 1/10^5) , lf_amp = sqrt(predict(lfm_complete, newdata = list(f = w*srn)))), 
             aes(x = w, y = lf_amp^2), color = "green", linetype = "dashed") +
   geom_line(data = tibble(w = seq(0, .5, by = 1/10^5) , lf_amp = sqrt(predict(lfm_bp, newdata = list(f = w*srn)))), 
