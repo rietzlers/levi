@@ -29,10 +29,6 @@ library(levi)
  - Möglichkeit die bearbeiteten Datensätze mit gewählten 
  Parameter zu speichern. 
 
-# Signal-Analysis
-
-Auswahl eines Signals und Zeitfensters. Bestimmung der dominanten 
-Frequenz in diesem Zeitfenster. Glättung!?
 
 # Frequenz-Schätzer
 
@@ -43,23 +39,22 @@ auf unterschiedliche Art ermittelt werden:
  - Lorentz-Fit an das Betragsquadrat der Amplituden; 
  - Instantanous Frequency; 
 
-Dabei ist folgendes zu beachten: 
 
- -  Das Signal kann vorher aufbereitet werden (Glättung, Mittelung usw. )
- -  Die Fourier-Koeffizeienten können verschieden berechnet werden: 
- über die Standard-Funktion ```spectrum ``` oder mit   der Funktion ```fft```.
+ - Das Signal kann vorher aufbereitet werden (Glättung, Mittelung usw. )
 
-# FFT
 
-## Leakage
+# FFT-Leakage
 
 Erhöhung der Periodogram-Ordinaten in der Nähe der Frequenz des periodischen Trends!
 Siehe Schlittgen Seite 128. Dieses Problem ist für die vorliegende Untersuchung relevant,
-da bei einem Zeit-Fenster (Taper) von ca. 1s die Frequenz-Auflösung bei ca. einem Herz liegt!
+da bei einem Zeit-Fenster (Taper) von ca. 1s die Frequenz-Auflösung bei ca. einem Herz liegt! 
 
-Zusammen mit der Tatsache das die Periodogram-Ordinaten an den Fourier-Frequenzen exponential-verteilt
+Zusammen mit der Tatsache, dass die Periodogram-Ordinaten an den Fourier-Frequenzen exponential-verteilt
 sind kann es durchaus vorkommen das zwei Peaks im Abstand von wenigen Hz auftauchen, 
-selbst wenn das 'wahre' aber verrauschte Signal nur eine dominante Frequenz besitzt.
+selbst wenn das 'wahre' aber verrauschte Signal nur eine dominante Frequenz besitzt. 
+Da aber sogar ein Frequenz-Shift mit theoretisch erwartet wird, ist mit signifikant 
+nicht-verschwindenden Periodogram-Ordinaten über mehrere Frequency-Bins, d.h. Herz
+bei einer Fensterbreite von ca. 1s, zu rechnen. 
 
 ```{r}
 N <- 500
@@ -75,8 +70,8 @@ tibble(f0 = f0 , est_sig_amp = purrr::map_dbl(f0, ~ max(abs(fft(signal(t = t, .x
   geom_point() +
   labs(
     subtitle = "Die geschätzte Signal-Amplitude (100) ist: 2/N mal 'maximaler Fourierkoeffizient'.
-    Beachte: Der Offset muß berücksichtigt werden! Entweder indem man den ersten Fourierkoeffizienten ausnimmt,
-    oder die Reihe Mittelwert-Zentriert.",
+    Beachte: Der Offset muß berücksichtigt werden! Entweder indem man den ersten 
+    Fourierkoeffizienten ausnimmt, oder die Reihe Mittelwert-Zentriert.",
     caption = "Also immer wenn die Frequenz des Signals gleich einer Fourier-Frequenz ist (unit-time ist eine sekunde,
 d.h. die Fourier-Frequenzen sind 1, 2, 3 ...Hz) wird die Signal-Amplitude korrekt geschätzt. Liegt
 die Signal-Frequenz zwischen zwei Fourier-Frequenzen, so wird die Signal-Amplitude unterschätzt. 
@@ -112,24 +107,24 @@ a <- function(f){
   }
 
 tibble(f = seq(0, 10, by = .01), scalarp = map_dbl(f, ~ a(.x))) %>% 
-  ggplot(aes(x = f, y = scalarp)) +
+  ggplot(aes(x = f, y = scalarp^2)) +
   scale_x_continuous(breaks = seq(0, N, by = 1)) +
   geom_line() +
   labs(
-    y = "Kreuzkovarianz: Signal mit harmonischer Schwingung 
+    y = "Kreuzkovarianz des Signals und einer harmonischer Schwingung 
     der angegebenen Frequenz",
     x = "Frequenz der harmonischen an die das Signal 'gefittet' wird."
   )
 ```
 
-# Freq.-Bestimmung durch Lorentz-Fit
+# Lorentz-Fit
 
 ## Motivation
 
 Ein gedämpfter harmonischer Oszillator gnügt folgender Gleichung: (siehe [Lorentz-Kurve](https://de.wikipedia.org/wiki/Lorentzkurve))
 \[\ddot{x} + 2\gamma \dot{x} + \omega_0^2 x = f(t)\]
 Die allgemeine Lösung ist:
-\[x(t) = A \cdot e^{-\gamma\cdot t}\cdot sin\bigg(\sqrt{\omega_0^2 - \gamma^2}\cdot t) + \phi\bigg) + x_p(t) \]
+\[x(t) = A \cdot e^{-\gamma\cdot t}\cdot sin\bigg(\sqrt{\omega_0^2 - \gamma^2}\cdot t + \phi\bigg) + x_p(t) \]
 wobei $x_p(t) \rightarrow 0$ für $t\rightarrow \infty$.   
 
 
@@ -153,17 +148,22 @@ und die Dämpfung $\lambda$ ermittelt.
 Amplituden-Werte der Fourie-Koeffizeinten repräsentieren aber hochfrequentes
 Rauschen und bleiben deswegen (statistisch) positiv endlich. Die Anpassung der
 Lorentz-Kurve muß auf ein Frequenz-Band um die dominante Freq. beschränkt werden.
-**Wie soll diese Breite festgelegt werden?**
+**Wie soll diese Breite festgelegt werden?** Exemplarische Untersuchungen mit 
+simulierten Signalen weisen darauf hin, das die geschätzten Parameter relativ
+unabhängig von dem gewählten Bandpass ist. Scheint also nicht wirklich ein Problem
+zu sein.
 
 * Das endliche sampling führt zu einer Verbreiterung des theoretischen 
 Spektrums: Ein Rechteck-Taper hat die Fejer-Funktion als Spektralfenster.
 Als 'Maß' für die Breite des Fejer-Fensters kann man als richtwert eine
 Fourier-Frequenz setzen. Also 1/N $\cdot$ samplerate = $1/T$ wobei T die 
-Beobachtungs-Dauer bzw. Länge des Taper-Fensters ist.
+Beobachtungs-Dauer bzw. Länge des Taper-Fensters ist. Siehe nachfolgende
+Graphik, in der Fejer-Fenster für verschiedene sampling-raten abgebildet 
+sind.
 
 ```{r}
 fejer <- function(w, N){if_else(w==0, N, 1/N*(sin(pi*w*N)/sin(pi*w))^2)}
-w <- seq(-0.5, 0.5, by = .0001)
+w <- seq(-0.01, 0.01, by = .0001)
 
 d <- tidyr::expand_grid(w, N = 2^seq(6,9)) %>% mutate(famps = fejer(w,N))
 
@@ -178,37 +178,25 @@ fejer_graph <-
   filter(!(near(abs(w), 0.5))) %>% 
   ggplot(aes(x = f, y = damping)) + 
   geom_line(aes(color = factor(N))) +
-ylim(c(-40, 0))
+  ylim(c(-10, 0)) +
+  scale_x_continuous(breaks = seq(-200, 200, by = 1))
 
-fejer_graph %>% plotly::ggplotly()
+fejer_graph +
+  labs(
+    subtitle = "Der 'narrow-band-bias' ist unabhängig von der samplerate!"
+  )
 ```
 
-Typische Werte der Frequenz sind von ca. 34 - 32Hz
-
-```{r}
-f_s <- function(st, m){sqrt(8/3*st/(pi*m))}
-m <- 1.29224 / 1000
-st <- 1.6
-f_s(st, m)
-```
-
-Typische werte der Dämpfung: 0.5 - 0.3 
-
-```{r}
-eta <- 8.47/1000
-r <- 3.264/1000
-d <- function(r,m ){20*pi/3*r/m * eta}
-d(r, m)
-```
-
-Erwartungswert direkter Spektralschätzer
+ - Typische/Erwartete Werte für $f_0$ sind ca. 34-32 Hz und für die Dämpfung ca. 0.5-0.3 Hz.
+ 
+# Direkter Spektralschätzer
 
 ```{r}
 sr <- 200
 srn <- nextn(sr, factors = c(2))
-w0 <- 10.5
-d <- 0.1
-bp = c(w0 - 2 , w0 + 2)
+w0 <- 30.5
+d <- 0.5
+bp = c(w0 - 15 , w0 + 15)
 
 fejer <- function(w, N){if_else(w==0, as.double(N), 1/N*(sin(pi*w*N)/sin(pi*w))^2)}
 
@@ -274,9 +262,19 @@ specs_plot %>% ggplotly()
 
 ```
 
-resultate:
+Zusammenfassung der (exemplarischen) Simulationsergebnisse:
 
- - Typische breite der Lorentz-kurve ist etw 1 Hz (bei d = 0.5). 
- D.h. bei einer Taper-Breite von ca. 1s liegt nur etwa ein 'Frequenz-Messwert'
- im 'nicht-null'-Teil der Kurve. Ist dieser Wert nicht gleich w0 so ...
+ - Typische breite der Lorentz-kurve ist etw 1 Hz (bei d = 0.5). Da die 
+ Eigenfrequenz der Kugel im Regelfall keine Fourier-Frequenz ist, ist zu
+ erwarten das zwei benachbarte Periodogram-Ordinaten erhöht sind. Je 
+ nach relativer Lage der Eigenfrequenz zwischen diesen Fourier-frequenzen
+ sind die theortischen Werte auch unterschiedlich hoch. Dies führt dann 
+ zu einer verzerrung des Schätzers.
+ - Gewichtiger schein aber die Tatsache, dass das Signal nicht gut durch
+ einen harmonisch gedämpften Oszillator beschrieben wird. Insbesondere ist ein 
+ Shift der Eigenfrequenz zu erwarten, welcher eine Verbreiterung der Kurve herbeiführt.
+ 
+ 
+ 
+ 
  
