@@ -140,7 +140,7 @@ get_dom_freq <- function(fc_data, sample_rate = 400){
   fc_data %>%
     dplyr::filter(f < sample_rate/2) %>% # spiegelsymmetrie an der nyquist-freq!
     dplyr::filter(near(fc_amp, max(fc_amp)))  %>%
-    dplyr::transmute(f = f, fc_amp = fc_amp)
+    dplyr::transmute(f = f, fc_amp = 2 * fc_amp)
 }
 
 
