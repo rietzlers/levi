@@ -29,17 +29,34 @@ fftc <- function(data, signal, sr){
 
 #' fit_lorentz
 #'
-#' @param fc tibble with columns f and fc_amp, wobei f Werte bis max. der Nyquist-Freq enthält
+#' @param fc_data tibble with columns f and fc_amp
 #' @param c0 numeric vector c(A, f0, d) with start-values for nls
 #'
 #' @return list(fit_params, fitted[[f, lf_amp]]) NULL if nls did not converge
 #' @export
-fit_lorentz <- function(fc, c0)
-  {
+fit_lorentz <- function(fc_data, c0, sr){
+
+  tryCatch(
+    error = function(cnd){
+      print(cnd_message(cnd))
+      return(
+        list(
+          fit_params = NULL,
+          fitted = NULL,
+          lorentz_fit = NULL
+        )
+      )
+    },
+    {
+    if(missing(c0)){
+        c(f, fc_amp) %<-% get_dom_freq(fc_data, sample_rate = sr)
+        c0 = c(A = fc_amp^2, f0 = f, d = 0.5)
+    }
+
     lfit <-
       nls(
-        fc_squared ~ A / ((f ^ 2 - f0 ^ 2) ^ 2 + (2*g) ^ 2 * f ^ 2),
-        data = fc %>% mutate(fc_squared = fc_amp^2),
+        fc_squared ~ A / ((f ^ 2 - f0 ^ 2) ^ 2 + (2*d) ^ 2 * f ^ 2),
+        data = fc_data %>% mutate(fc_squared = fc_amp^2),
         start =  c0,
         trace = FALSE,
         control = list(minFactor = 1/1024^2)
@@ -49,12 +66,14 @@ fit_lorentz <- function(fc, c0)
       as_tibble(summary(lfit)$coeff) %>% janitor::clean_names()
 
     fitted <-
-      fc %>%
+      fc_data %>%
       mutate(lf_amp = sqrt(predict(lfit, newdata = f)))
 
     return(list(fit_params = fit_params,
                 fitted = fitted,
                 lorentz_fit = lfit))
+    }
+  )
 }
 
 #' Band-Pass-Filter signal
