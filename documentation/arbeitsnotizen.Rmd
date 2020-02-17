@@ -195,9 +195,9 @@ fejer_graph +
 ```{r}
 sr <- 200
 srn <- nextn(sr, factors = c(2))
-w0 <- 30.2
-d <- 0.1
-bp = c(w0 - 15 , w0 + 15)
+w0 <- 30.5
+d <- 0.8
+bp = c(w0 - 3 , w0 + 3)
 
 fejer <- function(w, N){if_else(w==0, as.double(N), 1/N*(sin(pi*w*N)/sin(pi*w))^2)}
 
@@ -258,8 +258,8 @@ if(!is.null(lfm_complete)){
               aes(x = w, y = lf_amp^2), color = "green", linetype = "dashed") 
   
   plot_title <- str_glue("{plot_title}
-                         complete: f = {round(params_complete$estimate[2], 1)}, d = {round(params_complete$estimate[3], 1)}")
-  plot_caption <- plot_caption + str_glue("complete: {sv_complete[2]},  {sv_complete[3]},")
+                         complete: f = {round(params_complete$estimate[2], 1)}, d = {round(params_complete$estimate[3], 2)}")
+  plot_caption <- plot_caption + str_glue("complete: {sv_complete[2]}/  {sv_complete[3]},")
 }
 
 if(!is.null(lfm_bp)){
@@ -269,8 +269,8 @@ if(!is.null(lfm_bp)){
             aes(x = w, y = lf_amp^2), color = "orange") 
     
     plot_title <- str_glue("{plot_title}
-                         bp:  f = {round(params_bp$estimate[2],1)}, d = {round(params_bp$estimate[3],1)}")
-    plot_caption <- plot_caption + str_glue("bp: {sv_bp[2]}, {sv_bp[3]}")
+                         bp:  f = {round(params_bp$estimate[2],1)}, d = {round(params_bp$estimate[3],2)}")
+    plot_caption <- plot_caption + str_glue("bp: {sv_bp[2]}/ {sv_bp[3]}")
 }
 
 specs_plot <- 
