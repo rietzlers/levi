@@ -36,44 +36,69 @@ fftc <- function(data, signal, sr){
 #' @export
 fit_lorentz <- function(fc_data, c0, sr){
 
-  tryCatch(
-    error = function(cnd){
-      print(cnd_message(cnd))
-      return(
-        list(
+  if(missing(c0)){
+    c(f, fc_amp) %<-% get_dom_freq(fc_data, sample_rate = sr)
+    c0 = c(A = fc_amp^2, f0 = f, d = 0.5)
+  }
+
+
+  fit <- function(fc_data, c0 = c0, sr = sr)
+  {
+    tryCatch(
+      error = function(cnd) {
+        print(cnd_message(cnd))
+        return(list(
           fit_params = NULL,
           fitted = NULL,
-          lorentz_fit = NULL
-        )
-      )
-    },
-    {
-    if(missing(c0)){
-        c(f, fc_amp) %<-% get_dom_freq(fc_data, sample_rate = sr)
-        c0 = c(A = fc_amp^2, f0 = f, d = 0.5)
+          lorentz_fit = NULL,
+          start_values = c0
+        ))
+      },
+      # run nls
+      {
+        lfit <-
+          nls(
+            fc_squared ~ A / ((f ^ 2 - f0 ^ 2) ^ 2 + (2 * d) ^ 2 * f ^ 2),
+            data = fc_data %>% mutate(fc_squared = fc_amp ^ 2),
+            start =  c0,
+            trace = FALSE,
+            control = list(minFactor = 1 / 1024 ^ 2)
+          )
+
+        fit_params <-
+          as_tibble(summary(lfit)$coeff) %>% janitor::clean_names()
+
+        fitted <-
+          fc_data %>%
+          mutate(lf_amp = sqrt(predict(lfit, newdata = f)))
+
+        return(list(
+          fit_params = fit_params,
+          fitted = fitted,
+          lorentz_fit = lfit,
+          start_values = c0
+        ))
+      }
+    )
+  }
+
+  result <- fit(fc_data, c0 = c0, sr = sr)
+  if(!is.null(result$lorentz_fit)) return(result)
+
+  for(i in 1:5){
+    c0 <- rnorm(n = 3, mean = c0, sd = c0/10)
+    names(c0) <- c("A", "f0", "d")
+    message(str_glue("\n start_values: ({c0[1]}, {c0[2]}, {c0[3]})"))
+    result <- fit(fc_data, c0 = c0, sr = sr)
+    if(!is.null(result$lorentz_fit)) {
+      message(str_glue("\n nls converged in {i}. try \n"))
+      return(result)
+      }
     }
 
-    lfit <-
-      nls(
-        fc_squared ~ A / ((f ^ 2 - f0 ^ 2) ^ 2 + (2*d) ^ 2 * f ^ 2),
-        data = fc_data %>% mutate(fc_squared = fc_amp^2),
-        start =  c0,
-        trace = FALSE,
-        control = list(minFactor = 1/1024^2)
-      )
+  message("nls did not converge")
+  return(result)
 
-    fit_params <-
-      as_tibble(summary(lfit)$coeff) %>% janitor::clean_names()
-
-    fitted <-
-      fc_data %>%
-      mutate(lf_amp = sqrt(predict(lfit, newdata = f)))
-
-    return(list(fit_params = fit_params,
-                fitted = fitted,
-                lorentz_fit = lfit))
-    }
-  )
 }
 
 #' Band-Pass-Filter signal
