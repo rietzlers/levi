@@ -92,11 +92,11 @@ bp_filter <- function(sig_data, signal, bp, sr){
 #'
 #' @return tibble with variables f and fc_amp mit einer observation
 #' @export
-dom_harmonic_params <- function(fft_data, sample_rate = 400){
-  fft_data %>%
+get_dom_freq <- function(fc_data, sample_rate = 400){
+  fc_data %>%
     dplyr::filter(f < sample_rate/2) %>% # spiegelsymmetrie an der nyquist-freq!
     dplyr::filter(near(fc_amp, max(fc_amp)))  %>%
-    dplyr::transmute(f = f, fc_amp = fc_amp, fc_arg = fc_arg)
+    dplyr::transmute(f = f, fc_amp = fc_amp)
 }
 
 
