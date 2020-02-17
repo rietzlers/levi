@@ -18,14 +18,16 @@ library(dplR)
 library(levi)
 library(seewave)
 library(fBasics)
+library(lobstr)
+library(rlang)
 ```
 
 ```{r}
 fluidRow(
 column(width = 10,
        textInput("signal", "Signal", width = "100%", 
-          value = "100 * exp(-.5 * t) * (sin(2 * pi * (30 - 2*t) * t))")),
-column(width = 2, numericInput("noise", "Signal-Noise", value = 0, min = 0, max = 100, step = 1))
+          value = "100 * exp(-.5 * t) * (sin(2 * pi * (30 - (0.5)*t) * t))")),
+column(width = 2, numericInput("noise", "Signal-Noise", value = 30, min = 0, max = 100, step = 1))
 )
 
 
