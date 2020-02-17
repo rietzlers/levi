@@ -34,7 +34,7 @@ fftc <- function(data, signal, sr){
 #'
 #' @return list(fit_params, fitted[[f, lf_amp]]) NULL if nls did not converge
 #' @export
-fit_lorentz <- function(fc_data, c0, sr){
+fit_lorentz <- function(fc_data, c0, sr, nr_tries = 10){
 
   if(missing(c0)){
     c(f, fc_amp) %<-% get_dom_freq(fc_data, sample_rate = sr)
@@ -85,9 +85,8 @@ fit_lorentz <- function(fc_data, c0, sr){
   result <- fit(fc_data, c0 = c0, sr = sr)
   if(!is.null(result$lorentz_fit)) return(result)
 
-  nr_tries <- 10
   for(i in 1:nr_tries){
-    c0 <- rnorm(n = 3, mean = c0, sd = c0/(nr_tries + 1 -i))
+    c0 <- rnorm(n = 3, mean = c0, sd = c0/10)
     names(c0) <- c("A", "f0", "d")
     message(str_glue("\n start_values: ({c0[1]}, {c0[2]}, {c0[3]})"))
     result <- fit(fc_data, c0 = c0, sr = sr)

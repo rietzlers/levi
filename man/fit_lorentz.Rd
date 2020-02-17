@@ -4,7 +4,7 @@
 \alias{fit_lorentz}
 \title{fit_lorentz}
 \usage{
-fit_lorentz(fc_data, c0, sr)
+fit_lorentz(fc_data, c0, sr, nr_tries = 10)
 }
 \arguments{
 \item{fc_data}{tibble with columns f and fc_amp}
