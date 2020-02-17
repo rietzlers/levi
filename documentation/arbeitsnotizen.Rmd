@@ -15,6 +15,7 @@ library(cowplot)
 library(plotly)
 library(shiny)
 library(janitor)
+library(rlang)
 library(levi)
 ```
 
@@ -194,8 +195,8 @@ fejer_graph +
 ```{r}
 sr <- 200
 srn <- nextn(sr, factors = c(2))
-w0 <- 30.5
-d <- 0.5
+w0 <- 30.2
+d <- 0.1
 bp = c(w0 - 15 , w0 + 15)
 
 fejer <- function(w, N){if_else(w==0, as.double(N), 1/N*(sin(pi*w*N)/sin(pi*w))^2)}
@@ -216,8 +217,9 @@ ep_data <-
     fc_amp = sqrt(rexp(n=length(f), r = 1/th_spec))
     )
   
-c(params_complete, lf_complete, lfm_complete) %<-% (ep_data %>%  fit_lorentz(c0 = c(A = 10^4, f0 = w0, g = d)))
-c(params_bp, lf_bp, lfm_bp) %<-% 
+c(params_complete, lf_complete, lfm_complete, sv_complete) %<-% (ep_data %>%  fit_lorentz(sr = sr))
+
+c(params_bp, lf_bp, lfm_bp, sv_bp) %<-% 
   (ep_data %>%  
      transmute(
        f = f,
@@ -228,10 +230,7 @@ c(params_bp, lf_bp, lfm_bp) %<-%
         )
        ) %>% 
      filter(!is.na(fc_amp)) %>%
-     # mutate(
-     #   fc_amp = if_else(between(fc_amp, w0-2, w0+2), fc_amp * 4, fc_amp)
-     # ) %>% 
-     fit_lorentz(c0 = c(A = 10^4, f0 = w0, g = d)))
+     fit_lorentz(sr = sr))
 
 specs_plot <- 
   ep_data %>% 
@@ -247,19 +246,40 @@ specs_plot <-
             aes(x = w, y = expected_spec), color = "blue") +
   geom_line(data = tibble(w = seq(0, .5, by = 1/10^5), th_spec = lorentz_spec(w)), 
             aes(y = th_spec), color = "red") +
-  geom_line(data = tibble(w = seq(0, .5, by = 1/10^5) , lf_amp = sqrt(predict(lfm_complete, newdata = list(f = w*srn)))), 
-            aes(x = w, y = lf_amp^2), color = "green", linetype = "dashed") +
-  geom_line(data = tibble(w = seq(0, .5, by = 1/10^5) , lf_amp = sqrt(predict(lfm_bp, newdata = list(f = w*srn)))), 
-            aes(x = w, y = lf_amp^2), color = "orange") +
-  scale_x_continuous(sec.axis = sec_axis(~ .*srn)) +
-  #scale_y_continuous(trans = "log10") + 
-  labs(
-    title = str_glue("Estimates: f = {round(params_complete$estimate[2], 1)}/{round(params_bp$estimate[2],1)}, d = {round(params_complete$estimate[3], 1)}/{round(params_bp$estimate[3],1)}"))
+  scale_x_continuous(sec.axis = sec_axis(~ .*srn)) 
+
+plot_title <- str_glue("True Params: f={w0}Hz; d={d}Hz")
+plot_caption <- str_glue("Start-Values: ")
+
+if(!is.null(lfm_complete)){
+  specs_plot <-
+    specs_plot +
+    geom_line(data = tibble(w = seq(0, .5, by = 1/10^5) , lf_amp = sqrt(predict(lfm_complete, newdata = list(f = w*srn)))), 
+              aes(x = w, y = lf_amp^2), color = "green", linetype = "dashed") 
+  
+  plot_title <- str_glue("{plot_title}
+                         complete: f = {round(params_complete$estimate[2], 1)}, d = {round(params_complete$estimate[3], 1)}")
+  plot_caption <- plot_caption + str_glue("complete: {sv_complete[2]},  {sv_complete[3]},")
+}
+
+if(!is.null(lfm_bp)){
+    specs_plot <-
+      specs_plot +
+      geom_line(data = tibble(w = seq(0, .5, by = 1/10^5) , lf_amp = sqrt(predict(lfm_bp, newdata = list(f = w*srn)))), 
+            aes(x = w, y = lf_amp^2), color = "orange") 
     
-#specs_plot #+ xlim(c(w0 - 10, w0 + 10)/srn)
+    plot_title <- str_glue("{plot_title}
+                         bp:  f = {round(params_bp$estimate[2],1)}, d = {round(params_bp$estimate[3],1)}")
+    plot_caption <- plot_caption + str_glue("bp: {sv_bp[2]}, {sv_bp[3]}")
+}
+
+specs_plot <- 
+  specs_plot + 
+  labs(title = str_glue("{plot_title}
+                        {plot_caption}")) 
+  
 specs_plot %>% ggplotly()
-
-
+  
 ```
 
 Zusammenfassung der (exemplarischen) Simulationsergebnisse:
