@@ -85,8 +85,9 @@ fit_lorentz <- function(fc_data, c0, sr){
   result <- fit(fc_data, c0 = c0, sr = sr)
   if(!is.null(result$lorentz_fit)) return(result)
 
-  for(i in 1:5){
-    c0 <- rnorm(n = 3, mean = c0, sd = c0/10)
+  nr_tries <- 10
+  for(i in 1:nr_tries){
+    c0 <- rnorm(n = 3, mean = c0, sd = c0/(nr_tries + 1 -i))
     names(c0) <- c("A", "f0", "d")
     message(str_glue("\n start_values: ({c0[1]}, {c0[2]}, {c0[3]})"))
     result <- fit(fc_data, c0 = c0, sr = sr)
