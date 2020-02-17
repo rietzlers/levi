@@ -103,9 +103,12 @@ renderPlot({
 })
 
 renderPlot({
- spectro(ex_data()$s, f=input$sr, ovlp=50, wl = 2^8, osc = TRUE)
- 
-# dfreq(ex_data()$s, f=input$sr, ovlp=50, threshold=10, bandpass = c(input$lp, input$hp), type="l", col="red", lwd=2)
+ spectro(ex_data()$s, f=input$sr, wl = nextn(floor(input$sr), factors = c(2))/4, ovlp = 50, osc = TRUE, 
+         flim = c(input$lp, input$hp - 1)/1000)
+ # par(new=TRUE)
+ # dfreq(ex_data()$s, f=input$sr, wl = nextn(floor(input$sr), factors = c(2))/4, ovlp=50, threshold=10, 
+ #       bandpass = c(input$lp, input$hp - 1), 
+ #       type="l", col="black", lwd=4)
  })
 
 ```
