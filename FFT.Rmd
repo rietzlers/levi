@@ -94,8 +94,8 @@ renderPlot({
     geom_line(data = tibble(f = seq(10, 70, by = .01), lf_amp = sqrt(predict(model, newdata = list(f = f)))),
               aes(x = f, y = lf_amp), color = "red") +
     geom_vline(xintercept = fit_params$estimate[2], color = "red") + 
-    labs(subtitle = str_glue("f={round(f_max, 2)}Hz/ Amp = {2 * round(fmax_amp, 1)} 
-                              f= {round(fit_params$estimate[2], 2)}Hz/ d={round(fit_params$estimate[3], 2)}Hz"))
+    labs(subtitle = str_glue("Est. from max. Amp: f={round(f_max, 2)}Hz/ Amp = {2 * round(fmax_amp, 1)} 
+                              Est. from Lorentz-Fit: f= {round(fit_params$estimate[2], 2)}Hz/ d={round(fit_params$estimate[3], 2)}Hz"))
   
   plot_grid(
     sig_plot, 
@@ -121,11 +121,12 @@ renderPlot({
 
 Folgerungen:
 
-Sieht so aus als würde die Dämpfung systematisch um einen Faktor 10 *unterschätzt*
-werden! Eine Verbreiterung der Lorentzkurve (hier also des Periodogramms) sollte aber 
-dazu führen das die Dämpfung überschätzt wird!
+ - Sieht so aus als würde die Dämpfung (**bei kleinem Frequenz-Shift**) systematisch  *unterschätzt*.
+ Eine Verbreiterung der Lorentzkurve (hier also des Periodogramms) sollte aber 
+ dazu führen das die Dämpfung überschätzt wird!
+ Mögliche Erklärung: Siehe arbeitsnotizen
  
-Wie lässt sich das erklären? Das theoretisch Spektrum sollte durch das Fejer-Fenster 
-verbreitert werden. 
+ - Sobald der Frequenz-Shift aber in 'erwartete Bereiche' (d.h. ca. 2Hz pro sekunde) kommt,
+ führt das zu einer verbreiterung des Peaks und damit auch zu einer erhöhten (geschätzten)
+ Dämpfung.
 
-Ich glaube der Punkt ist: 
