@@ -1,4 +1,4 @@
-
+# view ---------
 importTeviDataUI <- function(id) {
   ns <- NS(id)
   tagList(
@@ -15,10 +15,12 @@ importTeviDataUI <- function(id) {
     )
 }
 
+# controller -----------
 importTeviData <- function(input, output, session){
 
   tevi_data <- reactive({import_tevi_data(session, input$file)})
 
+ # setup exp-timing-data ----------
   gen_exp_timing <- function(){
     exp_timing <-
       reactiveValues(
@@ -40,7 +42,7 @@ importTeviData <- function(input, output, session){
   exp_timing <- gen_exp_timing()
 
   output$plot_center_xy <-
-    renderPlot({center_coords(tevi_data(), exp_timing())})
+    renderPlot({plot_center_coords(tevi_data(), exp_timing())})
 
   c(...skip, lc_brush) %<-%
     callModule(signal, "temp", tevi_data, "pyro_temp")
@@ -54,13 +56,14 @@ importTeviData <- function(input, output, session){
   output$exp_timing <-
     renderPrint({exp_timing()})
 
+  # return-values ----------
   list(
     tevi_data,
     frame_rate
   )
 }
 
-center_coords <-
+plot_center_coords <-
   function(data, exp_timing){
     data %>%
     ggplot(aes(x = time)) +
