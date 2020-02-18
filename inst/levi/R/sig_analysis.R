@@ -33,7 +33,7 @@ signalAnalysis <- function(input, output, session, raw_tevi_data, frame_rate){
   })
 
 
-  output$signal_in_selected_range <- renderPlot({ts_plot(data_selection(), signal_sym())})
+  output$signal_in_selected_range <- renderPlot({ts_plot(data_selection(), signal_name())})
 
   output$selected_signal_info <- renderUI({
       br <- get_brush_range(signal_brush())
@@ -41,9 +41,9 @@ signalAnalysis <- function(input, output, session, raw_tevi_data, frame_rate){
     })
 
   # submodules ----------
-  c(signal_sym, signal_brush) %<-% callModule(signal_ctrl, "completeTimerange", raw_tevi_data, "radius_y")
+  c(signal_name, signal_brush) %<-% callModule(signal_ctrl, "completeTimerange", raw_tevi_data, "radius_y")
 
-  callModule(spectrum_ctrl, "spectrum", data_selection, signal_sym, frame_rate)
+  callModule(spectrum_ctrl, "spectrum", data_selection, signal_name, frame_rate)
 
  # return-values -----------
 }
@@ -52,5 +52,5 @@ signalAnalysis <- function(input, output, session, raw_tevi_data, frame_rate){
 ts_plot <- function(ds, var){
   ds %>%
     ggplot(aes(x = time)) +
-    geom_line(aes(y = !!var))
+    geom_line(aes(y = .data[[var]]))
 }

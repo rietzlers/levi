@@ -25,10 +25,7 @@ signal_ctrl <- function(input, output, session, data, variable = NULL){
 
    # return-values ---------
   list(
-    signal_sym  = reactive({
-      validate(need(input$selected_signal, "choose signal"))
-      rlang::sym(input$selected_signal)
-    }),
+    signal_name  = reactive({input$selected_signal}),
     signal_brush = reactive(input$brush)
     )
 }
