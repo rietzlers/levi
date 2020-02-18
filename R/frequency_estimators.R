@@ -14,12 +14,11 @@
 fftc <- function(data, signal, sr){
   if(!regular_ts(data, signal, sr)) stop("no regular ts")
 
-  signal = sym(signal)
   N <- length(data[[signal]])
 
   data %>%
     transmute(
-      fc = fft(!!signal) / N, # Normalisierung !!!
+      fc = fft(.data[[signal]]) / N, # Normalisierung !!!
       f = 0:(N - 1) / N * sr,
       fc_amp = Mod(fc),
       fc_arg = Arg(fc)
@@ -127,6 +126,8 @@ bp_filter <- function(sig_data, signal_name, bp, sr){
     )
 }
 
+#' get dominant freq and corresponding amplitude in signal
+#'
 #' ermittle die dominante Frequenz eines signals aus dem Periodogramm
 #' Ist das signal ein reines cosinoid, d.h. eine evtl. verrauschte
 #' harmonische Schwingung so liefert die Theorie: Der Betrag des betragsmäßig
