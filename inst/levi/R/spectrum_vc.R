@@ -1,19 +1,23 @@
 # spectrum_vc.R ##
 
-
+# view -----------
 spectrumUI <- function(id) {
   ns <- NS(id)
 
   tagList(
     plotlyOutput(ns("spectrum_plot"), height = 250),
     uiOutput(ns("spectrum_info")),
-    selectInput(ns("type"), label = "type", selected = "raw", choices = c("raw", "log")),
+    selectInput(ns("type"), label = "", selected = "raw", choices = c("raw", "log")),
+    fluidRow(
+      column(width = 4, numericInput(ns("bp_low"),  label = "", value = 0, min = 0, step = 1)),
+      column(width = 4, numericInput(ns("bp_high"), label = "", value = 200))
+    ),
     verbatimTextOutput(ns("select_info")),
     verbatimTextOutput(ns("click_info"))
   )
 }
 
-
+# controller ------------
 spectrum_ctrl <- function(input, output, session, data, signal, frame_rate){
 
   ns <- session$ns
@@ -46,6 +50,7 @@ spectrum_ctrl <- function(input, output, session, data, signal, frame_rate){
 
 }
 
+# helper-functions ----------
 spec_plot <- function(est_spec, type = "raw"){
   ylab = "raw"
   if( type == "log"){
