@@ -35,10 +35,9 @@ signalAnalysis <- function(input, output, session, raw_tevi_data, frame_rate){
 
   output$signal_in_selected_range <- renderPlot({ts_plot(data_selection(), signal_sym())})
 
-  output$selected_signal_info <-
-    renderUI({
-      br <- get_brush_range(input$brush)
-      h5(str_glue("Window center-point: {round(mean(br), 2)} s and window-width: {round(diff(br), 2)} s"))
+  output$selected_signal_info <- renderUI({
+      br <- get_brush_range(signal_brush())
+      h5(str_glue("CP: {round(mean(br), 2)} s; wl = {round(diff(br), 2)} s"))
     })
 
   # submodules ----------
