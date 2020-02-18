@@ -118,9 +118,9 @@ tibble(f = seq(0, 10, by = .01), scalarp = map_dbl(f, ~ a(.x))) %>%
   )
 ```
 
-# Lorentz-Fit
+# Lorentz-FiT
 
-## Motivation
+## Theorie
 
 Ein gedämpfter harmonischer Oszillator gnügt folgender Gleichung: (siehe [Lorentz-Kurve](https://de.wikipedia.org/wiki/Lorentzkurve))
 \[\ddot{x} + 2\gamma \dot{x} + \omega_0^2 x = f(t)\]
@@ -143,24 +143,7 @@ harmonische Oszillator.  Aus diesem Grund wird einel Lorentz-Kurve an die quadri
 Amplituden der Fourier-Frequenzen gefittet und daraus die Eigen-Frequenz $\omega_0$ 
 und die Dämpfung $\lambda$ ermittelt.
 
-## Einschränkungen
 
-* Für $\omega \rightarrow \infty$ geht die Lorentz-Kurve gegen Null. Die
-Amplituden-Werte der Fourie-Koeffizeinten repräsentieren aber hochfrequentes
-Rauschen und bleiben deswegen (statistisch) positiv endlich. Die Anpassung der
-Lorentz-Kurve muß auf ein Frequenz-Band um die dominante Freq. beschränkt werden.
-**Wie soll diese Breite festgelegt werden?** Exemplarische Untersuchungen mit 
-simulierten Signalen weisen darauf hin, das die geschätzten Parameter relativ
-unabhängig von dem gewählten Bandpass ist. Scheint also nicht wirklich ein Problem
-zu sein.
-
-* Das endliche sampling führt zu einer Verbreiterung des theoretischen 
-Spektrums: Ein Rechteck-Taper hat die Fejer-Funktion als Spektralfenster.
-Als 'Maß' für die Breite des Fejer-Fensters kann man als richtwert eine
-Fourier-Frequenz setzen. Also 1/N $\cdot$ samplerate = $1/T$ wobei T die 
-Beobachtungs-Dauer bzw. Länge des Taper-Fensters ist. Siehe nachfolgende
-Graphik, in der Fejer-Fenster für verschiedene sampling-raten abgebildet 
-sind.
 
 ```{r}
 fejer <- function(w, N){if_else(w==0, N, 1/N*(sin(pi*w*N)/sin(pi*w))^2)}
@@ -188,16 +171,17 @@ fejer_graph +
   )
 ```
 
- - Typische/Erwartete Werte für $f_0$ sind ca. 34-32 Hz und für die Dämpfung ca. 0.5-0.3 Hz.
- 
-# Direkter Spektralschätzer
+## Simulationen
+
+Typische/Erwartete Werte für $f_0$ sind ca. 34-32 Hz und für die Dämpfung ca. 0.5-0.3 Hz.
+
 
 ```{r}
 sr <- 200
 srn <- nextn(sr, factors = c(2))
-w0 <- 30.5
+w0 <- 30.7
 d <- 0.8
-bp = c(w0 - 3 , w0 + 3)
+
 
 fejer <- function(w, N){if_else(w==0, as.double(N), 1/N*(sin(pi*w*N)/sin(pi*w))^2)}
 
@@ -216,7 +200,11 @@ ep_data <-
     f = w*srn,
     fc_amp = sqrt(rexp(n=length(f), r = 1/th_spec))
     )
-  
+
+f0 <- get_dom_freq(ep_data, sample_rate = sr)$f
+
+bp = c(f0 - 10 , f0 + 10)
+
 c(params_complete, lf_complete, lfm_complete, sv_complete) %<-% (ep_data %>%  fit_lorentz(sr = sr))
 
 c(params_bp, lf_bp, lfm_bp, sv_bp) %<-% 
@@ -258,7 +246,8 @@ if(!is.null(lfm_complete)){
               aes(x = w, y = lf_amp^2), color = "green", linetype = "dashed") 
   
   plot_title <- str_glue("{plot_title}
-                         complete: f = {round(params_complete$estimate[2], 1)}, d = {round(params_complete$estimate[3], 2)}")
+                         complete: f = {round(params_complete$estimate[2], 2)}, d = {round(params_complete$estimate[3], 2)}")
+  sv_complete <- round(sv_complete, 2)
   plot_caption <- plot_caption + str_glue("complete: {sv_complete[2]}/  {sv_complete[3]},")
 }
 
@@ -269,20 +258,40 @@ if(!is.null(lfm_bp)){
             aes(x = w, y = lf_amp^2), color = "orange") 
     
     plot_title <- str_glue("{plot_title}
-                         bp:  f = {round(params_bp$estimate[2],1)}, d = {round(params_bp$estimate[3],2)}")
+                         bp:  f = {round(params_bp$estimate[2],2)}, d = {round(params_bp$estimate[3],2)}")
+    sv_bp <- round(sv_bp, 2)
     plot_caption <- plot_caption + str_glue("bp: {sv_bp[2]}/ {sv_bp[3]}")
 }
 
-specs_plot <- 
-  specs_plot + 
+specs_plot <-
+  specs_plot +
   labs(title = str_glue("{plot_title}
-                        {plot_caption}")) 
+                    {plot_caption}"),
+       caption = "Orange: fit on BP-filtered Amplitudes; 
+       Green: fit on all amplitudes") 
   
 specs_plot %>% ggplotly()
   
 ```
 
-Zusammenfassung der (exemplarischen) Simulationsergebnisse:
+## Folgerungen
+
+- Für $\omega \rightarrow \infty$ geht die Lorentz-Kurve gegen Null. Die
+Amplituden-Werte der Fourie-Koeffizeinten repräsentieren aber hochfrequentes
+Rauschen und bleiben deswegen (statistisch) positiv endlich. Die Anpassung der
+Lorentz-Kurve muß auf ein Frequenz-Band um die dominante Freq. beschränkt werden.
+**Wie soll diese Breite festgelegt werden?** Exemplarische Untersuchungen mit 
+simulierten Signalen weisen darauf hin, das die geschätzten Parameter relativ
+unabhängig von dem gewählten Bandpass ist. Scheint also nicht wirklich ein Problem
+zu sein.**vgl, grüne und orange kurve, bzw. entsprechende fit-parameter**
+
+- Das endliche sampling führt zu einer Verbreiterung des theoretischen 
+Spektrums: Ein Rechteck-Taper hat die Fejer-Funktion als Spektralfenster.
+Als 'Maß' für die Breite des Fejer-Fensters kann man als richtwert eine
+Fourier-Frequenz setzen. Also 1/N $\cdot$ samplerate = $1/T$ wobei T die 
+Beobachtungs-Dauer bzw. Länge des Taper-Fensters ist. Siehe nachfolgende
+Graphik, in der Fejer-Fenster für verschiedene sampling-raten abgebildet 
+sind. **dies ist in der blauen kurve veranschaulicht**
 
  - Typische breite der Lorentz-kurve ist etw 1 Hz (bei d = 0.5). Da die 
  Eigenfrequenz der Kugel im Regelfall keine Fourier-Frequenz ist, ist zu
@@ -290,6 +299,7 @@ Zusammenfassung der (exemplarischen) Simulationsergebnisse:
  nach relativer Lage der Eigenfrequenz zwischen diesen Fourier-frequenzen
  sind die theortischen Werte auch unterschiedlich hoch. Dies führt dann 
  zu einer verzerrung des Schätzers.
+ 
  - Gewichtiger schein aber die Tatsache, dass das Signal nicht gut durch
  einen harmonisch gedämpften Oszillator beschrieben wird. Insbesondere ist ein 
  Shift der Eigenfrequenz zu erwarten, welcher eine Verbreiterung der Kurve herbeiführt.
