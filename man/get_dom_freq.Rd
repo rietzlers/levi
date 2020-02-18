@@ -12,12 +12,12 @@ multipliziert.}
 get_dom_freq(fc_data, sample_rate = 400)
 }
 \arguments{
-\item{sample_rate}{sample-rate}
+\item{fc_data}{datensatz mit variablen f und fc_amp}
 
-\item{fft_data}{datensatz mit variablen f und fc_amp}
+\item{sample_rate}{sample-rate}
 }
 \value{
-tibble with variables f and fc_amp mit einer observation
+tibble with variables f and fc_amp
 }
 \description{
 ermittle die dominante Frequenz eines signals aus dem Periodogramm

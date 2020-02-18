@@ -4,19 +4,19 @@
 \alias{bp_filter}
 \title{Band-Pass-Filter signal}
 \usage{
-bp_filter(sig_data, signal, bp, sr)
+bp_filter(sig_data, signal_name, bp, sr)
 }
 \arguments{
 \item{sig_data}{tibble with var signal}
 
-\item{signal}{character: name of signal to be filtered}
-
 \item{bp}{numeric vector: lower and upper bp-Freqs}
 
 \item{sr}{samplerate}
+
+\item{signal}{character: name of signal to be filtered}
 }
 \value{
-tibble with
+tibble with vars t and signal_name
 }
 \description{
 Band-Pass-Filter signal
