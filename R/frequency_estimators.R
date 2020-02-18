@@ -111,11 +111,11 @@ fit_lorentz <- function(fc_data, c0, sr, nr_tries = 10){
 #' @param bp numeric vector: lower and upper bp-Freqs
 #' @param sr samplerate
 #'
-#' @return tibble with
+#' @return tibble with vars t and signal_name
 #' @export
-bp_filter <- function(sig_data, signal, bp, sr){
+bp_filter <- function(sig_data, signal_name, bp, sr){
   N <- length(sig_data$t)
-  levi::fftc(sig_data, signal, sr) %>%
+  levi::fftc(sig_data, signal_name, sr) %>%
     mutate(
       t = sig_data$t,
       fc = if_else(
@@ -123,7 +123,7 @@ bp_filter <- function(sig_data, signal, bp, sr){
         fc * N, # N = lenght(t): Normierung wieder rückgängig machen.
         0i
         ),
-      !!sym(signal) := Re(fft(fc, inverse = TRUE)) / N # Normierung!
+      !!sym(signal_name) := Re(fft(fc, inverse = TRUE)) / N # Normierung!
     )
 }
 
@@ -134,10 +134,10 @@ bp_filter <- function(sig_data, signal, bp, sr){
 #' Aus diesem Grund wird der zurückgegebene Wert der Amplitude mit 2
 #' multipliziert.
 #'
-#' @param fft_data datensatz mit variablen f und fc_amp
+#' @param fc_data datensatz mit variablen f und fc_amp
 #' @param sample_rate sample-rate
 #'
-#' @return tibble with variables f and fc_amp mit einer observation
+#' @return tibble with variables f and fc_amp
 #' @export
 get_dom_freq <- function(fc_data, sample_rate = 400){
   fc_data %>%
