@@ -18,12 +18,12 @@ spectrumUI <- function(id) {
 }
 
 # controller ------------
-spectrum_ctrl <- function(input, output, session, data, signal, frame_rate){
+spectrum_ctrl <- function(input, output, session, tevi_data, signal_name, frame_rate){
 
   ns <- session$ns
 
   est_spec <- reactive({
-    estimate_signal_spectrum(data(), signal(), frame_rate())
+    estimate_signal_spectrum(tevi_data(), signal_name(), frame_rate())
   })
 
   output$spectrum_plot <-
@@ -65,10 +65,10 @@ spec_plot <- function(est_spec, type = "raw"){
          y = ylab)
 }
 
-estimate_signal_spectrum <- function(data, signal, frame_rate) {
+estimate_signal_spectrum <- function(data, signal_name, frame_rate) {
   est_spec <-
     spectrum(
-      ts(data  %>% pull(!!signal), frequency = frame_rate),
+      ts(data[[signal_name]], frequency = frame_rate),
       plot = FALSE)
 
   tibble(freq = est_spec$freq, spec = est_spec$spec)

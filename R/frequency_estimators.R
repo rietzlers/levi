@@ -21,7 +21,8 @@ fftc <- function(data, signal, sr){
       fc = fft(.data[[signal]]) / N, # Normalisierung !!!
       f = 0:(N - 1) / N * sr,
       fc_amp = Mod(fc),
-      fc_arg = Arg(fc)
+      fc_arg = Arg(fc),
+      spec = N * fc_amp^2
     )
 }
 
