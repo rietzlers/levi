@@ -36,8 +36,8 @@ spectrum_ctrl <- function(input, output, session, tevi_data, signal_name, frame_
     })
 
   output$spectrum_info <- renderUI({
-    max_freq <- levi::get_dom_freq(est_spec())$f
-    h5(str_glue("Maximum Freq.: {round(max_freq$max_freq, 2)} Hz"))
+    c(f, ...)  %<-% levi::get_dom_freq(est_spec())
+    h5(str_glue("Maximum Freq.: {round(f, 2)} Hz"))
   })
 
   output$select_info <- renderPrint({
@@ -59,19 +59,26 @@ spec_plot <- function(est_spec, type = "raw"){
   }
 
     est_spec %>%
-    ggplot(aes(x = freq, y = spec)) +
+    ggplot(aes(x = f, y = spec)) +
     geom_line() +
     labs(x = "Frequency [Hz]",
          y = ylab)
 }
 
-estimate_signal_spectrum <- function(data, signal_name, frame_rate) {
-  est_spec <-
-    spectrum(
-      ts(data[[signal_name]], frequency = frame_rate),
-      plot = FALSE)
+estimate_signal_spectrum <- function(signal_data, signal_name, frame_rate, type = "spectrum") {
+  if(type == "spectrum"){
+    est_spec <-
+      spectrum(
+        ts(signal_data[[signal_name]], frequency = frame_rate),
+        plot = FALSE)
 
-  tibble(freq = est_spec$freq, spec = est_spec$spec)
+    return(tibble(f = est_spec$freq,  spec = est_spec$spec, fc_amp = sqrt(spec / length(N))))
+  }
+
+  if(type == "fft"){
+    levi::fftc(signal_data, signal_name, sr = frame_rate)
+  }
+
 }
 
 
