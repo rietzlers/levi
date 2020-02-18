@@ -36,7 +36,7 @@ spectrum_ctrl <- function(input, output, session, data, signal, frame_rate){
     })
 
   output$spectrum_info <- renderUI({
-    max_freq <- get_freq_max(est_spec())
+    max_freq <- levi::get_dom_freq(est_spec())$f
     h5(str_glue("Maximum Freq.: {round(max_freq$max_freq, 2)} Hz"))
   })
 
@@ -74,8 +74,4 @@ estimate_signal_spectrum <- function(data, signal, frame_rate) {
   tibble(freq = est_spec$freq, spec = est_spec$spec)
 }
 
-get_freq_max <- function(est_spec){
-    est_spec %>%
-    filter(near(spec, max(spec), tol = 0.5)) %>%
-    summarize(max_freq = mean(freq))
-}
+
