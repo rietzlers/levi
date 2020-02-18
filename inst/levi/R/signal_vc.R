@@ -1,12 +1,12 @@
 # signal_vc.R #
 
+# view ------------
 signalUI <- function(id, height = 200){
   ns <- NS(id)
 
   tagList(
     fluidRow(
-      column(width = 4, selectInput(ns("selected_signal"), label = NULL, choices = NULL)),
-      column(width = 4, sliderInput("bp", "Band-Pass", min = 0, max = 400, value = c(0,400)))
+      column(width = 4, selectInput(ns("selected_signal"), label = NULL, choices = NULL))
     ),
     plotOutput(
       ns("signal"), height = height,
@@ -14,7 +14,8 @@ signalUI <- function(id, height = 200){
     )
 }
 
-signal <- function(input, output, session, data, variable = NULL){
+# controller ----------
+signal_ctrl <- function(input, output, session, data, variable = NULL){
 
   observeEvent(data(),
       updateSelectInput(session, "selected_signal", choices = names(data()), selected = variable))
@@ -22,16 +23,17 @@ signal <- function(input, output, session, data, variable = NULL){
   output$signal <-
     renderPlot({gen_signal_plot(data(), input$selected_signal)})
 
+   # return-values ---------
   list(
-    signal =
-      reactive({
-        validate(need(input$selected_signal, "choose signal"))
-        rlang::sym(input$selected_signal)}),
-    brush =
-      reactive(input$brush)
+    signal_sym  = reactive({
+      validate(need(input$selected_signal, "choose signal"))
+      rlang::sym(input$selected_signal)
+    }),
+    signal_brush = reactive(input$brush)
     )
 }
 
+# helpers ---------
 gen_signal_plot <-
   function(data, signal){
     data %>%
