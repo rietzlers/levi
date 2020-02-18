@@ -10,9 +10,20 @@ fit_lorentz(fc_data, c0, sr, nr_tries = 10)
 \item{fc_data}{tibble with columns f and fc_amp}
 
 \item{c0}{numeric vector c(A, f0, d) with start-values for nls}
+
+\item{sr}{samplerate}
+
+\item{nr_tries}{# to repeat nls with different start-values if
+it did not converge}
 }
 \value{
-list(fit_params, fitted[[f, lf_amp]]) NULL if nls did not converge
+list with elements (all element will be NULL if non-convergence):
+\itemize{
+\item est_params: c(A, f0, d)
+\item fitted: tibble with vars: f, lf_amp
+\item lfit: model-object
+\item start_values:
+}
 }
 \description{
 fit_lorentz

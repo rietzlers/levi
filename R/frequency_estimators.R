@@ -31,8 +31,17 @@ fftc <- function(data, signal, sr){
 #'
 #' @param fc_data tibble with columns f and fc_amp
 #' @param c0 numeric vector c(A, f0, d) with start-values for nls
+#' @param sr samplerate
+#' @param nr_tries # to repeat nls with different start-values if
+#' it did not converge
 #'
-#' @return list(fit_params, fitted[[f, lf_amp]]) NULL if nls did not converge
+#' @return list with elements (all element will be NULL if non-convergence):
+#' \itemize{
+#' \item est_params: c(A, f0, d)
+#' \item fitted: tibble with vars: f, lf_amp
+#' \item lfit: model-object
+#' \item start_values:
+#' }
 #' @export
 fit_lorentz <- function(fc_data, c0, sr, nr_tries = 10){
 
@@ -41,16 +50,14 @@ fit_lorentz <- function(fc_data, c0, sr, nr_tries = 10){
     c0 = c(A = fc_amp^2, f0 = f, d = 0.5)
   }
 
-
   fit <- function(fc_data, c0 = c0, sr = sr)
   {
     tryCatch(
       error = function(cnd) {
-        print(cnd_message(cnd))
         return(list(
-          fit_params = NULL,
+          est_params = NULL,
           fitted = NULL,
-          lorentz_fit = NULL,
+          lfit = NULL,
           start_values = c0
         ))
       },
@@ -73,9 +80,9 @@ fit_lorentz <- function(fc_data, c0, sr, nr_tries = 10){
           mutate(lf_amp = sqrt(predict(lfit, newdata = f)))
 
         return(list(
-          fit_params = fit_params,
+          est_params = fit_params,
           fitted = fitted,
-          lorentz_fit = lfit,
+          lfit = lfit,
           start_values = c0
         ))
       }
@@ -88,17 +95,13 @@ fit_lorentz <- function(fc_data, c0, sr, nr_tries = 10){
   for(i in 1:nr_tries){
     c0 <- rnorm(n = 3, mean = c0, sd = c0/10)
     names(c0) <- c("A", "f0", "d")
-    message(str_glue("\n start_values: ({c0[1]}, {c0[2]}, {c0[3]})"))
+    #message(str_glue("\n start_values: ({c0[1]}, {c0[2]}, {c0[3]})"))
     result <- fit(fc_data, c0 = c0, sr = sr)
     if(!is.null(result$lorentz_fit)) {
-      message(str_glue("\n nls converged in {i}. try \n"))
       return(result)
       }
     }
-
-  message("nls did not converge")
   return(result)
-
 }
 
 #' Band-Pass-Filter signal
