@@ -274,6 +274,9 @@ specs_plot %>% ggplotly()
   
 ```
 
+Siehe auch:  **simulate_analysis.Rmd**
+
+
 ## Folgerungen
 
 - Für $\omega \rightarrow \infty$ geht die Lorentz-Kurve gegen Null. Die
@@ -303,8 +306,15 @@ sind. **dies ist in der blauen kurve veranschaulicht**
  - Gewichtiger schein aber die Tatsache, dass das Signal nicht gut durch
  einen harmonisch gedämpften Oszillator beschrieben wird. Insbesondere ist ein 
  Shift der Eigenfrequenz zu erwarten, welcher eine Verbreiterung der Kurve herbeiführt.
+
+ - Sieht so aus als würde die Dämpfung (**bei kleinem Frequenz-Shift**) systematisch  *unterschätzt*.
+ Eine Verbreiterung der Lorentzkurve (hier also des Periodogramms) sollte aber 
+ dazu führen das die Dämpfung überschätzt wird!
+ Mögliche Erklärung: Siehe arbeitsnotizen
  
- 
- 
+ - Sobald der Frequenz-Shift aber in 'erwartete Bereiche' (d.h. ca. 2Hz pro sekunde) kommt,
+ führt das zu einer verbreiterung des Peaks und damit auch zu einer erhöhten (geschätzten)
+ Dämpfung.
+
  
  
