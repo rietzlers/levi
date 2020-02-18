@@ -1,5 +1,5 @@
 ---
-title: "FFT"
+title: "Simulate Analysis"
 output: 
   html_notebook:
     code_folding: hide
