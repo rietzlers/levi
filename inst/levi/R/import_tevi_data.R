@@ -45,10 +45,10 @@ importTeviData <- function(input, output, session){
     renderPlot({plot_center_coords(tevi_data(), exp_timing())})
 
   c(...skip, lc_brush) %<-%
-    callModule(signal, "temp", tevi_data, "pyro_temp")
+    callModule(signal_ctrl, "temp", tevi_data, "pyro_temp")
 
   c(...skip, hp_brush) %<-%
-    callModule(signal, "heating", tevi_data, "htr_i")
+    callModule(signal_ctrl, "heating", tevi_data, "htr_i")
 
   c(frame_rate) %<-%
     callModule(parameters, "params", tevi_data)
