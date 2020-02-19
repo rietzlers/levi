@@ -34,6 +34,6 @@ signal_ctrl <- function(input, output, session, data, variable = NULL){
 gen_signal_plot <-
   function(data, signal){
     data %>%
-      ggplot(aes(x = time)) +
+      ggplot(aes(x = t)) +
       geom_line(aes_string(y = signal))
   }

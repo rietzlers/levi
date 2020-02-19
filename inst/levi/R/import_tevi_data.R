@@ -74,7 +74,7 @@ importTeviData <- function(input, output, session) {
 plot_center_coords <-
   function(data, exp_timing){
     data %>%
-    ggplot(aes(x = time)) +
+    ggplot(aes(x = t)) +
       geom_line(aes(y = center_x)) +
       geom_line(aes(y = center_y), color = "red") +
       geom_vline(data = exp_timing, aes(xintercept = lc), linetype = "dashed") +

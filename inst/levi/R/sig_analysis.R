@@ -28,12 +28,16 @@ signalAnalysis <- function(input, output, session, raw_tevi_data, frame_rate){
   # update UI -
   observeEvent(raw_tevi_data(), {
     col_names <- raw_tevi_data() %>% names()
-    signal_names <- col_names[col_names != "time"]
+    signal_names <- col_names[col_names != "t"]
     updateSelectInput(session, "signal_choice", choices = signal_names)
   })
 
-
-  output$signal_in_selected_range <- renderPlot({ts_plot(data_selection(), signal_name())})
+  output$signal_in_selected_range <-
+    renderPlot({
+      ts_plot(
+        data_selection() %>% bp_filter(signal_name(), bp(), frame_rate()),
+        signal_name())
+      })
 
   output$selected_signal_info <- renderUI({
       br <- get_brush_range(signal_brush())
@@ -43,7 +47,7 @@ signalAnalysis <- function(input, output, session, raw_tevi_data, frame_rate){
   # submodules ----------
   c(signal_name, signal_brush) %<-% callModule(signal_ctrl, "completeTimerange", raw_tevi_data, "radius_y")
 
-  callModule(spectrum_ctrl, "spectrum", data_selection, signal_name, frame_rate)
+  c(bp) %<-% callModule(spectrum_ctrl, "spectrum", data_selection, signal_name, frame_rate)
 
  # return-values -----------
 }
@@ -51,6 +55,9 @@ signalAnalysis <- function(input, output, session, raw_tevi_data, frame_rate){
 # helpers -----------------
 ts_plot <- function(ds, var){
   ds %>%
-    ggplot(aes(x = time)) +
-    geom_line(aes(y = .data[[var]]))
+    ggplot(aes(x = t)) +
+    geom_line(aes(y = .data[[var]])) +
+    labs(
+      y = var
+    )
 }

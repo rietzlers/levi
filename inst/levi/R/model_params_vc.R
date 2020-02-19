@@ -27,11 +27,14 @@ model_params_ctrl <- function(input, output, session, data){
       # estimate sample/frame-rate from mean dt
       c(est_sample_freq) %<-%
         (data() %>%
-           summarize(est_sample_freq = round(1 / mean(diff(time), na.rm = TRUE))))
+           summarize(est_sample_freq = round(1 / mean(diff(t), na.rm = TRUE))))
 
       updateNumericInput(session, "frame_rate", value = est_sample_freq)
 
     })
 
-  list(reactive(input$frame_rate))
+  # return values ---------
+  list(
+    reactive(input$frame_rate)
+    )
   }

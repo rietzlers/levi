@@ -21,7 +21,7 @@ import_tevi_data <- function(session, file) {
   df <- df_raw[-1, ]
 
   # add exp-time: time=0 is start of measurement
-  df <-  df %>% arrange(seconds) %>% mutate(time = seconds - seconds[1])
+  df <-  df %>% arrange(seconds) %>% mutate(t = seconds - seconds[1])
 
   # standardize var-names (remove different prefix for ax-/radial-data)
   names(df) <- map_chr(names(df), ~ str_remove(.x, "^a_|^r_"))
