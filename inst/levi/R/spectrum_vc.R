@@ -72,7 +72,7 @@ estimate_signal_spectrum <- function(signal_data, signal_name, frame_rate, type 
         ts(signal_data[[signal_name]], frequency = frame_rate),
         plot = FALSE)
 
-    return(tibble(f = est_spec$freq,  spec = est_spec$spec, fc_amp = sqrt(spec / length(N))))
+    return(tibble(f = est_spec$freq,  spec = est_spec$spec, fc_amp = sqrt(spec / length(f))))
   }
 
   if(type == "fft"){
