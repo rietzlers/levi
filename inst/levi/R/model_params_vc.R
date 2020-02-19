@@ -1,7 +1,7 @@
 # parameters.R ##
 
 
-parametersUI <- function(id) {
+model_params_view <- function(id) {
   ns <- NS(id)
   tagList(
     box(width = 12, collapsible = TRUE,
@@ -18,7 +18,7 @@ parametersUI <- function(id) {
 }
 
 
-parameters <- function(input, output, session, data){
+model_params_ctrl <- function(input, output, session, data){
 
   # update ui ------------
   observeEvent(
