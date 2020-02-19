@@ -8,7 +8,7 @@
 #' @param signal character: name of signal
 #' @param sr samplerate
 #'
-#' @return tibble with vars f (Kreisfrequenz, d.h. cycles per unit-time), fc, fc_amp and fc_arg
+#' @return tibble with vars f (Kreisfrequenz, d.h. cycles per unit-time), fc, fc_amp and fc_arg and spec = N * fc_amp^2
 #'
 #' @export
 fftc <- function(data, signal, sr){
@@ -18,8 +18,8 @@ fftc <- function(data, signal, sr){
 
   data %>%
     transmute(
-      fc = fft(.data[[signal]]) / N, # Normalisierung !!!
       f = 0:(N - 1) / N * sr,
+      fc = fft(.data[[signal]]) / N, # Normalisierung !!!
       fc_amp = Mod(fc),
       fc_arg = Arg(fc),
       spec = N * fc_amp^2
