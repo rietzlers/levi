@@ -12,7 +12,7 @@
 #'
 #' @export
 fftc <- function(data, signal, sr){
-  if(!regular_ts(data, signal, sr)) stop("no regular ts")
+  if(!regular_ts(data, signal, sr)) warning("no regular ts")
 
   N <- length(data[[signal]])
 
@@ -124,7 +124,8 @@ bp_filter <- function(sig_data, signal_name, bp, sr){
         0i
         ),
       !!sym(signal_name) := Re(fft(fc, inverse = TRUE)) / N # Normierung!
-    )
+    ) %>%
+    select(-fc)
 }
 
 #' get dominant freq and corresponding amplitude in signal
