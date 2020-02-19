@@ -5,16 +5,17 @@ spectrumUI <- function(id) {
   ns <- NS(id)
 
   tagList(
-    plotlyOutput(ns("spectrum_plot"), height = 250),
+    plotOutput(ns("spectrum_plot"), height = 250,
+               brush = brushOpts(id = ns("brush"), fill = "#ccc", direction = "x", resetOnNew = TRUE)),
     uiOutput(ns("spectrum_info")),
     fluidRow(
       column(width = 6, selectInput(ns("scale"), label = "", selected = "raw", choices = c("raw", "log10"))),
       column(width = 6, selectInput(ns("type"), label = "", selected = "spectrum", choices = c("spectrum", "fft")))
     ),
-    fluidRow(
-      column(width = 4, numericInput(ns("bp_low"),  label = "", value = 0, min = 0, step = 1)),
-      column(width = 4, numericInput(ns("bp_high"), label = "", value = 200))
-    ),
+    # fluidRow(
+    #   column(width = 4, numericInput(ns("bp_low"),  label = "", value = 0, min = 0, step = 1)),
+    #   column(width = 4, numericInput(ns("bp_high"), label = "", value = 200))
+    # ),
     verbatimTextOutput(ns("select_info")),
     verbatimTextOutput(ns("click_info"))
   )
@@ -25,17 +26,19 @@ spectrum_ctrl <- function(input, output, session, tevi_data, signal_name, frame_
 
   ns <- session$ns
 
+  # data ----
   est_spec <- reactive({
     estimate_signal_spectrum(tevi_data(), signal_name(), frame_rate(), input$type)
   })
 
+  bp <- reactive(({
+    get_brush_range(input$brush)
+  }))
+
+  # output-ctrls -----------
   output$spectrum_plot <-
-    renderPlotly({
-      spec_plot(est_spec(), scale = input$scale) %>%
-        ggplotly(source = ns("spectrum_plotly")) %>%
-        layout(dragmode = "select") %>%
-        event_register("plotly_brushed") %>%
-        event_register("plotly_selected")
+    renderPlot({
+      spec_plot(est_spec(), scale = input$scale)
     })
 
   output$spectrum_info <- renderUI({
@@ -43,13 +46,10 @@ spectrum_ctrl <- function(input, output, session, tevi_data, signal_name, frame_
     h5(str_glue("Dominant Freq.: {round(f, 2)} Hz/ Amp.: {round(fc_amp, 2)}"))
   })
 
-  output$select_info <- renderPrint({
-    event_data("plotly_brushed", source = ns("spectrum_plotly"))
-    })
-
-  output$click_info <- renderPrint({
-    event_data("plotly_click", source = ns("spectrum_plotly"))
-  })
+  # return-values -----------
+  list(
+    bp
+  )
 
 }
 
