@@ -26,7 +26,7 @@ signal_ctrl <- function(input, output, session, data, variable = NULL){
    # return-values ---------
   list(
     signal_name  = reactive({input$selected_signal}),
-    signal_brush = reactive(input$brush)
+    signal_brush = reactive({input$brush})
     )
 }
 
