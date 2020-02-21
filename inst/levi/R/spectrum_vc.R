@@ -32,7 +32,7 @@ spectrum_ctrl <- function(input, output, session, tevi_data, signal_name, frame_
   })
 
   bp <- reactive(({
-    get_brush_range(input$brush)
+    get_brush_range(input$brush, "set band-pass by brushing spectrum-plot")
   }))
 
   # output-ctrls -----------
