@@ -10,7 +10,7 @@ signalUI <- function(id, height = 200){
     ),
     plotOutput(
       ns("signal"), height = height,
-      brush = brushOpts(id = ns("brush"), fill = "#ccc", direction = "x", resetOnNew = TRUE))
+      brush = brushOpts(id = ns("brush"), fill = "#ccc", direction = "x", resetOnNew = FALSE))
     )
 }
 

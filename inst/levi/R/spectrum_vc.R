@@ -6,7 +6,7 @@ spectrumUI <- function(id) {
 
   tagList(
     plotOutput(ns("spectrum_plot"), height = 250,
-               brush = brushOpts(id = ns("brush"), fill = "#ccc", direction = "x", resetOnNew = TRUE)),
+               brush = brushOpts(id = ns("brush"), fill = "#ccc", direction = "x", resetOnNew = FALSE)),
     uiOutput(ns("spectrum_info")),
     fluidRow(
       column(width = 6, selectInput(ns("scale"), label = "", selected = "raw", choices = c("raw", "log10"))),
