@@ -41,7 +41,9 @@ spectrum_ctrl <- function(input, output, session, data_selection, signal_name, f
       spec_plot(
         est_spec(),
         scale = input$scale,
-        bp = c(0, frame_rate()/2)
+        bp = c(0, frame_rate()/2),
+        sample_rate = frame_rate(),
+        color = "black"
         )
     })
 
@@ -50,7 +52,9 @@ spectrum_ctrl <- function(input, output, session, data_selection, signal_name, f
       spec_plot(
         est_spec(),
         scale = input$scale,
-        bp = bp()
+        bp = bp(),
+        sample_rate = frame_rate(),
+        color = "blue"
       )
     })
 
@@ -62,7 +66,7 @@ spectrum_ctrl <- function(input, output, session, data_selection, signal_name, f
 }
 
 # helper-functions ----------
-spec_plot <- function(est_spec, scale = "raw", bp){
+spec_plot <- function(est_spec, scale = "raw", bp, sample_rate, color){
 
   bp <- round(bp, 1)
   est_spec <-
@@ -71,15 +75,39 @@ spec_plot <- function(est_spec, scale = "raw", bp){
 
   c(f, fc_amp)  %<-% round(levi::get_dom_freq(est_spec), 1)
 
+  c(est_params, fitted_data, lfit, sv) %<-%
+    fit_lorentz(est_spec, sr = sample_rate)
+
+  plot_title <- str_glue("BP: [{bp[1]}, {bp[2]}] Hz; Dom. Freq.: {f} Hz (Amp.: {fc_amp})")
   periodogram <-
     est_spec %>%
-    ggplot(aes(x = f, y = spec)) +
-    geom_line() +
+    ggplot(aes(x = f, y = fc_amp)) +
+    geom_line(color = color) +
     labs(
       x = "Frequency [Hz]",
-      subtitle = str_glue("BP: [{bp[1]}, {bp[2]}] Hz; Dom. Freq.: {f} Hz (Amp.: {fc_amp})")
+      subtitle = plot_title
       )
 
+  if(!is.null(fitted_data)){
+    # fitted_data <-
+    #   tibble(f = seq(bp[1], bp[2], by = 1000)) %>%
+    #   mutate(lf_amp = sqrt(predict(lfit, newdata = list(f = f))))
+    c(A, f0, d) %<-% round(abs(est_params$estimate), 2)
+    print(est_params)
+    periodogram <-
+      periodogram +
+      geom_line(data = fitted_data, aes(x = f, y = lf_amp), alpha = 0.5, color = "red") +
+      labs(
+        caption = str_glue("LF: A = {A}, f0 = {f} Hz, d = {d} Hz")
+      )
+  }else{
+    periodogram <-
+      periodogram +
+      geom_line(data = fitted_data, aes(x = f, y = lf_amp), alpha = 0.5, color = "red") +
+      labs(
+        caption = str_glue("LF: did not converge")
+      )
+  }
   if(scale == "raw"){
     return(
       periodogram +
