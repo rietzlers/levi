@@ -5,30 +5,30 @@ spectrumUI <- function(id) {
   ns <- NS(id)
 
   tagList(
-    plotOutput(ns("spectrum_plot"), height = 250,
-               brush = brushOpts(id = ns("brush"), fill = "#ccc", direction = "x", resetOnNew = FALSE)),
-    uiOutput(ns("spectrum_info")),
+    fluidRow(
+      column(width = 6,
+            plotOutput(ns("complete_spectrum"), height = 250,
+               brush = brushOpts(id = ns("brush"), fill = "#ccc", direction = "x", resetOnNew = FALSE))
+            ),
+        column(width = 6,
+            plotOutput(ns("bp_spectrum"), height = 250)
+        )
+    ),
     fluidRow(
       column(width = 6, selectInput(ns("scale"), label = "", selected = "raw", choices = c("raw", "log10"))),
       column(width = 6, selectInput(ns("type"), label = "", selected = "spectrum", choices = c("spectrum", "fft")))
-    ),
-    # fluidRow(
-    #   column(width = 4, numericInput(ns("bp_low"),  label = "", value = 0, min = 0, step = 1)),
-    #   column(width = 4, numericInput(ns("bp_high"), label = "", value = 200))
-    # ),
-    verbatimTextOutput(ns("select_info")),
-    verbatimTextOutput(ns("click_info"))
+    )
   )
 }
 
 # controller ------------
-spectrum_ctrl <- function(input, output, session, tevi_data, signal_name, frame_rate){
+spectrum_ctrl <- function(input, output, session, data_selection, signal_name, frame_rate){
 
   ns <- session$ns
 
   # data ----
   est_spec <- reactive({
-    estimate_signal_spectrum(tevi_data(), signal_name(), frame_rate(), input$type)
+    estimate_signal_spectrum(data_selection(), signal_name(), frame_rate(), input$type)
   })
 
   bp <- reactive(({
@@ -36,15 +36,23 @@ spectrum_ctrl <- function(input, output, session, tevi_data, signal_name, frame_
   }))
 
   # output-ctrls -----------
-  output$spectrum_plot <-
+  output$complete_spectrum <-
     renderPlot({
-      spec_plot(est_spec(), scale = input$scale)
+      spec_plot(
+        est_spec(),
+        scale = input$scale,
+        bp = c(0, frame_rate()/2)
+        )
     })
 
-  output$spectrum_info <- renderUI({
-    c(f, fc_amp)  %<-% levi::get_dom_freq(est_spec())
-    h5(str_glue("Dominant Freq.: {round(f, 2)} Hz/ Amp.: {round(fc_amp, 2)}"))
-  })
+  output$bp_spectrum <-
+    renderPlot({
+      spec_plot(
+        est_spec(),
+        scale = input$scale,
+        bp = bp()
+      )
+    })
 
   # return-values -----------
   list(
@@ -54,13 +62,23 @@ spectrum_ctrl <- function(input, output, session, tevi_data, signal_name, frame_
 }
 
 # helper-functions ----------
-spec_plot <- function(est_spec, scale = "raw"){
+spec_plot <- function(est_spec, scale = "raw", bp){
+
+  bp <- round(bp, 1)
+  est_spec <-
+    est_spec %>%
+    filter(f %>% between(bp[1], bp[2]))
+
+  c(f, fc_amp)  %<-% round(levi::get_dom_freq(est_spec), 1)
 
   periodogram <-
     est_spec %>%
     ggplot(aes(x = f, y = spec)) +
     geom_line() +
-    labs(x = "Frequency [Hz]")
+    labs(
+      x = "Frequency [Hz]",
+      subtitle = str_glue("BP: [{bp[1]}, {bp[2]}] Hz; Dom. Freq.: {f} Hz (Amp.: {fc_amp})")
+      )
 
   if(scale == "raw"){
     return(
@@ -68,7 +86,6 @@ spec_plot <- function(est_spec, scale = "raw"){
         labs(y = scale)
     )
   }
-
   if(scale == "log10"){
     return(
       periodogram +
@@ -76,7 +93,6 @@ spec_plot <- function(est_spec, scale = "raw"){
         scale_y_continuous(trans = scale)
     )
   }
-
 }
 
 estimate_signal_spectrum <- function(signal_data, signal_name, frame_rate, type = "spectrum") {
@@ -88,15 +104,12 @@ estimate_signal_spectrum <- function(signal_data, signal_name, frame_rate, type 
     return(
       tibble(f = est_spec$freq,  spec = est_spec$spec, fc_amp = sqrt(spec / length(f))))
   }
-
   if(type == "fft"){
     return(
       levi::fftc(signal_data, signal_name, sr = frame_rate) %>%
         filter(f < frame_rate/2)
     )
   }
-
-
 }
 
 
