@@ -4,11 +4,11 @@
 signalAnalysisUI <- function(id, width = 12) {
   ns <- NS(id)
   tagList(
-    box(width = width, signalUI(ns("completeTimerange"))),
-    box(width = width / 2,
-        plotOutput(ns("signal_in_selected_range"),  height = 250),
-        uiOutput(ns("selected_signal_info"))),
-    box(width = width / 2, spectrumUI(ns("spectrum")))
+    box(width = width,
+        signalUI(ns("completeTimerange")),
+        plotOutput(ns("signal_in_selected_range"),  height = 250)
+        ),
+    box(width = width, spectrumUI(ns("spectrum_analysis")))
   )
 }
 
@@ -17,6 +17,7 @@ signalAnalysis <- function(input, output, session, raw_tevi_data, frame_rate){
 
   ns <- session$ns
 
+  # data ----
   data_selection <-
     reactive({
       selected_data <-brushedPoints(raw_tevi_data(), signal_brush())
@@ -25,7 +26,8 @@ signalAnalysis <- function(input, output, session, raw_tevi_data, frame_rate){
       selected_data
     })
 
-  # update UI -
+
+  # views ----
   observeEvent(raw_tevi_data(), {
     col_names <- raw_tevi_data() %>% names()
     signal_names <- col_names[col_names != "t"]
@@ -35,29 +37,35 @@ signalAnalysis <- function(input, output, session, raw_tevi_data, frame_rate){
   output$signal_in_selected_range <-
     renderPlot({
       ts_plot(
-        data_selection() %>% bp_filter(signal_name(), bp(), frame_rate()),
-        signal_name())
+        ds = data_selection(),
+        signal_name = signal_name(),
+        time_range = get_brush_range(signal_brush()),
+        bp = bp(),
+        frame_rate = frame_rate()
+        )
       })
 
-  output$selected_signal_info <- renderUI({
-      br <- get_brush_range(signal_brush())
-      h5(str_glue("CP: {round(mean(br), 2)} s; wl = {round(diff(br), 2)} s"))
-    })
+
 
   # submodules ----------
-  c(signal_name, signal_brush) %<-% callModule(signal_ctrl, "completeTimerange", raw_tevi_data, "radius_y")
+  c(signal_name, signal_brush) %<-% callModule(signal_ctrl, "completeTimerange", raw_tevi_data, "radius_y", bp)
 
-  c(bp) %<-% callModule(spectrum_ctrl, "spectrum", data_selection, signal_name, frame_rate)
+  c(bp) %<-% callModule(spectrum_ctrl, "spectrum_analysis", data_selection, signal_name, frame_rate)
 
- # return-values -----------
-}
+  # return-values -----------
+
+  }
 
 # helpers -----------------
-ts_plot <- function(ds, var){
+ts_plot <- function(ds, signal_name, time_range, bp, frame_rate){
+  bp_signal <- ds %>% bp_filter(signal_name, bp, frame_rate)
+
   ds %>%
     ggplot(aes(x = t)) +
-    geom_line(aes(y = .data[[var]])) +
+    geom_line(aes(y = (.data[[signal_name]] - mean(.data[[signal_name]], na.rm = TRUE)))) +
+    geom_line(data = bp_signal, aes(x = t, y = .data[[signal_name]]), color = "red", linetype = "dashed", alpha = 0.5) +
     labs(
-      y = var
+      y = signal_name,
+      subtitle = str_glue("CP: {round(mean(time_range), 2)} s; wl = {round(diff(time_range), 2)} s")
     )
 }

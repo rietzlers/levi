@@ -15,7 +15,7 @@ signalUI <- function(id, height = 200){
 }
 
 # controller ----------
-signal_ctrl <- function(input, output, session, data, variable = NULL){
+signal_ctrl <- function(input, output, session, data, variable = NULL, bp){
 
   observeEvent(data(),
       updateSelectInput(session, "selected_signal", choices = names(data()), selected = variable))
