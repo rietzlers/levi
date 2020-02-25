@@ -16,7 +16,10 @@ spectrumUI <- function(id) {
     ),
     fluidRow(
       column(width = 6, selectInput(ns("scale"), label = "", selected = "raw", choices = c("raw", "log10"))),
-      column(width = 6, selectInput(ns("type"), label = "", selected = "spectrum", choices = c("spectrum", "fft")))
+      column(width = 6,
+             selectInput(ns("type"), label = "", selected = "spectrum", choices = c("spectrum", "fft")),
+             textInput(ns("spans"), label = "span", value = "c(3,3)")
+             )
     )
   )
 }
@@ -28,7 +31,9 @@ spectrum_ctrl <- function(input, output, session, data_selection, signal_name, f
 
   # data ----
   est_spec <- reactive({
-    estimate_signal_spectrum(data_selection(), signal_name(), frame_rate(), input$type)
+    estimate_signal_spectrum(data_selection(), signal_name(), frame_rate(),
+                             input$type,
+                             eval(rlang::parse_expr(input$spans)))
   })
 
   bp <- reactive(({
