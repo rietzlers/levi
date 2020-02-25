@@ -89,16 +89,17 @@ spec_plot <- function(est_spec, scale = "raw", bp, sample_rate, color){
       )
 
   if(!is.null(fitted_data)){
-    # fitted_data <-
-    #   tibble(f = seq(bp[1], bp[2], by = 1000)) %>%
-    #   mutate(lf_amp = sqrt(predict(lfit, newdata = list(f = f))))
+    fitted_data <-
+      tibble(f = seq(bp[1], bp[2], by = 1/100)) %>%
+      mutate(lf_amp = sqrt(predict(lfit, newdata = tibble(f = f))))
+
     c(A, f0, d) %<-% round(abs(est_params$estimate), 2)
     print(est_params)
     periodogram <-
       periodogram +
       geom_line(data = fitted_data, aes(x = f, y = lf_amp), alpha = 0.5, color = "red") +
       labs(
-        caption = str_glue("LF: A = {A}, f0 = {f} Hz, d = {d} Hz")
+        caption = str_glue("LF: A = {round(sqrt(A))}, f0 = {f} Hz, d = {d} Hz")
       )
   }else{
     periodogram <-
@@ -122,11 +123,12 @@ spec_plot <- function(est_spec, scale = "raw", bp, sample_rate, color){
   }
 }
 
-estimate_signal_spectrum <- function(signal_data, signal_name, frame_rate, type = "spectrum") {
+estimate_signal_spectrum <- function(signal_data, signal_name, frame_rate, type = "spectrum", spans = c(3, 3)) {
   if(type == "spectrum"){
     est_spec <-
       spectrum(
         ts(signal_data[[signal_name]], frequency = frame_rate),
+        spans = spans,
         plot = FALSE)
     return(
       tibble(f = est_spec$freq,  spec = est_spec$spec, fc_amp = sqrt(spec / length(f))))
