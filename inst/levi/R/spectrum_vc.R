@@ -103,7 +103,6 @@ spec_plot <- function(est_spec, scale = "raw", bp, sample_rate, color){
   }else{
     periodogram <-
       periodogram +
-      geom_line(data = fitted_data, aes(x = f, y = lf_amp), alpha = 0.5, color = "red") +
       labs(
         caption = str_glue("LF: did not converge")
       )
