@@ -50,8 +50,7 @@ fit_lorentz <- function(fc_data, c0, sr, nr_tries = 10){
     c0 = c(A = fc_amp^2, f0 = f, d = 0.5)
   }
 
-  fit <- function(fc_data, c0 = c0, sr = sr)
-  {
+  fit <- function(fc_data, c0 = c0, sr = sr){
     tryCatch(
       error = function(cnd) {
         return(list(
@@ -173,4 +172,42 @@ regular_ts <- function(data, signal, sr) {
     return(FALSE)
   }
   return(TRUE)
+}
+
+#' Estimate Spectrum from Signal
+#'
+#' @param signal_data tibble with signal
+#' @param signal_name char: name of the signal-variable
+#' @param frame_rate sample-rate in Hz
+#' @param type spectrum or fft
+#' @param spans vector of odd integers giving the widths of modified Daniell smoothers to be used to smooth the periodogram.
+#' @param taper specifies the proportion of data to taper
+#'
+#' @return
+#'
+#' @export
+estimate_signal_spectrum <- function(signal_data, signal_name, frame_rate, type = "spectrum", spans = c(3, 3), taper = 0.1) {
+  if(type == "spectrum"){
+    est_spec <-
+      spectrum(
+        ts(signal_data[[signal_name]], frequency = frame_rate),
+        spans = spans,
+        taper = taper,
+        plot = FALSE)
+    return(
+      tibble(f = est_spec$freq,  spec = est_spec$spec, fc_amp = sqrt(spec / length(f))))
+  }
+  if(type == "fft"){
+    return(
+      levi::fftc(signal_data, signal_name, sr = frame_rate) %>%
+        filter(f < frame_rate/2)
+    )
+  }
+
+  estimates <-
+    tibble(f = est_spec$freq,  spec_s = est_spec$spec, fc_amp_s = sqrt(spec / length(f))) %>%
+    left_join(
+      levi::fftc(signal_data, signal_name, sr = frame_rate),
+      by = "f"
+      )
 }

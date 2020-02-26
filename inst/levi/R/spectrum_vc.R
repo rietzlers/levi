@@ -128,22 +128,6 @@ spec_plot <- function(est_spec, scale = "raw", bp, sample_rate, color){
   }
 }
 
-estimate_signal_spectrum <- function(signal_data, signal_name, frame_rate, type = "spectrum", spans = c(3, 3)) {
-  if(type == "spectrum"){
-    est_spec <-
-      spectrum(
-        ts(signal_data[[signal_name]], frequency = frame_rate),
-        spans = spans,
-        plot = FALSE)
-    return(
-      tibble(f = est_spec$freq,  spec = est_spec$spec, fc_amp = sqrt(spec / length(f))))
-  }
-  if(type == "fft"){
-    return(
-      levi::fftc(signal_data, signal_name, sr = frame_rate) %>%
-        filter(f < frame_rate/2)
-    )
-  }
-}
+
 
 
