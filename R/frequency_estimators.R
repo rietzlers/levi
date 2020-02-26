@@ -179,35 +179,24 @@ regular_ts <- function(data, signal, sr) {
 #' @param signal_data tibble with signal
 #' @param signal_name char: name of the signal-variable
 #' @param frame_rate sample-rate in Hz
-#' @param type spectrum or fft
 #' @param spans vector of odd integers giving the widths of modified Daniell smoothers to be used to smooth the periodogram.
 #' @param taper specifies the proportion of data to taper
 #'
 #' @return
 #'
 #' @export
-estimate_signal_spectrum <- function(signal_data, signal_name, frame_rate, type = "spectrum", spans = c(3, 3), taper = 0.1) {
-  if(type == "spectrum"){
-    est_spec <-
-      spectrum(
-        ts(signal_data[[signal_name]], frequency = frame_rate),
-        spans = spans,
-        taper = taper,
-        plot = FALSE)
-    return(
-      tibble(f = est_spec$freq,  spec = est_spec$spec, fc_amp = sqrt(spec / length(f))))
-  }
-  if(type == "fft"){
-    return(
-      levi::fftc(signal_data, signal_name, sr = frame_rate) %>%
-        filter(f < frame_rate/2)
-    )
-  }
+estimate_signal_spectrum <- function(signal_data, signal_name, frame_rate,  spans = c(3, 3), taper = 0.1) {
+
+  est_spec <-
+    spectrum(ts(signal_data[[signal_name]], frequency = frame_rate),
+             spans = spans, taper = taper, plot = FALSE)
 
   estimates <-
-    tibble(f = est_spec$freq,  spec_s = est_spec$spec, fc_amp_s = sqrt(spec / length(f))) %>%
-    left_join(
-      levi::fftc(signal_data, signal_name, sr = frame_rate),
-      by = "f"
+    tibble(f = est_spec$freq, type = "spectrum", spec = est_spec$spec, fc_amp = sqrt(spec)) %>%
+    dplyr::union(
+      levi::fftc(signal_data, signal_name, sr = frame_rate) %>%
+        mutate(type = "fft") %>%
+        select(f, type, spec, fc_amp) %>%
+        dplyr::filter(f < frame_rate/2)
       )
 }

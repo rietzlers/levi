@@ -8,8 +8,8 @@ estimate_signal_spectrum(
   signal_data,
   signal_name,
   frame_rate,
-  type = "spectrum",
-  spans = c(3, 3)
+  spans = c(3, 3),
+  taper = 0.1
 )
 }
 \arguments{
@@ -18,8 +18,6 @@ estimate_signal_spectrum(
 \item{signal_name}{char: name of the signal-variable}
 
 \item{frame_rate}{sample-rate in Hz}
-
-\item{type}{spectrum or fft}
 
 \item{spans}{vector of odd integers giving the widths of modified Daniell smoothers to be used to smooth the periodogram.}
 
