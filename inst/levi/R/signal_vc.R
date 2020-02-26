@@ -1,7 +1,7 @@
 # signal_vc.R #
 
 # view ------------
-signalUI <- function(id, height = 200){
+signalUI <- function(id, height = 150){
   ns <- NS(id)
 
   tagList(

@@ -6,7 +6,7 @@ signalAnalysisUI <- function(id, width = 12) {
   tagList(
     box(width = width,
         signalUI(ns("completeTimerange")),
-        plotOutput(ns("signal_in_selected_range"),  height = 250)
+        plotOutput(ns("signal_in_selected_range"),  height = 150)
         ),
     box(width = width, spectrumUI(ns("spectrum_analysis")))
   )
