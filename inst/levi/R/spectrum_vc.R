@@ -11,14 +11,15 @@ spectrumUI <- function(id) {
                brush = brushOpts(id = ns("brush"), fill = "#ccc", direction = "x", resetOnNew = FALSE))
             ),
         column(width = 6,
-            plotOutput(ns("bp_spectrum"), height = 250)
+            plotlyOutput(ns("bp_spectrum"), height = 250)
         )
     ),
     fluidRow(
       column(width = 6, selectInput(ns("scale"), label = "", selected = "raw", choices = c("raw", "log10"))),
       column(width = 6,
              selectInput(ns("type"), label = "", selected = "spectrum", choices = c("spectrum", "fft")),
-             textInput(ns("spans"), label = "span", value = "c(3,3)")
+             textInput(ns("spans"), label = "span", value = "c(3,3)"),
+             numericInput(ns("taper"), label = "taper", value = 0.1, step = .1, min = 0, max = 1)
              )
     )
   )
@@ -31,9 +32,13 @@ spectrum_ctrl <- function(input, output, session, data_selection, signal_name, f
 
   # data ----
   est_spec <- reactive({
-    estimate_signal_spectrum(data_selection(), signal_name(), frame_rate(),
-                             input$type,
-                             eval(rlang::parse_expr(input$spans)))
+    levi::estimate_signal_spectrum(
+      data_selection(),
+      signal_name(),
+      frame_rate(),
+      spans = eval(rlang::parse_expr(input$spans)),
+      taper = input$taper
+    )
   })
 
   bp <- reactive(({
@@ -48,19 +53,22 @@ spectrum_ctrl <- function(input, output, session, data_selection, signal_name, f
         scale = input$scale,
         bp = c(0, frame_rate()/2),
         sample_rate = frame_rate(),
+        type = input$type,
         color = "black"
         )
     })
 
   output$bp_spectrum <-
-    renderPlot({
+    renderPlotly({
       spec_plot(
         est_spec(),
         scale = input$scale,
         bp = bp(),
         sample_rate = frame_rate(),
+        type = input$type,
         color = "blue"
-      )
+      ) %>%
+        ggplotly()
     })
 
   # return-values -----------
@@ -71,23 +79,25 @@ spectrum_ctrl <- function(input, output, session, data_selection, signal_name, f
 }
 
 # helper-functions ----------
-spec_plot <- function(est_spec, scale = "raw", bp, sample_rate, color){
+spec_plot <- function(est_spec, scale = "raw", bp, type = "fft", sample_rate, color){
 
   bp <- round(bp, 1)
   est_spec <-
     est_spec %>%
-    filter(f %>% between(bp[1], bp[2]))
+    dplyr::filter(f %>% between(bp[1], bp[2]))
 
-  c(f, fc_amp)  %<-% round(levi::get_dom_freq(est_spec), 1)
+  c(f, fc_amp)  %<-% round(levi::get_dom_freq(dplyr::filter(est_spec, type == type), 1))
 
-  c(est_params, fitted_data, lfit, sv) %<-%
-    fit_lorentz(est_spec, sr = sample_rate)
+  c(est_params, fitted_data, lfit, sv) %<-% fit_lorentz(dplyr::filter(est_spec, type == type), sr = sample_rate)
 
   plot_title <- str_glue("BP: [{bp[1]}, {bp[2]}] Hz; Dom. Freq.: {f} Hz (Amp.: {fc_amp})")
+
   periodogram <-
     est_spec %>%
-    ggplot(aes(x = f, y = fc_amp)) +
-    geom_line(color = color) +
+    ggplot(aes(x = f)) +
+    geom_line(data = ~ dplyr::filter(.x, type == "spectrum"), aes(y = fc_amp), color = color) +
+    geom_point(data = ~ dplyr::filter(.x, type == "spectrum"), aes(y = fc_amp), color = color, shape = "x") +
+    geom_point(data = ~ dplyr::filter(.x, type == "fft", f > 0), aes(y = fc_amp), shape = "+", size = 1.5) +
     labs(
       x = "Frequency [Hz]",
       subtitle = plot_title
