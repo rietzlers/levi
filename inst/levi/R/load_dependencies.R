@@ -11,6 +11,7 @@ library(vroom)
 library(janitor)
 library(zeallot)
 library(crosstalk)
+library(shinyBS)
 
 # source code which needs to run once -------------------------------------
 
