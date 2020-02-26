@@ -54,7 +54,7 @@ spectrum_ctrl <- function(input, output, session, data_selection, signal_name, f
         scale = input$scale,
         bp = c(0, frame_rate()/2),
         sample_rate = frame_rate(),
-        type = input$type,
+        type_choosen= input$type,
         color = "black"
         )
     })
@@ -66,7 +66,7 @@ spectrum_ctrl <- function(input, output, session, data_selection, signal_name, f
         scale = input$scale,
         bp = bp(),
         sample_rate = frame_rate(),
-        type = input$type,
+        type_choosen =  input$type,
         color = "blue"
       ) %>%
         ggplotly()
@@ -80,18 +80,25 @@ spectrum_ctrl <- function(input, output, session, data_selection, signal_name, f
 }
 
 # helper-functions ----------
-spec_plot <- function(est_spec, scale = "raw", bp, type = "fft", sample_rate, color){
+spec_plot <- function(est_spec, scale = "log10", bp, type_choosen = "fft", sample_rate, color){
 
   bp <- round(bp, 1)
   est_spec <-
     est_spec %>%
     dplyr::filter(f %>% between(bp[1], bp[2]))
 
-  c(f, fc_amp)  %<-% round(levi::get_dom_freq(dplyr::filter(est_spec, type == type), 1))
 
-  c(est_params, fitted_data, lfit, sv) %<-% fit_lorentz(dplyr::filter(est_spec, type == type), sr = sample_rate)
+  c(f_dom, fc_amp_dom)  %<-%
+    round(
+      levi::get_dom_freq(
+        dplyr::filter(est_spec, type == "fft", f %>% between(0.1, sample_rate/2)),
+        sample_rate = sample_rate)
+        , 1)
 
-  plot_title <- str_glue("BP: [{bp[1]}, {bp[2]}] Hz; Dom. Freq.: {f} Hz (Amp.: {fc_amp})")
+  c(est_params, fitted_data, lfit, sv) %<-%
+    fit_lorentz(dplyr::filter(est_spec, type== type_choosen, f %>% between(0.1, sample_rate/2)), sr = sample_rate)
+
+  plot_title <- str_glue("BP: [{bp[1]}, {bp[2]}] Hz; Dom. Freq.: {f_dom} Hz (Amp.: {fc_amp_dom})")
 
   periodogram <-
     est_spec %>%
@@ -100,8 +107,7 @@ spec_plot <- function(est_spec, scale = "raw", bp, type = "fft", sample_rate, co
     geom_point(data = ~ dplyr::filter(.x, type == "spectrum"), aes(y = fc_amp), color = color, shape = "x") +
     geom_point(data = ~ dplyr::filter(.x, type == "fft", f > 0), aes(y = fc_amp), shape = "+", size = 1.5) +
     labs(
-      x = "Frequency [Hz]",
-      subtitle = plot_title
+      x = "Frequency [Hz]"
       )
 
   if(!is.null(fitted_data)){
@@ -110,18 +116,18 @@ spec_plot <- function(est_spec, scale = "raw", bp, type = "fft", sample_rate, co
       mutate(lf_amp = sqrt(predict(lfit, newdata = tibble(f = f))))
 
     c(A, f0, d) %<-% round(abs(est_params$estimate), 2)
-    print(est_params)
+
     periodogram <-
       periodogram +
       geom_line(data = fitted_data, aes(x = f, y = lf_amp), alpha = 0.5, color = "red") +
       labs(
-        caption = str_glue("LF: A = {round(sqrt(A))}, f0 = {f} Hz, d = {d} Hz")
+        title  = str_glue("{plot_title}; LF: A = {round(sqrt(A))}, f0 = {f0} Hz, d = {d} Hz")
       )
   }else{
     periodogram <-
       periodogram +
       labs(
-        caption = str_glue("LF: did not converge")
+        title  = str_glue("{plot_title}; LF: did not converge")
       )
   }
   if(scale == "raw"){
