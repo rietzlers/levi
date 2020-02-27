@@ -4,17 +4,19 @@
 \alias{fit_lorentz}
 \title{fit_lorentz}
 \usage{
-fit_lorentz(fc_data, c0, sr, nr_tries = 10)
+fit_lorentz(fc_data, c0, bp, sr, nr_tries = 10)
 }
 \arguments{
 \item{fc_data}{tibble with columns f and fc_amp}
 
 \item{c0}{numeric vector c(A, f0, d) with start-values for nls}
 
+\item{bp}{numeric vector of length 2 specifying a Band-Pass; fit to bp-filtered data}
+
 \item{sr}{samplerate}
 
 \item{nr_tries}{# to repeat nls with different start-values if
-it did not converge}
+it did not converge the first time.}
 }
 \value{
 list with elements (all element will be NULL if non-convergence):
@@ -26,5 +28,7 @@ list with elements (all element will be NULL if non-convergence):
 }
 }
 \description{
-fit_lorentz
+fits a lorentz-curve to the supplied amplitudes of the
+Fourier-Coefficients. It does not matter if those amplitudes
+are calculated with the fft or spectrum function.
 }

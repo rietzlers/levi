@@ -15,10 +15,15 @@ get_dom_freq(fc_data, sample_rate = 400)
 tibble with variables f and fc_amp
 }
 \description{
-ermittle die dominante Frequenz eines signals aus dem Periodogramm
+Ermittelt die dominante Frequenz (die Frequenz mit maximaler Amplitude)
+eines Signals aus dem Periodogramm.
+}
+\details{
+Nur Frequenzen ab 0.1 Hz kommen in Frage!
+
 Ist das signal ein reines cosinoid, d.h. eine evtl. verrauschte
 harmonische Schwingung so liefert die Theorie: Der Betrag des betragsmäßig
-größten Foruierkoeffizienten ist die halbe Amplitude des Signals.
+größten (normierten) Fourierkoeffizienten ist die halbe Amplitude des Signals.
 Aus diesem Grund wird der zurückgegebene Wert der Amplitude mit 2
 multipliziert.
 }

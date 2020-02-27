@@ -2,8 +2,7 @@
 % Please edit documentation in R/frequency_estimators.R
 \name{regular_ts}
 \alias{regular_ts}
-\title{checks if sampling-interval is equidistant and no
-observations are missing}
+\title{check time-series for regularity}
 \usage{
 regular_ts(data, signal, sr)
 }

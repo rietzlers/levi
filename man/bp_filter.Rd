@@ -19,5 +19,7 @@ bp_filter(sig_data, signal_name, bp, sr)
 tibble with vars t and signal_name
 }
 \description{
-Band-Pass-Filter signal
+The function calculates the Fourier-Coefficients with fft,
+sets all Fourier-Coefficients not within the bp-range to 0
+and inverses the fft.
 }
