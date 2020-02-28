@@ -58,6 +58,7 @@ signalAnalysis <- function(input, output, session, raw_tevi_data, frame_rate){
 
 # helpers -----------------
 ts_plot <- function(ds, signal_name, time_range, bp, frame_rate){
+
   bp_signal <- ds %>% bp_filter(signal_name, bp, frame_rate)
 
   ds %>%
@@ -67,6 +68,6 @@ ts_plot <- function(ds, signal_name, time_range, bp, frame_rate){
               color = "blue", alpha = 0.5) +
     labs(
       y = signal_name,
-      subtitle = str_glue("CP: {round(mean(time_range), 2)} s; wl = {round(diff(time_range), 2)} s")
+      subtitle = str_glue("CP: {round(mean(time_range), 2)} s; wl = {round(diff(time_range), 2)} s; BP: [{bp[1]}, {bp[2]}] Hz")
     )
 }
