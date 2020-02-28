@@ -22,6 +22,9 @@ spectrumUI <- function(id) {
              bsTooltip(ns("spans"), "specify daniell-smoother: NULL for no smoothing", "top", options = list(container = "body"))),
       column(width = 3,
              numericInput(ns("taper"), label = "taper", value = 0.1, step = .1, min = 0, max = 1))
+    ),
+    fluidRow(
+      column(width = 12, htmlOutput(ns("numerical_summary")))
     )
   )
 }
@@ -85,6 +88,11 @@ spectrum_ctrl <- function(input, output, session, data_selection, signal_name, f
         ggplotly()
     })
 
+  output$numerical_summary <-
+    renderUI({
+      numerical_summary(est_spec(), lfit(), frame_rate())
+    })
+
   # return-values -----------
   list(
     bp
@@ -95,17 +103,16 @@ spectrum_ctrl <- function(input, output, session, data_selection, signal_name, f
 # helper-functions ----------
 spec_plot <- function(est_spec, lfit, scale = "log10", bp, type_choosen = "fft", sample_rate, color){
 
-  numerical_summary(est_spec, lfit, sample_rate)
+
 
   periodogram <-
     est_spec %>%
+    filter(f %>% between(bp[1], bp[2])) %>%
     ggplot(aes(x = f)) +
     geom_line(data = ~ dplyr::filter(.x, type == "spectrum"), aes(y = fc_amp), color = color) +
     geom_point(data = ~ dplyr::filter(.x, type == "spectrum"), aes(y = fc_amp), color = color, shape = "x", size = 0.8) +
     geom_point(data = ~ dplyr::filter(.x, type == "fft", f > 0), aes(y = fc_amp), shape = "+", size = 1.5) +
-    labs(x = "Frequency [Hz]") +
-    xlim(bp)
-
+    labs(x = "Frequency [Hz]")
 
   if(!is.null(lfit)){
     fitted_data <-
@@ -135,10 +142,14 @@ numerical_summary <- function(est_spec, lfit, sample_rate){
         sample_rate = sample_rate)
       , 1)
 
+  textual_summary <- str_glue("FFT: Dom. Freq: {f_dom} Hz")
   if(!is.null(lfit)){
-    print(lorentz_parameters(lfit))
+    params <- lorentz_parameters(lfit)
     #print(summary(lfit))
+    textual_summary <- str_glue("{textual_summary}
+                              Lorentz-Fit: f0 = {params[2]} Hz; d = {params[3]} Hz")
   }
+  textual_summary
 }
 
 
