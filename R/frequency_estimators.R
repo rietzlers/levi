@@ -174,7 +174,7 @@ fit_lorentz <- function(fc_data, c0, bp, sr, nr_tries = 10){
 #' @return named vector
 #' @export
 lorentz_parameters <- function(lf_model){
-  round(coef(lf_model), 2)
+  abs(round(coef(lf_model), 2))
 }
 
 
