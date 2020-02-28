@@ -12,6 +12,7 @@ library(janitor)
 library(zeallot)
 library(crosstalk)
 library(shinyBS)
+library(levi)
 
 # source code which needs to run once -------------------------------------
 
