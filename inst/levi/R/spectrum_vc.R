@@ -27,7 +27,8 @@ spectrumUI <- function(id) {
       )
     ),
     fluidRow(
-      column(width = 12, htmlOutput(ns("numerical_summary")))
+      column(width = 6, plotlyOutput(ns("spec_analysis_results_display"))),
+      column(width = 6, DT::dataTableOutput(ns("spec_analsis_results_DT")))
     )
   )
 }
@@ -93,10 +94,23 @@ spectrum_ctrl <- function(input, output, session, data_selection, signal_name, f
         ggplotly()
     })
 
-  output$numerical_summary <-
-    renderUI({
-      numerical_summary(est_spec(), lfit(), frame_rate())
+  output$spec_analysis_results_display <-
+    renderPlotly({
+      validate(need(spec_analysis_results(), label = "spec_analysis_results"))
+      spec_analysis_results() %>%
+        ggplot(aes(x = t, color = type)) +
+        geom_point(aes(y = dom_freq), shape = "x", size = 2) +
+        geom_point(aes(y = f0), size = 2) +
+        ylim(bp())
     })
+
+  output$spec_analsis_results_DT <-
+    DT::renderDataTable({
+      validate(need(spec_analysis_results(), label = "spec_analysis_results"))
+      spec_analysis_results() %>%
+        arrange(type, t)
+      },
+      server = TRUE)
 
   observeEvent(
     input$save_result,
@@ -147,30 +161,6 @@ spec_plot <- function(est_spec, lfit, scale = "log10", bp, type_choosen = "fft",
   }
 }
 
-numerical_summary <- function(est_spec, lfit, sample_rate){
-  c(f_dom_fft, ...)  %<-%
-    round(
-      levi::get_dom_freq(
-        est_spec %>% dplyr::filter(type == "fft"),
-        sample_rate = sample_rate)
-      , 1)
-
-  c(f_dom_spectrum, ...)  %<-%
-    round(
-      levi::get_dom_freq(
-        est_spec %>% dplyr::filter(type == "spectrum"),
-        sample_rate = sample_rate)
-      , 1)
-
-  textual_summary <- str_glue("Dom. Freq: {f_dom_fft}/{f_dom_spectrum} Hz")
-  if(!is.null(lfit)){
-    params <- lorentz_parameters(lfit)
-    #print(summary(lfit))
-    textual_summary <- str_glue("{textual_summary}
-                              Lorentz-Fit: f0 = {params[2]} Hz; d = {params[3]} Hz")
-  }
-  textual_summary
-}
 
 save_result <- function(spec_analysis_results, est_spec, lfit,
                         time_range,
@@ -199,9 +189,9 @@ save_result <- function(spec_analysis_results, est_spec, lfit,
 
   result <-
     tibble(
-      t = mean(time_range),
-      t1 = time_range[1],
-      t2 = time_range[2],
+      t = round(mean(time_range), 1),
+      t1 = round(time_range[1], 1),
+      t2 = round(time_range[2], 1),
       type = type_choosen,
       dom_freq = f_dom,
       f0 = params[2],
