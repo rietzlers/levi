@@ -60,7 +60,7 @@ spectrum_ctrl <- function(input, output, session, data_selection, signal_name, f
         round(1)
   }))
 
-  results <- reactiveVal()
+  spec_analysis_results <- reactiveVal()
 
   # output-ctrls -----------
   output$complete_spectrum <-
@@ -101,8 +101,8 @@ spectrum_ctrl <- function(input, output, session, data_selection, signal_name, f
   observeEvent(
     input$save_result,
     {
-      save_result(
-        results = NULL, est_spec = est_spec(), lfit = lfit(),
+        save_result(
+        spec_analysis_results =  spec_analysis_results, est_spec = est_spec(), lfit = lfit(),
         time_range = get_brush_range(time_range()),
         sample_rate = frame_rate(),
         type_choosen = input$type,
@@ -172,7 +172,7 @@ numerical_summary <- function(est_spec, lfit, sample_rate){
   textual_summary
 }
 
-save_result <- function(results, est_spec, lfit,
+save_result <- function(spec_analysis_results, est_spec, lfit,
                         time_range,
                         sample_rate,
                         bp = c(NA_real_, NA_real_),
@@ -211,7 +211,17 @@ save_result <- function(results, est_spec, lfit,
       taper = taper
     )
 
-  print(result)
+  results <- spec_analysis_results()
+  if(is.null(results)){
+    results <- result
+  }else{
+    results <-
+      results %>%
+      dplyr::union(result)
+  }
+
+  print(results)
+  spec_analysis_results(results)
 }
 
 
