@@ -103,8 +103,6 @@ spectrum_ctrl <- function(input, output, session, data_selection, signal_name, f
 # helper-functions ----------
 spec_plot <- function(est_spec, lfit, scale = "log10", bp, type_choosen = "fft", sample_rate, color){
 
-
-
   periodogram <-
     est_spec %>%
     filter(f %>% between(bp[1], bp[2])) %>%
@@ -135,14 +133,21 @@ spec_plot <- function(est_spec, lfit, scale = "log10", bp, type_choosen = "fft",
 }
 
 numerical_summary <- function(est_spec, lfit, sample_rate){
-  c(f_dom, fc_amp_dom)  %<-%
+  c(f_dom_fft, ...)  %<-%
     round(
       levi::get_dom_freq(
         est_spec %>% dplyr::filter(type == "fft"),
         sample_rate = sample_rate)
       , 1)
 
-  textual_summary <- str_glue("FFT: Dom. Freq: {f_dom} Hz")
+  c(f_dom_spectrum, ...)  %<-%
+    round(
+      levi::get_dom_freq(
+        est_spec %>% dplyr::filter(type == "spectrum"),
+        sample_rate = sample_rate)
+      , 1)
+
+  textual_summary <- str_glue("Dom. Freq: {f_dom_fft}/{f_dom_spectrum} Hz")
   if(!is.null(lfit)){
     params <- lorentz_parameters(lfit)
     #print(summary(lfit))
@@ -151,5 +156,7 @@ numerical_summary <- function(est_spec, lfit, sample_rate){
   }
   textual_summary
 }
+
+
 
 
