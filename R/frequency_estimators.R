@@ -139,7 +139,7 @@ fit_lorentz <- function(fc_data, c0, bp, sr, nr_tries = 10){
   fit <- function(fc_data, c0 = c0, sr = sr){
     tryCatch(
       error = function(cnd) {
-        warning(str_glue("nls did not converge;  start_values: ({c0[1]}, {c0[2]}, {c0[3]})"))
+        #warning(str_glue("nls did not converge;  start_values: ({c0[1]}, {c0[2]}, {c0[3]})"))
         return(NULL)
       },
       # run nls
