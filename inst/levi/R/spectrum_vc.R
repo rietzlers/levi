@@ -17,11 +17,14 @@ spectrumUI <- function(id) {
     fluidRow(
       column(width = 3, selectInput(ns("scale"), label = "", selected = "log10", choices = c("raw", "log10"))),
       column(width = 3, selectInput(ns("type"), label = "", selected = "spectrum", choices = c("spectrum", "fft"))),
-      column(width = 3,
+      column(width = 2,
              textInput(ns("spans"), label = "span", value = "c(3,3)"),
              bsTooltip(ns("spans"), "specify daniell-smoother: NULL for no smoothing", "top", options = list(container = "body"))),
-      column(width = 3,
-             numericInput(ns("taper"), label = "taper", value = 0.1, step = .1, min = 0, max = 1))
+      column(width = 2,
+             numericInput(ns("taper"), label = "taper", value = 0.1, step = .1, min = 0, max = 1)),
+      column(width = 2,
+             actionButton(ns("save_result"), label = "save")
+      )
     ),
     fluidRow(
       column(width = 12, htmlOutput(ns("numerical_summary")))
@@ -30,7 +33,7 @@ spectrumUI <- function(id) {
 }
 
 # controller ------------
-spectrum_ctrl <- function(input, output, session, data_selection, signal_name, frame_rate){
+spectrum_ctrl <- function(input, output, session, data_selection, signal_name, frame_rate, time_range){
 
   ns <- session$ns
 
@@ -56,6 +59,8 @@ spectrum_ctrl <- function(input, output, session, data_selection, signal_name, f
       get_brush_range(input$brush, "set band-pass by brushing spectrum-plot") %>%
         round(1)
   }))
+
+  results <- reactiveVal()
 
   # output-ctrls -----------
   output$complete_spectrum <-
@@ -93,6 +98,16 @@ spectrum_ctrl <- function(input, output, session, data_selection, signal_name, f
       numerical_summary(est_spec(), lfit(), frame_rate())
     })
 
+  observeEvent(
+    input$save_result,
+    {
+      save_result(
+        results = NULL, est_spec = est_spec(), lfit = lfit(),
+        time_range = get_brush_range(time_range()),
+        sample_rate = frame_rate(),
+        type_choosen = input$type,
+        bp = bp(), spans = input$spans, taper = input$taper)
+    })
   # return-values -----------
   list(
     bp
@@ -157,6 +172,46 @@ numerical_summary <- function(est_spec, lfit, sample_rate){
   textual_summary
 }
 
+save_result <- function(results, est_spec, lfit,
+                        time_range,
+                        sample_rate,
+                        bp = c(NA_real_, NA_real_),
+                        type_choosen,
+                        spans = NA_character_, taper = NA_real_){
 
+   c(f_dom, ...)  %<-%
+    round(
+      levi::get_dom_freq(
+        est_spec %>% dplyr::filter(type == type_choosen),
+        sample_rate = sample_rate)
+      , 2)
+
+  if(!is.null(lfit)){
+    params <- lorentz_parameters(lfit)
+  }else{
+    params <- c(A = NA_real_, f0 = NA_real_, d = NA_real_)
+  }
+
+  if(type_choosen == "fft"){
+    spans <- NA_character_
+    taper <- NA_real_
+  }
+
+  result <-
+    tibble(
+      t = mean(time_range),
+      t1 = time_range[1],
+      t2 = time_range[2],
+      type = type_choosen,
+      dom_freq = f_dom,
+      f0 = params[2],
+      d = params[3],
+      bp_l = bp[1], bp_h = bp[2],
+      spans = spans,
+      taper = taper
+    )
+
+  print(result)
+}
 
 
