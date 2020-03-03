@@ -25,10 +25,6 @@ spectrumUI <- function(id) {
       column(width = 2,
              actionButton(ns("save_result"), label = "save")
       )
-    ),
-    fluidRow(
-      column(width = 6, plotlyOutput(ns("spec_analysis_results_display"))),
-      column(width = 6, DT::dataTableOutput(ns("spec_analsis_results_DT")))
     )
   )
 }
@@ -64,8 +60,7 @@ spectrum_ctrl <- function(input, output, session, data_selection, signal_name, f
   spec_analysis_results <- reactiveVal()
 
   # output-ctrls -----------
-  output$complete_spectrum <-
-    renderPlot({
+  output$complete_spectrum <- renderPlot({
       spec_plot(
         est_spec(),
         lfit =
@@ -94,23 +89,6 @@ spectrum_ctrl <- function(input, output, session, data_selection, signal_name, f
         ggplotly()
     })
 
-  output$spec_analysis_results_display <-
-    renderPlotly({
-      validate(need(spec_analysis_results(), label = "spec_analysis_results"))
-      spec_analysis_results() %>%
-        ggplot(aes(x = t, color = type)) +
-        geom_point(aes(y = dom_freq), shape = "x", size = 2) +
-        geom_point(aes(y = f0), size = 2) +
-        ylim(bp())
-    })
-
-  output$spec_analsis_results_DT <-
-    DT::renderDataTable({
-      validate(need(spec_analysis_results(), label = "spec_analysis_results"))
-      spec_analysis_results() %>%
-        arrange(type, t)
-      },
-      server = TRUE)
 
   observeEvent(
     input$save_result,
@@ -124,7 +102,8 @@ spectrum_ctrl <- function(input, output, session, data_selection, signal_name, f
     })
   # return-values -----------
   list(
-    bp
+    bp = bp,
+    spec_analysis_results = spec_analysis_results
   )
 
 }
@@ -210,7 +189,6 @@ save_result <- function(spec_analysis_results, est_spec, lfit,
       dplyr::union(result)
   }
 
-  print(results)
   spec_analysis_results(results)
 }
 
