@@ -21,7 +21,6 @@ source("R/model_params_vc.R")
 source("R/sig_analysis.R")
 source("R/import_tevi_data.R")
 source("R/compare_signals.R")
-source("R/ui_helpers.R")
 source("R/signal_vc.R")
 source("R/spectrum_vc.R")
 
