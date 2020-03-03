@@ -14,26 +14,21 @@ signalAnalysisUI <- function(id, width = 12) {
 
 # controller --------
 signalAnalysis <- function(input, output, session, raw_tevi_data, frame_rate){
-
   ns <- session$ns
-
   # data ----
-  data_selection <-
-    reactive({
+  data_selection <- reactive({
       selected_data <-brushedPoints(raw_tevi_data(), signal_brush())
       validate(need(nrow(selected_data) > 0,
                     "select data by brushing (left-click and pull) over signal-plot"))
       selected_data
     })
-
-
-  # views ----
   observeEvent(raw_tevi_data(), {
     col_names <- raw_tevi_data() %>% names()
     signal_names <- col_names[col_names != "t"]
     updateSelectInput(session, "signal_choice", choices = signal_names)
   })
 
+  # UIs -------------
   output$signal_in_selected_range <-
     renderPlot({
       ts_plot(
@@ -44,17 +39,13 @@ signalAnalysis <- function(input, output, session, raw_tevi_data, frame_rate){
         frame_rate = frame_rate()
         )
       })
-
-
-
-  # submodules ----------
-  c(signal_name, signal_brush) %<-% callModule(signal_ctrl, "completeTimerange", raw_tevi_data, "radius_y", bp)
-
-  c(bp) %<-% callModule(spectrum_ctrl, "spectrum_analysis", data_selection, signal_name, frame_rate, signal_brush)
+  c(signal_name, signal_brush) %<-%
+    callModule(signal_ctrl, "completeTimerange", raw_tevi_data, "radius_y", bp)
+  c(bp) %<-%
+    callModule(spectrum_ctrl, "spectrum_analysis", data_selection, signal_name, frame_rate, signal_brush)
 
   # return-values -----------
-
-  }
+}
 
 # helpers -----------------
 ts_plot <- function(ds, signal_name, time_range, bp, frame_rate){
