@@ -33,7 +33,19 @@ signal_ctrl <- function(input, output, session, data, variable = NULL, bp){
 # helpers ---------
 gen_signal_plot <-
   function(data, signal){
-    data %>%
+    graph <-
+      data %>%
       ggplot(aes(x = t)) +
       geom_line(aes_string(y = signal))
+
+    if(signal == "pyro_temp"){
+      data <-
+        data %>%
+        add_temperature()
+      graph <-
+        graph +
+        geom_line(data = data %>% add_temperature(),
+                  aes(x = t, y = smoothed_temp), lineytype = "dashed", color = "red")
+    }
+    graph
   }
