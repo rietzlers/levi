@@ -53,7 +53,7 @@ spectrum_ctrl <- function(input, output, session, data_selection, signal_name, f
   })
 
   bp <- reactive(({
-      get_brush_range(input$brush, "set band-pass by brushing spectrum-plot") %>%
+      levi::get_brush_range(input$brush, "set band-pass by brushing spectrum-plot") %>%
         round(1)
   }))
 
@@ -74,9 +74,7 @@ spectrum_ctrl <- function(input, output, session, data_selection, signal_name, f
         color = "black"
         )
     })
-
-  output$bp_spectrum <-
-    renderPlotly({
+  output$bp_spectrum <- renderPlotly({
       spec_plot(
         est_spec(),
         lfit = lfit(),
@@ -100,6 +98,7 @@ spectrum_ctrl <- function(input, output, session, data_selection, signal_name, f
         type_choosen = input$type,
         bp = bp(), spans = input$spans, taper = input$taper)
     })
+
   # return-values -----------
   list(
     bp = bp,
