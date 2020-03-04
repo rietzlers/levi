@@ -17,11 +17,13 @@ signalUI <- function(id, height = 150){
 # controller ----------
 signal_ctrl <- function(input, output, session, data, variable = NULL, bp){
 
-  observeEvent(data(),
-      updateSelectInput(session, "selected_signal", choices = names(data()), selected = variable))
-
-  output$signal <-
-    renderPlot({gen_signal_plot(data(), input$selected_signal)})
+  observeEvent(data(),{
+        updateSelectInput(session, "selected_signal", choices = names(data()), selected = variable)
+        }) #update signal-selection
+  output$signal <- renderPlot({
+    validate(need(input$selected_signal, label = "signal"))
+    gen_signal_plot(data(), input$selected_signal)
+    })
 
    # return-values ---------
   list(
