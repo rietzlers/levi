@@ -74,7 +74,7 @@ results_ctrl <-
       filter = 'top',
       extensions = c('Buttons'),
       options = list(
-        dom = 'Bfrtip',
+        dom = 'lftipB',
         buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
         pageLength = 5, autoWidth = TRUE)
       )
