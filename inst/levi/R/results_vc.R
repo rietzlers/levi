@@ -24,18 +24,7 @@ resultsUI <- function(id){
 }
 
 
-results_ctrl <- function(input, output, session, spec_analysis_results, bp){
-
-  output$spec_analysis_results_display <-
-    renderPlotly({
-      validate(need(spec_analysis_results(), label = "spec_analysis_results"))
-      spec_analysis_results() %>%
-        ggplot(aes(x = t, color = type)) +
-        geom_point(aes(y = dom_freq), shape = "x", size = 2) +
-        geom_point(aes(y = f0), size = 2) +
-        ylim(bp())
-    })
-
+results_ctrl <- function(input, output, session, type, bp, dom_freq, f0, d, spans, taper){
   output$spec_analsis_results_DT <-
     DT::renderDataTable({
       validate(need(spec_analysis_results(), label = "spec_analysis_results"))
@@ -43,4 +32,14 @@ results_ctrl <- function(input, output, session, spec_analysis_results, bp){
         arrange(type, t)
     },
     server = TRUE)
+
+  # output$spec_analysis_results_display <-
+  #   renderPlotly({
+  #     validate(need(spec_analysis_results(), label = "spec_analysis_results"))
+  #     spec_analysis_results() %>%
+  #       ggplot(aes(x = t, color = type)) +
+  #       geom_point(aes(y = dom_freq), shape = "x", size = 2) +
+  #       geom_point(aes(y = f0), size = 2) +
+  #       ylim(bp())
+  #   })
 }

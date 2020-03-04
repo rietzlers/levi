@@ -40,12 +40,14 @@ signalAnalysis <- function(input, output, session, raw_tevi_data, frame_rate){
         frame_rate = frame_rate()
         )
       })
+
   c(signal_name, signal_brush) %<-%
     callModule(signal_ctrl, "completeTimerange", raw_tevi_data, "radius_y", bp)
-  c(bp, spec_analysis_results) %<-%
+
+  c(type, bp, dom_freq, f0, d, spans, taper) %<-%
     callModule(spectrum_ctrl, "spectrum_analysis", data_selection, signal_name, frame_rate, signal_brush)
 
-  callModule(results_ctrl, "results", spec_analysis_results, bp)
+  callModule(results_ctrl, "results", type, bp, dom_freq, f0, d, spans, taper)
   # return-values -----------
 }
 
