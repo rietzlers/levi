@@ -8,14 +8,30 @@ resultsUI <- function(id){
         collapsible = TRUE,
         collapsed = FALSE
       ),
-      box(width = 12,
-        plotlyOutput(ns("surface_tension_plot")),
+      box(width = 6,
+        {
+          div(
+            plotlyOutput(ns("surface_tension_plot")),
+            fluidRow(
+              column(width = 6, selectInput(ns("st_x_scale"), label = "", selected = "time", choices = c("time", "temp"))),
+              column(width = 6, selectInput(ns("st_y_scale"), label = "", selected = "freq", choices = c("freq", "st")))
+            )
+          )
+        },
         title = "Surface-Tension/Frequency-Plot",
         collapsible = TRUE,
         collapsed = TRUE
         ),
-      box(width = 12,
-        plotlyOutput(ns("viscosity_plot")),
+      box(width = 6,
+        {
+          div(
+            plotlyOutput(ns("viscosity_plot")),
+            fluidRow(
+              column(width = 6, selectInput(ns("visc_x_scale"), label = "", selected = "time", choices = c("time", "temp"))),
+              column(width = 6, selectInput(ns("visc_y_scale"), label = "", selected = "d", choices = c("d", "visc")))
+              )
+            )
+          },
         title = "Viscosity/Damping-Plot",
         collapsible = TRUE,
         collapsed = TRUE
@@ -65,8 +81,8 @@ results_ctrl <-
                     })
 
     # output-ctrls -----------
-    output$spec_analsis_results_DT <- DT::renderDataTable(
-        {
+    output$spec_analsis_results_DT <-
+      DT::renderDataTable({
         validate(need(spec_analysis_results(), label = "spec_analysis_results"))
         spec_analysis_results() %>% arrange(type, t)
         },
@@ -79,14 +95,24 @@ results_ctrl <-
         pageLength = 5, autoWidth = TRUE)
       )
 
-  # output$spec_analysis_results_display <-
-  #   renderPlotly({
-  #     validate(need(spec_analysis_results(), label = "spec_analysis_results"))
-  #     spec_analysis_results() %>%
-  #       ggplot(aes(x = t, color = type)) +
-  #       geom_point(aes(y = dom_freq), shape = "x", size = 2) +
-  #       geom_point(aes(y = f0), size = 2) +
-  #       ylim(bp())
-  #   })
+  output$surface_tension_plot <-
+    renderPlotly({
+      validate(need(spec_analysis_results(), label = "spec_analysis_results"))
+      spec_analysis_results() %>%
+        ggplot(aes(x = t, color = type)) +
+        geom_point(aes(y = dom_freq), shape = "x", size = 2) +
+        geom_point(aes(y = f0), size = 2) +
+        ylim(bp()) +
+        theme(legend.position="none")
+    })
+
+  output$viscosity_plot <-
+    renderPlotly({
+      validate(need(spec_analysis_results(), label = "spec_analysis_results"))
+      spec_analysis_results() %>%
+        ggplot(aes(x = t, color = type)) +
+        geom_point(aes(y = d),  size = 2) +
+        theme(legend.position="none")
+    })
 }
 
