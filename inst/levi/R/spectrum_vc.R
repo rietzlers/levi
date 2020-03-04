@@ -25,6 +25,12 @@ spectrumUI <- function(id) {
       column(width = 2,
              actionButton(ns("save_result"), label = "save")
       )
+    ),
+    fluidRow(
+      column(3, textOutput(ns("dom_freq"))),
+      column(3, textOutput(ns("f0"))),
+      column(3, textOutput(ns("d"))),
+      column(4, textOutput(ns("fit_info")))
     )
   )
 }
@@ -57,6 +63,44 @@ spectrum_ctrl <- function(input, output, session, data_selection, signal_name, f
         round(1)
   }))
 
+  dom_freq <- reactive({
+    c(f_dom, ...)  %<-%
+      (est_spec() %>%
+         dplyr::filter(type == input$type) %>%
+         levi::get_dom_freq(sample_rate = frame_rate()) %>%
+        round(2))
+    f_dom
+  })
+  f0 <- reactive({
+    if(!is.null(lfit())){
+      params <- lorentz_parameters(lfit())
+    }else{
+      params <- c(A = NA_real_, f0 = NA_real_, d = NA_real_)
+    }
+    params[2]
+  })
+  d <- reactive({
+    if(!is.null(lfit())){
+      params <- lorentz_parameters(lfit())
+    }else{
+      params <- c(A = NA_real_, f0 = NA_real_, d = NA_real_)
+    }
+    params[3]
+  })
+  fit_info <- reactive({
+    if(!is.null(lfit())){
+      params <- lorentz_parameters(lfit())
+    }else{
+      params <- "Could not fit lorentz to data"
+    }
+    params
+  })
+
+  output$dom_freq <- renderText({str_glue("Dom.Freq: {dom_freq()}")})
+  output$f0 <- renderText({str_glue("f0: {f0()}")})
+  output$d <- renderText({str_glue("D: {d()}")})
+  output$fit_info <- renderText({fit_info()})
+
   spec_analysis_results <- reactiveVal()
 
   # output-ctrls -----------
@@ -87,7 +131,6 @@ spectrum_ctrl <- function(input, output, session, data_selection, signal_name, f
         ggplotly()
     })
 
-
   observeEvent(
     input$save_result,
     {
@@ -108,8 +151,8 @@ spectrum_ctrl <- function(input, output, session, data_selection, signal_name, f
 }
 
 # helper-functions ----------
-spec_plot <- function(est_spec, lfit, scale = "log10", bp, type_choosen = "fft", sample_rate, color){
-
+spec_plot <-
+  function(est_spec, lfit, scale = "log10", bp, type_choosen = "fft", sample_rate, color){
   periodogram <-
     est_spec %>%
     filter(f %>% between(bp[1], bp[2])) %>%
@@ -127,9 +170,10 @@ spec_plot <- function(est_spec, lfit, scale = "log10", bp, type_choosen = "fft",
     periodogram <-
       periodogram +
       geom_line(data = fitted_data, aes(x = f, y = lf_amp), alpha = 0.5, color = "red")
-  }
-
-  if(scale == "raw"){return(periodogram + labs(y = scale))}
+  } # add lorentz-curve
+  if(scale == "raw"){
+    return(periodogram + labs(y = scale))
+    }
   if(scale == "log10"){
     return(
       periodogram +
@@ -139,9 +183,10 @@ spec_plot <- function(est_spec, lfit, scale = "log10", bp, type_choosen = "fft",
   }
 }
 
-
-save_result <- function(spec_analysis_results, est_spec, lfit,
-                        time_range,
+save_result <-
+  function(
+    spec_analysis_results, est_spec, lfit,
+    time_range,
                         sample_rate,
                         bp = c(NA_real_, NA_real_),
                         type_choosen,
