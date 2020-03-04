@@ -28,20 +28,40 @@ results_ctrl <-
   function(input, output, session, signal_brush, type, bp, dom_freq, f0, d, spans, taper, add_result){
     # data ----------
     time_range <- reactive({get_brush_range(signal_brush())})
-    spec_analysis_results <-
-      eventReactive(add_result(),
+    spec_analysis_results <- reactiveVal()
+    observeEvent(add_result(),
                     {
-                      browser()
-                      tibble(
-                        type = type(),
-                        t = mean(time_range()),
-                        wl = (time_range()[2] - time_range()[1]),
-                        dom_freq = dom_freq(),
-                        f0 = f0(),
-                        d = d(),
-                        spans = spans(),
-                        taper = taper()
-                      )
+                      if(is.null(spec_analysis_results())){
+                        spec_analysis_results(
+                          tibble(
+                          type = type(),
+                          t = mean(time_range()) %>% round(2),
+                          wl = (time_range()[2] - time_range()[1]) %>% round(2),
+                          dom_freq = dom_freq(),
+                          f0 = f0(),
+                          d = d(),
+                          spans = spans(),
+                          taper = taper()
+                          )
+                        )
+                      }else{
+                        spec_analysis_results(
+                          spec_analysis_results() %>%
+                          dplyr::union(
+                            tibble(
+                              type = type(),
+                              t = mean(time_range()) %>% round(2),
+                              wl = (time_range()[2] - time_range()[1]) %>% round(2),
+                              dom_freq = dom_freq(),
+                              f0 = f0(),
+                              d = d(),
+                              spans = spans(),
+                              taper = taper()
+                            )
+                          )
+                        )
+                      }
+
                     })
 
     # output-ctrls -----------
@@ -50,7 +70,14 @@ results_ctrl <-
         validate(need(spec_analysis_results(), label = "spec_analysis_results"))
         spec_analysis_results() %>% arrange(type, t)
         },
-      server = TRUE)
+      server = TRUE,
+      filter = 'top',
+      extensions = c('Buttons'),
+      options = list(
+        dom = 'Bfrtip',
+        buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
+        pageLength = 5, autoWidth = TRUE)
+      )
 
   # output$spec_analysis_results_display <-
   #   renderPlotly({
