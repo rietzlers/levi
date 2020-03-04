@@ -45,7 +45,7 @@ gen_signal_plot <-
       graph <-
         graph +
         geom_line(data = data %>% add_temperature(),
-                  aes(x = t, y = smoothed_temp), lineytype = "dashed", color = "red")
+                  aes(x = t, y = smoothed_temp), linetype = "dashed", color = "red")
     }
     graph
   }
