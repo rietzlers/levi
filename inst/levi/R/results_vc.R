@@ -2,10 +2,24 @@
 resultsUI <- function(id){
   ns <- NS(id)
   tagList(
-    fluidRow(
-      column(width = 6, plotlyOutput(ns("spec_analysis_results_display"))),
-      column(width = 6, DT::dataTableOutput(ns("spec_analsis_results_DT")))
-    )
+      box(width = 12,
+        DT::dataTableOutput(ns("spec_analsis_results_DT")),
+        title = "Table of Spectrum-Annalysis-Results",
+        collapsible = TRUE,
+        collapsed = TRUE
+      ),
+      box(width = 12,
+        plotlyOutput(ns("surface_tension_plot")),
+        title = "Surface-Tension/Frequency-Plot",
+        collapsible = TRUE,
+        collapsed = TRUE
+        ),
+      box(width = 12,
+        plotlyOutput(ns("viscosity_plot")),
+        title = "Viscosity/Damping-Plot",
+        collapsible = TRUE,
+        collapsed = TRUE
+      )
   )
 }
 
