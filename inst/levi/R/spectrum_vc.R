@@ -15,31 +15,25 @@ spectrumUI <- function(id) {
         )
     ),
     fluidRow(
-      column(width = 3, selectInput(ns("scale"), label = "", selected = "log10", choices = c("raw", "log10"))),
-      column(width = 3, selectInput(ns("type"), label = "", selected = "spectrum", choices = c("spectrum", "fft"))),
+      column(width = 2, selectInput(ns("scale"), label = "", selected = "log10", choices = c("raw", "log10"))),
+      column(width = 2, selectInput(ns("type"), label = "", selected = "spectrum", choices = c("spectrum", "fft"))),
       column(width = 2,
              textInput(ns("spans"), label = "span", value = "c(3,3)"),
              bsTooltip(ns("spans"), "specify daniell-smoother: NULL for no smoothing", "top", options = list(container = "body"))),
-      column(width = 2,
-             numericInput(ns("taper"), label = "taper", value = 0.1, step = .1, min = 0, max = 1)),
-      column(width = 2,
-             actionButton(ns("save_result"), label = "save")
+      column(width = 2, numericInput(ns("taper"), label = "taper", value = 0.1, step = .1, min = 0, max = 1)),
+      column(width = 3, actionButton(ns("save_result"), label = "save result")
       )
     ),
     fluidRow(
       column(3, textOutput(ns("dom_freq"))),
       column(3, textOutput(ns("f0"))),
-      column(3, textOutput(ns("d"))),
-      column(4, textOutput(ns("fit_info")))
+      column(3, textOutput(ns("d")))
     )
   )
 }
 
 # controller ------------
 spectrum_ctrl <- function(input, output, session, data_selection, signal_name, frame_rate, time_range){
-
-  ns <- session$ns
-
   # data ----
   est_spec <- reactive({
     levi::estimate_signal_spectrum(
@@ -50,19 +44,17 @@ spectrum_ctrl <- function(input, output, session, data_selection, signal_name, f
       taper = input$taper
     )
   })
-
   lfit <- reactive({
     levi::fit_lorentz(
       dplyr::filter(est_spec(), type == input$type),
       bp = bp(),
       sr = frame_rate())
   })
-
   bp <- reactive(({
-      levi::get_brush_range(input$brush, "set band-pass by brushing spectrum-plot") %>%
-        round(1)
+    input$brush %>%
+      levi::get_brush_range( "set band-pass by brushing spectrum-plot") %>%
+      round(1)
   }))
-
   dom_freq <- reactive({
     c(f_dom, ...)  %<-%
       (est_spec() %>%
@@ -87,30 +79,19 @@ spectrum_ctrl <- function(input, output, session, data_selection, signal_name, f
     }
     params[3]
   })
-  fit_info <- reactive({
-    if(!is.null(lfit())){
-      params <- lorentz_parameters(lfit())
-    }else{
-      params <- "Could not fit lorentz to data"
-    }
-    params
-  })
 
+  # output-ctrls -----------
   output$dom_freq <- renderText({str_glue("Dom.Freq: {dom_freq()}")})
   output$f0 <- renderText({str_glue("f0: {f0()}")})
   output$d <- renderText({str_glue("D: {d()}")})
-  output$fit_info <- renderText({fit_info()})
 
-  spec_analysis_results <- reactiveVal()
-
-  # output-ctrls -----------
   output$complete_spectrum <- renderPlot({
       spec_plot(
         est_spec(),
-        lfit =
-          levi::fit_lorentz(dplyr::filter(est_spec(), type == input$type),
-                            bp = c(0, frame_rate()/2),
-                            sr = frame_rate()),
+        lfit = levi::fit_lorentz(
+          dplyr::filter(est_spec(), type == input$type),
+          bp = c(0, frame_rate()/2),
+          sr = frame_rate()),
         scale = input$scale,
         bp = c(0, frame_rate()/2),
         sample_rate = frame_rate(),
@@ -130,22 +111,15 @@ spectrum_ctrl <- function(input, output, session, data_selection, signal_name, f
       ) %>%
         ggplotly()
     })
-
-  observeEvent(
-    input$save_result,
-    {
-        save_result(
-        spec_analysis_results =  spec_analysis_results, est_spec = est_spec(), lfit = lfit(),
-        time_range = get_brush_range(time_range()),
-        sample_rate = frame_rate(),
-        type_choosen = input$type,
-        bp = bp(), spans = input$spans, taper = input$taper)
-    })
-
   # return-values -----------
   list(
+    type = reactive(input$type),
     bp = bp,
-    spec_analysis_results = spec_analysis_results
+    dom_freq = dom_freq,
+    f0 = f0,
+    d = d,
+    spans = reactive(input$spans),
+    taper = reactive(input$taper)
   )
 
 }
