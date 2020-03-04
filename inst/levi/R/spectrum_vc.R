@@ -95,8 +95,7 @@ spectrum_ctrl <- function(input, output, session, data_selection, signal_name, f
         scale = input$scale,
         bp = c(0, frame_rate()/2),
         sample_rate = frame_rate(),
-        type_choosen= input$type,
-        color = "black"
+        type_choosen= input$type
         )
     })
   output$bp_spectrum <- renderPlotly({
@@ -106,8 +105,7 @@ spectrum_ctrl <- function(input, output, session, data_selection, signal_name, f
         scale = input$scale,
         bp = bp(),
         sample_rate = frame_rate(),
-        type_choosen =  input$type,
-        color = "blue"
+        type_choosen =  input$type
       ) %>%
         ggplotly()
     })
@@ -127,14 +125,14 @@ spectrum_ctrl <- function(input, output, session, data_selection, signal_name, f
 
 # helper-functions ----------
 spec_plot <-
-  function(est_spec, lfit, scale = "log10", bp, type_choosen = "fft", sample_rate, color){
+  function(est_spec, lfit, scale = "log10", bp, type_choosen = "fft", sample_rate){
   periodogram <-
     est_spec %>%
     filter(f %>% between(bp[1], bp[2])) %>%
     ggplot(aes(x = f)) +
-    geom_line(data = ~ dplyr::filter(.x, type == "spectrum"), aes(y = fc_amp), color = color) +
-    geom_point(data = ~ dplyr::filter(.x, type == "spectrum"), aes(y = fc_amp), color = color, shape = "x", size = 0.8) +
-    geom_point(data = ~ dplyr::filter(.x, type == "fft", f > 0), aes(y = fc_amp), shape = "+", size = 1.5) +
+    geom_line(data = ~ dplyr::filter(.x, type == "spectrum"), aes(y = fc_amp)) +
+    geom_point(data = ~ dplyr::filter(.x, type == "spectrum"), aes(y = fc_amp), shape = "x", size = 0.8) +
+    geom_point(data = ~ dplyr::filter(.x, type == "fft", f > 0), aes(y = fc_amp), color = "blue", shape = "+", size = 1.5) +
     labs(x = "Frequency [Hz]")
 
   if(!is.null(lfit)){
