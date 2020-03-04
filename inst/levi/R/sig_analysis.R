@@ -4,10 +4,9 @@
 signalAnalysisUI <- function(id, width = 12) {
   ns <- NS(id)
   tagList(
-    box(width = width,
-        signalUI(ns("completeTimerange")),
-        plotOutput(ns("signal_in_selected_range"),  height = 150)
-        ),
+    box(width = width,signalUI(ns("completeTimerange"))),
+    box(width= width, plotOutput(ns("signal_in_selected_range"),  height = 150),
+        title = "Signal in selected range; raw and BP-filtered(blue)", collapsible = TRUE),
     box(width = width, spectrumUI(ns("spectrum_analysis"))),
     box(width = width, resultsUI(ns("results")))
   )
