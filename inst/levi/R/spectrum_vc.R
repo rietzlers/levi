@@ -118,7 +118,8 @@ spectrum_ctrl <- function(input, output, session, data_selection, signal_name, f
     f0 = f0,
     d = d,
     spans = reactive(input$spans),
-    taper = reactive(input$taper)
+    taper = reactive(input$taper),
+    add_result = reactive(input$save_result)
   )
 
 }
@@ -154,59 +155,6 @@ spec_plot <-
         scale_y_continuous(trans = scale)
     )
   }
-}
-
-save_result <-
-  function(
-    spec_analysis_results, est_spec, lfit,
-    time_range,
-                        sample_rate,
-                        bp = c(NA_real_, NA_real_),
-                        type_choosen,
-                        spans = NA_character_, taper = NA_real_){
-
-   c(f_dom, ...)  %<-%
-    round(
-      levi::get_dom_freq(
-        est_spec %>% dplyr::filter(type == type_choosen),
-        sample_rate = sample_rate)
-      , 2)
-
-  if(!is.null(lfit)){
-    params <- lorentz_parameters(lfit)
-  }else{
-    params <- c(A = NA_real_, f0 = NA_real_, d = NA_real_)
-  }
-
-  if(type_choosen == "fft"){
-    spans <- NA_character_
-    taper <- NA_real_
-  }
-
-  result <-
-    tibble(
-      t = round(mean(time_range), 1),
-      t1 = round(time_range[1], 1),
-      t2 = round(time_range[2], 1),
-      type = type_choosen,
-      dom_freq = f_dom,
-      f0 = params[2],
-      d = params[3],
-      bp_l = bp[1], bp_h = bp[2],
-      spans = spans,
-      taper = taper
-    )
-
-  results <- spec_analysis_results()
-  if(is.null(results)){
-    results <- result
-  }else{
-    results <-
-      results %>%
-      dplyr::union(result)
-  }
-
-  spec_analysis_results(results)
 }
 
 
