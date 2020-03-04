@@ -87,10 +87,11 @@ spectrum_ctrl <- function(input, output, session, data_selection, signal_name, f
   output$complete_spectrum <- renderPlot({
       spec_plot(
         est_spec(),
-        lfit = levi::fit_lorentz(
-          dplyr::filter(est_spec(), type == input$type),
-          bp = c(0, frame_rate()/2),
-          sr = frame_rate()),
+        lfit = NULL,
+          # levi::fit_lorentz(
+          # dplyr::filter(est_spec(), type == input$type),
+          # bp = c(0, frame_rate()/2),
+          # sr = frame_rate()),
         scale = input$scale,
         bp = c(0, frame_rate()/2),
         sample_rate = frame_rate(),
