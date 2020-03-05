@@ -2,6 +2,7 @@
 
 export(add_temperature)
 export(bp_filter)
+export(convert_to_temp)
 export(estimate_signal_spectrum)
 export(fftc)
 export(fit_lorentz)

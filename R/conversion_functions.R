@@ -31,15 +31,36 @@ to_viscosity <- function(d, m, r){
 #'
 #' @return tibble: signal_data with additional variable \emph{smoothed_temp}
 #' @export
-add_temperature <- function(signal_data, interpolation_times){
+add_temperature <- function(signal_data, interpolation_times, time_range){
   # temperatur sollte im interessierenden bereich ! monoton fallend sein (bis auf heizpulse)!
   # stark verrauschte signale sollten geglättet werden.
+
+  if(missing(time_range)){
+    time_range <- range(signal_data %>% pull(t))
+  }
   if(missing(interpolation_times)){
-    interpolation_times <- signal_data %>% pull(t)
+    interpolation_times <- signal_data %>% filter(t %>% between(time_range[1], time_range[2])) %>% pull(t)
   }
 
   signal_data %>%
     mutate(
       smoothed_temp = predict(loess(pyro_temp ~ t), newdata = interpolation_times)
     )
+}
+
+#' convert time to temp
+#'
+#' this function takes a time-vector and converts it to a temperature-vector;
+#' it uses the smoothed temperature-values from raw_tevi_data:
+#' if the time is outside the experimental-time-range (specified in import-tevi-data)
+#' it returns NA-values
+#'
+#' @param time vector: time-points to convert to temp
+#' @param tevi_data tibble with vars \emph{t} and \emph{smoothed_temp}
+#'
+#' @return vector with temperatur
+#' @export
+convert_to_temp <- function(time, tevi_data){
+  approx(x = tevi_data[["t"]], y = tevi_data[["smoothed_temp"]], xout = time)$y %>%
+    round(1)
 }
