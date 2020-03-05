@@ -4,7 +4,7 @@
 \alias{add_temperature}
 \title{convert time to temperature}
 \usage{
-add_temperature(signal_data, interpolation_times)
+add_temperature(signal_data, interpolation_times, time_range)
 }
 \arguments{
 \item{signal_data}{tibble with variable t and pyro_temp (measured temperature)}

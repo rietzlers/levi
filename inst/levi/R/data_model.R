@@ -26,7 +26,7 @@ import_tevi_data <- function(session, file) {
   # standardize var-names (remove different prefix for ax-/radial-data)
   names(df) <- map_chr(names(df), ~ str_remove(.x, "^a_|^r_"))
 
-  df
+  df %>% add_temperature()
 
 }
 
