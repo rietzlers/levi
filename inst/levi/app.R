@@ -36,9 +36,10 @@ ui <- dashboardPage(header, sidebar, body, title = "Alloy-EML-Analysis")
 server <-
   function(input, output, session) {
 
-    c(tevi_data, frame_rate) %<-% callModule(importTeviData, "tdi")
+    c(tevi_data, frame_rate, mass, radius) %<-%
+      callModule(importTeviData, "tdi")
 
-    callModule(signalAnalysis, "sa", tevi_data, frame_rate)
+    callModule(signalAnalysis, "sa", tevi_data, frame_rate, mass, radius)
 
   }
 

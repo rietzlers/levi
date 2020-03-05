@@ -35,6 +35,12 @@ model_params_ctrl <- function(input, output, session, data){
 
   # return values ---------
   list(
-    reactive(input$frame_rate)
+    frame_rate = reactive(input$frame_rate),
+    mass = reactive({
+      validate(need(input$sample_mass, label = "sample mass"))
+      input$sample_mass}),
+    radius = reactive({
+      validate(need(input$sphere_radius, label = "sphere radius"))
+      input$sphere_radius})
     )
   }

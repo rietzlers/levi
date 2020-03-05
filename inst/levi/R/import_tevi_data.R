@@ -62,12 +62,17 @@ importTeviData <- function(input, output, session) {
 
   c(...skip, hp_brush) %<-%
     callModule(signal_ctrl, "heating", tevi_data, "htr_i")
-c(frame_rate) %<-%
+
+c(frame_rate, mass, radius) %<-%
     callModule(model_params_ctrl, "params", tevi_data)
 
   # return-values ----------
-  list(tevi_data,
-       frame_rate)
+  list(
+    tevi_data,
+    frame_rate,
+    mass,
+    radius
+    )
 }
 
 
