@@ -31,21 +31,30 @@ to_viscosity <- function(d, m, r){
 #'
 #' @return tibble: signal_data with additional variable \emph{smoothed_temp}
 #' @export
-add_temperature <- function(signal_data, interpolation_times, time_range){
+add_temperature <- function(signal_data, time_range){
   # temperatur sollte im interessierenden bereich ! monoton fallend sein (bis auf heizpulse)!
   # stark verrauschte signale sollten geglättet werden.
 
   if(missing(time_range)){
     time_range <- range(signal_data %>% pull(t))
   }
-  if(missing(interpolation_times)){
-    interpolation_times <- signal_data %>% filter(t %>% between(time_range[1], time_range[2])) %>% pull(t)
+
+  if(signal_data %>% has_name("smoothed_temp")){
+    signal_data <- signal_data %>% select(-smoothed_temp)
   }
 
-  signal_data %>%
+  time_temp_data <-
+    signal_data %>%
+    filter(
+      t %>% between(time_range[1], time_range[2])
+    ) %>%
     mutate(
-      smoothed_temp = predict(loess(pyro_temp ~ t), newdata = interpolation_times)
-    )
+      smoothed_temp = predict(loess(pyro_temp ~ t))
+    ) %>%
+    select(t, smoothed_temp)
+
+  signal_data %>%
+    left_join(time_temp_data, by = c("t"))
 }
 
 #' convert time to temp
