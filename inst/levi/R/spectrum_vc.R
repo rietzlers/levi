@@ -57,7 +57,7 @@ spectrum_ctrl <- function(input, output, session, data_selection, signal_name, f
   dom_freq <- reactive({
     c(f_dom, ...)  %<-%
       (est_spec() %>%
-         dplyr::filter(type == input$type) %>%
+         dplyr::filter(type == input$type, f %>% between(bp()[1], bp()[2])) %>%
          levi::get_dom_freq(sample_rate = frame_rate()) %>%
         round(2))
     f_dom
