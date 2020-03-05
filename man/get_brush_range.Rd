@@ -4,12 +4,18 @@
 \alias{get_brush_range}
 \title{convert brush from plotOutput to numeric vector}
 \usage{
-get_brush_range(brush, failure_massage = "select range by brushing plot")
+get_brush_range(
+  brush,
+  failure_massage = "select range by brushing plot",
+  default_values
+)
 }
 \arguments{
 \item{brush}{input-object}
 
 \item{failure_massage}{string: message to display in case there is no brush}
+
+\item{default_values}{range to return if no brush is selected}
 }
 \value{
 numeric vector with the range of the brushed area
