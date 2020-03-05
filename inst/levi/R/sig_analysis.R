@@ -56,7 +56,7 @@ signalAnalysis <- function(input, output, session, raw_tevi_data, frame_rate){
   c(type, bp, dom_freq, f0, d, spans, taper, add_result) %<-%
     callModule(spectrum_ctrl, "spectrum_analysis", data_selection, signal_name, frame_rate, signal_brush)
 
-  callModule(results_ctrl, "results", signal_brush, type, bp, dom_freq, f0, d, spans, taper, add_result)
+  callModule(results_ctrl, "results", raw_tevi_data, data_selection, signal_brush, type, bp, dom_freq, f0, d, spans, taper, add_result)
   # return-values -----------
 }
 
