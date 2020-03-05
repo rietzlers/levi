@@ -4,16 +4,11 @@
 model_params_view <- function(id) {
   ns <- NS(id)
   tagList(
-    box(width = 12, collapsible = TRUE,
-        title = "Set parameters",
-        tibble::tribble(
-          ~ id, ~ label,
-          "frame_rate" , "Frame-Rate [Hz]",
-          "sample_mass", "Sample-Mass [g]",
-          "sphere_radius", "Sphere-Radius [mn]"
-        ) %>%
-          purrr::pmap( ~ numericInput(inputId = ns(.x), label = .y, value = NULL))
-    ),
+    fluidRow(
+      column(width = 4, numericInput(ns("frame_rate"), label = "Frame Rate [Hz]", value = NULL)),
+      column(width = 4, numericInput(ns("sample_mass"), label = "Sample-Mass [g]", value = 1.29224)),
+      column(width = 4, numericInput(ns("sphere_radius"), label = "Sphere-Radius [mm]", value = 6.528/2))
+    )
   )
 }
 

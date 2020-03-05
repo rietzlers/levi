@@ -2,10 +2,10 @@
 importTeviDataUI <- function(id) {
   ns <- NS(id)
   tagList(
-    box(width = 4,
+    box(width = 12,
         fileInput(ns("file"), label = "select tevi-data (.dat-file)", accept = c(".dat")),
         model_params_view(ns("params"))),
-    box(width = 8,
+    box(width = 12,
         plotOutput(ns("plot_center_xy"), height = 200),
         box(width = 12,{
           div(
