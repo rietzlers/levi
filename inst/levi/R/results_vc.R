@@ -11,8 +11,8 @@ resultsUI <- function(id){
         div(
           plotlyOutput(ns("surface_tension_plot")),
           fluidRow(
-            column(width = 6, selectInput(ns("st_x_scale"), label = "", selected = "time", choices = c("time", "temp"))),
-            column(width = 6, selectInput(ns("st_y_scale"), label = "", selected = "freq", choices = c("freq", "st")))
+            column(width = 6, selectInput(ns("st_xvar"), label = "", selected = "t", choices = c("t", "smoothed_temp"))),
+            column(width = 6, selectInput(ns("st_yvar"), label = "", selected = "f", choices = c("f", "st")))
           )
         )
       },
@@ -22,8 +22,8 @@ resultsUI <- function(id){
         div(
           plotlyOutput(ns("viscosity_plot")),
           fluidRow(
-            column(width = 6, selectInput(ns("visc_x_scale"), label = "", selected = "time", choices = c("time", "temp"))),
-            column(width = 6, selectInput(ns("visc_y_scale"), label = "", selected = "d", choices = c("d", "visc")))
+            column(width = 6, selectInput(ns("visc_xvar"), label = "",selected = "t", choices = c("t", "smoothed_temp"))),
+            column(width = 6, selectInput(ns("visc_yvar"), label = "", selected = "d", choices = c("d", "viscosity")))
           )
         )
       },
@@ -34,7 +34,8 @@ resultsUI <- function(id){
 
 
 results_ctrl <-
-  function(input, output, session, raw_tevi_data, data_selection, signal_brush, type, bp, dom_freq, f0, d, spans, taper, add_result){
+  function(input, output, session, raw_tevi_data, mass, radius, data_selection,
+           signal_brush, type, bp, dom_freq, f0, d, spans, taper, add_result){
     # data ----------
     time_range <- reactive({get_brush_range(signal_brush())})
     spec_analysis_results <- reactiveVal()
@@ -89,19 +90,18 @@ results_ctrl <-
   output$surface_tension_plot <-
     renderPlotly({
       validate(need(spec_analysis_results(), label = "spec_analysis_results"))
-      if(input$st_x_scale == "time"){
-        xvar = "t"
-      }else{xvar = "smoothed_temp"}
       spec_analysis_results() %>%
         mutate(
           smoothed_temp = convert_to_temp(t, raw_tevi_data()),
-          st_dom_freq = to_surface_tension(dom_freq, 3),
-          st_f0 = to_surface_tension(f0, 3),
+          f_dom_freq = dom_freq,
+          f_f0 = f0,
+          st_dom_freq = to_surface_tension(dom_freq, mass()),
+          st_f0 = to_surface_tension(f0, mass()),
         ) %>%
-        ggplot(aes(x = .data[[xvar]], color = type)) +
-        geom_point(aes(y = dom_freq), shape = "x", size = 2) +
-        geom_point(aes(y = f0), size = 2) +
-        ylim(bp()) +
+        ggplot(aes(x = .data[[input$st_xvar]], color = type)) +
+        geom_point(aes(y = .data[[paste0(input$st_yvar, "_dom_freq")]]), shape = "x", size = 2) +
+        geom_point(aes(y = .data[[paste0(input$st_yvar,"_f0")]]), size = 2) +
+        labs(x = "time/Temp", y = "Freqs/Surface-Tension") +
         theme(legend.position="none")
     })
 
@@ -109,8 +109,13 @@ results_ctrl <-
     renderPlotly({
       validate(need(spec_analysis_results(), label = "spec_analysis_results"))
       spec_analysis_results() %>%
-        ggplot(aes(x = t, color = type)) +
-        geom_point(aes(y = d),  size = 2) +
+        mutate(
+          smoothed_temp = convert_to_temp(t, raw_tevi_data()),
+          viscosity = to_viscosity(d, mass(), radius()),
+        ) %>%
+        ggplot(aes(x = .data[[input$visc_xvar]], color = type)) +
+        geom_point(aes(y = .data[[input$visc_yvar]]),  size = 2) +
+        labs(x = "time/temp", y = "Damping/Viscosity") +
         theme(legend.position="none")
     })
 }
