@@ -27,7 +27,7 @@ to_viscosity <- function(d, m, r){
 #' convert time to temperature
 #'
 #' @param signal_data tibble with variable t and pyro_temp (measured temperature)
-#' @param interpolation_times times at for which the temperatures are required
+#' @param time_range vector: time-limits between which smoothing is done;
 #'
 #' @return tibble: signal_data with additional variable \emph{smoothed_temp}
 #' @export

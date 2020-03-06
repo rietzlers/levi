@@ -9,7 +9,7 @@ add_temperature(signal_data, time_range)
 \arguments{
 \item{signal_data}{tibble with variable t and pyro_temp (measured temperature)}
 
-\item{interpolation_times}{times at for which the temperatures are required}
+\item{time_range}{vector: time-limits between which smoothing is done;}
 }
 \value{
 tibble: signal_data with additional variable \emph{smoothed_temp}

@@ -9,11 +9,11 @@ bp_filter(sig_data, signal_name, bp, sr)
 \arguments{
 \item{sig_data}{tibble with var signal}
 
+\item{signal_name}{var-name of the signal}
+
 \item{bp}{numeric vector: lower and upper bp-Freqs}
 
 \item{sr}{samplerate}
-
-\item{signal}{character: name of signal to be filtered}
 }
 \value{
 tibble with vars t and signal_name

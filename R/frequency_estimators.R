@@ -38,7 +38,7 @@ fftc <- function(data, signal, sr){
 #'
 #'
 #' @param sig_data tibble with var signal
-#' @param signal character: name of signal to be filtered
+#' @param signal_name var-name of the signal
 #' @param bp numeric vector: lower and upper bp-Freqs
 #' @param sr samplerate
 #'

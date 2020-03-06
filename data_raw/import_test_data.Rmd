@@ -18,7 +18,7 @@ library(vroom)
   # load data as is
   cmsx_10_c06_rad <-
     vroom::vroom(
-      "./dat/CMSX-10 ISS Batch-1.2b cycle06 rad.dat", delim = "\t",
+      "./CMSX10rad.dat", delim = "\t",
       col_types = cols(`Absolute Time` = col_time(format = "%H:%M:%OS"), .default = col_double()),
       trim_ws = TRUE
     )

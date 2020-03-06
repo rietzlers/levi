@@ -1,12 +1,12 @@
 name: levi
 title: levi
 username:
-account: rietzlers
+account: sr-apps
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
-appId: 1579355
-bundleId: 2856787
-url: https://rietzlers.shinyapps.io/levi/
-when: 1583494097.1241
+appId: 1913188
+bundleId: 2856761
+url: https://sr-apps.shinyapps.io/levi/
+when: 1583493214.55399
 asMultiple: FALSE
 asStatic: FALSE

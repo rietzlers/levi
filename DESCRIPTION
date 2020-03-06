@@ -22,5 +22,7 @@ Imports:
     tidyselect,
     dplyr,
     tibble,
-    zeallot
+    zeallot,
+    rlang,
+    cowplot
 RoxygenNote: 7.0.2
