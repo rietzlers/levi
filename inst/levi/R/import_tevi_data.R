@@ -26,6 +26,11 @@ importTeviData <- function(input, output, session) {
     validate(need(input$file, "tevi_data"))
     import_tevi_data(session, input$file)
   })
+  tevi_data_name <- reactive({
+    validate(need(input$file, "tevi_data"))
+    input$file$name
+  })
+
   tevi_data <- reactive({
     imported_tevi_data() %>%
       add_temperature(time_range = exp_time_range())
@@ -68,6 +73,7 @@ importTeviData <- function(input, output, session) {
   # return-values ----------
   list(
     tevi_data,
+    tevi_data_name,
     exp_time_range,
     frame_rate,
     mass,

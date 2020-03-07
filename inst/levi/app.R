@@ -37,13 +37,13 @@ ui <- dashboardPage(header, sidebar, body, title = "Alloy-EML-Analysis")
 server <-
   function(input, output, session) {
 
-    c(tevi_data, exp_time_range, frame_rate, mass, radius) %<-%
+    c(tevi_data, tevi_data_name, exp_time_range, frame_rate, mass, radius) %<-%
       callModule(importTeviData, "tdi")
 
     ss_input <- reactiveVal()
     output$signal_selection <- renderUI(ss_input())
 
-    callModule(signalAnalysis, "sa", tevi_data, exp_time_range, frame_rate, mass, radius, ss_input, reactive(input$sidebarMenu))
+    callModule(signalAnalysis, "sa", tevi_data, tevi_data_name, exp_time_range, frame_rate, mass, radius, ss_input, reactive(input$sidebarMenu))
 
   }
 

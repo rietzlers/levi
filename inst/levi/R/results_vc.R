@@ -34,7 +34,8 @@ resultsUI <- function(id){
 
 
 results_ctrl <-
-  function(input, output, session, raw_tevi_data, signal_name, mass, radius, data_selection,
+  function(input, output, session,
+           raw_tevi_data, tevi_data_name, signal_name, mass, radius, data_selection,
            signal_brush, type, bp, dom_freq, f0, d, spans, taper, add_result){
     # data ----------
     time_range <- reactive({get_brush_range(signal_brush())})
@@ -43,7 +44,6 @@ results_ctrl <-
       if (is.null(spec_analysis_results())) {
         spec_analysis_results(
           tibble(
-            signal = signal_name(),
             type = type(),
             t = mean(time_range()) %>% round(2),
             wl = (time_range()[2] - time_range()[1]) %>% round(2),
@@ -51,7 +51,9 @@ results_ctrl <-
             f0 = f0(),
             d = d(),
             spans = spans(),
-            taper = taper()
+            taper = taper(),
+            signal = signal_name(),
+            data = tevi_data_name()
           )
         )
       }
@@ -60,7 +62,6 @@ results_ctrl <-
           spec_analysis_results() %>%
             dplyr::union(
               tibble(
-                signal = signal_name(),
                 type = type(),
                 t = mean(time_range()) %>% round(2),
                 wl = (time_range()[2] - time_range()[1]) %>% round(2),
@@ -68,12 +69,13 @@ results_ctrl <-
                 f0 = f0(),
                 d = d(),
                 spans = spans(),
-                taper = taper()
+                taper = taper(),
+                signal = signal_name(),
+                data = tevi_data_name()
               )
             ))
       }
     })
-
     # output-ctrls -----------
     output$spec_analsis_results_DT <-
       DT::renderDataTable({
