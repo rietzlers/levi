@@ -18,9 +18,10 @@ header <-
 
 
 sidebar <-
-  dashboardSidebar(sidebarMenu(
-    menuItem("Import Tevi Data", tabName = "importTeviData", icon = icon("dashboard")),
-    menuItem("Signal Analysis", tabName = "signalAnalysis", icon = icon("bar-chart-o"))
+  dashboardSidebar(sidebarMenu(id = "sidebarMenu",
+    menuItem("Import Tevi Data",tabName = "importTeviData", icon = icon("dashboard")),
+    menuItem("Signal Analysis", tabName = "signalAnalysis", icon = icon("bar-chart-o")),
+    uiOutput("signal_selection")
   ))
 
 
@@ -36,10 +37,13 @@ ui <- dashboardPage(header, sidebar, body, title = "Alloy-EML-Analysis")
 server <-
   function(input, output, session) {
 
-    c(tevi_data, frame_rate, mass, radius) %<-%
+    c(tevi_data, exp_time_range, frame_rate, mass, radius) %<-%
       callModule(importTeviData, "tdi")
 
-    callModule(signalAnalysis, "sa", tevi_data, frame_rate, mass, radius)
+    ss_input <- reactiveVal()
+    output$signal_selection <- renderUI(ss_input())
+
+    callModule(signalAnalysis, "sa", tevi_data, exp_time_range, frame_rate, mass, radius, ss_input, reactive(input$sidebarMenu))
 
   }
 

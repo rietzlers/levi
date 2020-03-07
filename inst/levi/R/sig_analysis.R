@@ -13,7 +13,7 @@ signalAnalysisUI <- function(id, width = 12) {
 }
 
 # controller --------
-signalAnalysis <- function(input, output, session, raw_tevi_data, frame_rate, mass, radius){
+signalAnalysis <- function(input, output, session, raw_tevi_data, exp_time_range, frame_rate, mass, radius, ss_input, selected_tab){
   ns <- session$ns
   # data ----
   data_selection <- reactive({
@@ -51,13 +51,13 @@ signalAnalysis <- function(input, output, session, raw_tevi_data, frame_rate, ma
       })
 
   c(signal_name, signal_brush) %<-%
-    callModule(signal_ctrl, "completeTimerange", raw_tevi_data, "radius_y", bp)
+    callModule(signal_ctrl, "completeTimerange", raw_tevi_data, "radius_y", bp, ss_input, selected_tab)
 
   c(type, bp, dom_freq, f0, d, spans, taper, add_result) %<-%
     callModule(spectrum_ctrl, "spectrum_analysis", data_selection, signal_name, frame_rate, signal_brush)
 
   callModule(results_ctrl, "results",
-             raw_tevi_data, mass, radius, data_selection, signal_brush,
+             raw_tevi_data, signal_name, mass, radius, data_selection, signal_brush,
              type, bp, dom_freq, f0, d, spans, taper, add_result)
   # return-values -----------
 }

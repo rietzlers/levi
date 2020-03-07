@@ -5,9 +5,9 @@ signalUI <- function(id, height = 150){
   ns <- NS(id)
 
   tagList(
-    fluidRow(
-      column(width = 4, selectInput(ns("selected_signal"), label = NULL, choices = NULL))
-    ),
+    # fluidRow(
+    #   column(width = 4, selectInput(ns("selected_signal"), label = NULL, choices = NULL))
+    # ),
     plotOutput(
       ns("signal"), height = height,
       brush = brushOpts(id = ns("brush"), fill = "#ccc", direction = "x", resetOnNew = FALSE))
@@ -15,11 +15,22 @@ signalUI <- function(id, height = 150){
 }
 
 # controller ----------
-signal_ctrl <- function(input, output, session, data, variable = NULL, bp){
+signal_ctrl <- function(input, output, session, data, variable = NULL, bp, ss_input, selected_tab){
 
-  observeEvent(data(),{
-        updateSelectInput(session, "selected_signal", choices = names(data()), selected = variable)
-        }) #update signal-selection
+  observeEvent({selected_tab()},
+    {
+    if (selected_tab() == "signalAnalysis") {
+      ss_input(
+        selectInput(session$ns("selected_signal"), label = NULL, choices = names(data()), selected = variable)
+        )
+    } else{
+      ss_input(NULL)
+    }
+
+  }) #update signal-selection
+
+
+
   output$signal <- renderPlot({
     validate(need(input$selected_signal, label = "signal"))
     gen_signal_plot(data(), input$selected_signal)
