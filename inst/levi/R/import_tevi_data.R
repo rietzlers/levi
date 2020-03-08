@@ -26,7 +26,7 @@ importTeviData <- function(input, output, session) {
   # local data --------
   imported_tevi_data <- reactive({
     validate(need(input$file, "tevi_data"))
-    import_tevi_data(session, input$file)
+    import_tevi_data(input$file$datapath)
   })
   tevi_data_name <- reactive({
     validate(need(input$file, "tevi_data"))

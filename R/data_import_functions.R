@@ -1,13 +1,15 @@
-## data_model.R ##
 
-import_tevi_data <- function(session, file) {
-
-  validate(need(file, "upload a tevi-data-file (.dat-file)"))
-
+#' loads tevi-data
+#'
+#' @param file_path
+#'
+#' @return a tibble with all signals + vars: \emph{t, smoothed_temperature}
+#' @export
+import_tevi_data <- function(file_path) {
   # load data as is
   df_raw <-
     vroom::vroom(
-      file$datapath, delim = "\t",
+      file_path, delim = "\t",
       col_types = cols(`Absolute Time` = col_time(format = "%H:%M:%OS"), .default = col_double()),
       trim_ws = TRUE
     )
