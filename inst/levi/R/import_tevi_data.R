@@ -3,8 +3,11 @@ importTeviDataUI <- function(id) {
   ns <- NS(id)
   tagList(
     box(width = 12,
-        fileInput(ns("file"), label = "select tevi-data (.dat-file)", accept = c(".dat")),
-        model_params_view(ns("params"))),
+        fluidRow(
+          column(width = 8, fileInput(ns("file"), label = "select tevi-data (.dat-file)", accept = c(".dat"))),
+          column(width = 4, numericInput(ns("frame_rate"), label = "Frame Rate [Hz]", value = NULL))
+        )
+    ),
     box(width = 12,
         plotOutput(ns("plot_center_xy"), height = 200),
         div(plotOutput(ns("temp_plot"), height = 300,
@@ -47,8 +50,14 @@ importTeviData <- function(input, output, session) {
     hps[[str_glue("hp{hp_nr}")]] <- get_brush_range(input$heat_pulses_plot_brush, str_glue("brush heat-puls-plot to set hp {hp_nr}"))
   })
 
+  observeEvent(imported_tevi_data(), {
+      # estimate sample/frame-rate from mean dt
+      c(est_sample_freq) %<-%
+        (imported_tevi_data() %>% summarize(est_sample_freq = round(1 / mean(diff(t), na.rm = TRUE))))
+      updateNumericInput(session, "frame_rate", value = est_sample_freq)
+    })
+
   # output-ctrls -------------
-  c(frame_rate, mass, radius) %<-% callModule(model_params_ctrl, "params", tevi_data)
   output$plot_center_xy <- renderPlot({
     center_xy_plot <-
         tevi_data() %>%
@@ -90,9 +99,10 @@ importTeviData <- function(input, output, session) {
     tevi_data,
     tevi_data_name,
     exp_time_range,
-    frame_rate,
-    mass,
-    radius
+    frame_rate = reactive({
+      validate(need(input$frame_rate, label = "frame_rate"))
+      input$frame_rate
+    })
     )
 }
 

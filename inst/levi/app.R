@@ -38,19 +38,17 @@ ui <- dashboardPage(header, sidebar, body, title = "Alloy-EML-Analysis")
 server <-
   function(input, output, session) {
 
+    selectedSidebarMenu <- reactive(input$sidebarMenu) #returns the selected sidebar-tab
+    dynamicSidebarItems <- reactiveValues(signal_selection = NULL)
+    output$signal_selection <- renderUI({
+      dynamicSidebarItems$signal_selection
+      })
 
-    c(tevi_data, tevi_data_name, exp_time_range, frame_rate, mass, radius) %<-%
-      callModule(importTeviData, "tdi")
+    sample_specs <- callModule(sample_specs_ctrl, "sample_specs")
 
+    c(tevi_data, tevi_data_name, exp_time_range, frame_rate) %<-% callModule(importTeviData, "tdi")
 
-    dynamicSidebarItems <-
-      reactiveValues(
-        signal_selection = NULL
-      )
-
-    output$signal_selection <- renderUI(dynamicSidebarItems$signal_selection)
-
-    callModule(signalAnalysis, "sa", tevi_data, tevi_data_name, exp_time_range, frame_rate, mass, radius, dynamicSidebarItems, reactive(input$sidebarMenu))
+    callModule(signalAnalysis, "sa", tevi_data, tevi_data_name, exp_time_range, frame_rate, sample_specs, dynamicSidebarItems, selectedSidebarMenu)
 
   }
 

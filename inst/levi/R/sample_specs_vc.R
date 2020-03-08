@@ -11,9 +11,11 @@ sample_specs_view <- function(id){
 sample_specs_ctrl <- function(input, output, session){
 
   # return-Values ------
-  list(
-    alloy = reactive(input$alloy_name),
-    mass = reactive(input$mass),
-    radius = reactive(input$radius)
-  )
+  reactive({
+    list(
+      alloy = input$alloy_name,
+      mass = input$mass,
+      radius = input$radius
+      )
+  })
 }

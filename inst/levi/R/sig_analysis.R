@@ -1,6 +1,4 @@
-# signal_plot.R #
 
-# view --------
 signalAnalysisUI <- function(id, width = 12) {
   ns <- NS(id)
   tagList(
@@ -12,10 +10,9 @@ signalAnalysisUI <- function(id, width = 12) {
   )
 }
 
-# controller --------
 signalAnalysis <- function(input, output, session,
-                           raw_tevi_data, tevi_data_name, exp_time_range,
-                           frame_rate, mass, radius,
+                           raw_tevi_data, tevi_data_name, exp_time_range, frame_rate,
+                           sample_specs,
                            dynamicSidebarItems, selected_tab){
   ns <- session$ns
   # data ----
@@ -32,8 +29,7 @@ signalAnalysis <- function(input, output, session,
   })
 
   # UIs -------------
-  output$signal_in_selected_range <-
-    renderPlot({
+  output$signal_in_selected_range <- renderPlot({
       ts_plot <- function(ds, signal_name, time_range, bp, frame_rate){
         ds %>%
           ggplot(aes(x = t)) +
@@ -60,7 +56,7 @@ signalAnalysis <- function(input, output, session,
     callModule(spectrum_ctrl, "spectrum_analysis", data_selection, signal_name, frame_rate, signal_brush)
 
   callModule(results_ctrl, "results",
-             raw_tevi_data, tevi_data_name, signal_name, mass, radius, data_selection, signal_brush,
+             raw_tevi_data, tevi_data_name, signal_name, sample_specs, data_selection, signal_brush,
              type, bp, dom_freq, f0, d, spans, taper, add_result)
   # return-values -----------
 }

@@ -35,7 +35,7 @@ resultsUI <- function(id){
 
 results_ctrl <-
   function(input, output, session,
-           raw_tevi_data, tevi_data_name, signal_name, mass, radius, data_selection,
+           raw_tevi_data, tevi_data_name, signal_name, sample_specs, data_selection,
            signal_brush, type, bp, dom_freq, f0, d, spans, taper, add_result){
     # data ----------
     time_range <- reactive({get_brush_range(signal_brush())})
@@ -99,8 +99,8 @@ results_ctrl <-
           smoothed_temp = convert_to_temp(t, raw_tevi_data()),
           f_dom_freq = dom_freq,
           f_f0 = f0,
-          st_dom_freq = to_surface_tension(dom_freq, mass()),
-          st_f0 = to_surface_tension(f0, mass()),
+          st_dom_freq = to_surface_tension(dom_freq, sample_specs()$mass),
+          st_f0 = to_surface_tension(f0, sample_specs()$mass),
         ) %>%
         ggplot(aes(x = .data[[input$st_xvar]], color = type)) +
         geom_point(aes(y = .data[[paste0(input$st_yvar, "_dom_freq")]]), shape = "x", size = 2) +
@@ -115,7 +115,7 @@ results_ctrl <-
       spec_analysis_results() %>%
         mutate(
           smoothed_temp = convert_to_temp(t, raw_tevi_data()),
-          viscosity = to_viscosity(d, mass(), radius()),
+          viscosity = to_viscosity(d, sample_specs()$mass, sample_specs()$radius),
         ) %>%
         ggplot(aes(x = .data[[input$visc_xvar]], color = type)) +
         geom_point(aes(y = .data[[input$visc_yvar]]),  size = 2) +
