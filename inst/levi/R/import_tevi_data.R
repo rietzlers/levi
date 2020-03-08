@@ -8,7 +8,7 @@ importTeviDataUI <- function(id) {
     box(width = 12,
         plotOutput(ns("plot_center_xy"), height = 200),
         div(plotOutput(ns("temp_plot"), height = 300,
-                       brush = brushOpts(id = ns("temp_plot_brush"), fill = "#ccc", direction = "x", resetOnNew = FALSE)),
+                       brush = brushOpts(id = ns("temp_plot_brush"), delayType = "debounce", delay = 1000, fill = "#ccc", direction = "x", resetOnNew = FALSE)),
             textOutput(ns("exp_time_range_info"))),
         div(plotOutput(ns("heat_pulses_plot"), height = 100,
                       brush = brushOpts(id = ns("heat_pulses_plot_brush"), fill = "#ccc", direction = "x", resetOnNew = FALSE)),
@@ -50,11 +50,19 @@ importTeviData <- function(input, output, session) {
   # output-ctrls -------------
   c(frame_rate, mass, radius) %<-% callModule(model_params_ctrl, "params", tevi_data)
   output$plot_center_xy <- renderPlot({
-      tevi_data() %>%
+    center_xy_plot <-
+        tevi_data() %>%
         ggplot(aes(x = t)) +
         geom_line(aes(y = center_x)) +
         geom_line(aes(y = center_y), color = "red") +
         labs(y = "center-coordinates")
+    hps <- reactiveValuesToList(hps) %>% flatten_dbl()
+    if(is.null(need(hps, "hps"))){
+      center_xy_plot <-
+        center_xy_plot +
+        geom_vline(xintercept = hps, linetype = "dashed", color = "red")
+    }
+    center_xy_plot
     })
   output$temp_plot <- renderPlot({
     plot <- function(ds){
