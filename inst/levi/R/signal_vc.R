@@ -15,16 +15,15 @@ signalUI <- function(id, height = 150){
 }
 
 # controller ----------
-signal_ctrl <- function(input, output, session, data, variable = NULL, bp, ss_input, selected_tab){
+signal_ctrl <- function(input, output, session, data, variable = NULL, bp, dynamicSidebarItems, selected_tab){
 
   observeEvent({selected_tab()},
     {
     if (selected_tab() == "signalAnalysis") {
-      ss_input(
+      dynamicSidebarItems$signal_selection <-
         selectInput(session$ns("selected_signal"), label = NULL, choices = names(data()), selected = variable)
-        )
     } else{
-      ss_input(NULL)
+      dynamicSidebarItems$signal_selection <- NULL
     }
 
   }) #update signal-selection
