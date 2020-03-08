@@ -20,6 +20,7 @@ header <-
 sidebar <-
   dashboardSidebar(sidebarMenu(id = "sidebarMenu",
     menuItem("Import Tevi Data",tabName = "importTeviData", icon = icon("dashboard")),
+    sample_specs_view("sample_specs"),
     menuItem("Signal Analysis", tabName = "signalAnalysis", icon = icon("bar-chart-o")),
     uiOutput("signal_selection")
   ))

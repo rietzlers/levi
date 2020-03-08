@@ -5,9 +5,7 @@ model_params_view <- function(id) {
   ns <- NS(id)
   tagList(
     fluidRow(
-      column(width = 4, numericInput(ns("frame_rate"), label = "Frame Rate [Hz]", value = NULL)),
-      column(width = 4, numericInput(ns("sample_mass"), label = "Sample-Mass [g]", value = 1.29224)),
-      column(width = 4, numericInput(ns("sphere_radius"), label = "Sphere-Radius [mm]", value = 6.528/2))
+      column(width = 4, numericInput(ns("frame_rate"), label = "Frame Rate [Hz]", value = NULL))
     )
   )
 }
