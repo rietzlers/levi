@@ -12,9 +12,11 @@ importTeviDataUI <- function(id) {
             textOutput(ns("exp_time_range_info"))),
         div(plotOutput(ns("heat_pulses_plot"), height = 100,
                       brush = brushOpts(id = ns("heat_pulses_plot_brush"), fill = "#ccc", direction = "x", resetOnNew = FALSE)),
-            actionButton(ns("set_hp"), label = "set heat-puls"),
-            actionButton(ns("reset_hps"), label = "reset heat-pulses"),
-            textOutput(ns("heat_pulses_info"))
+            fluidRow(
+              column(width = 2, actionButton(ns("save_hp"), label = "save hp Nr.:")),
+              column(width = 3, numericInput(ns("hp_nr"), label = "", value = 1)),
+              column(width = 5, textOutput(ns("hp_range")))
+            )
             )
         )
   )
@@ -40,8 +42,8 @@ importTeviData <- function(input, output, session) {
                      "brush temp-plot to set experimental time-range",
                      default_values = range(imported_tevi_data()$t))
   })
-  observeEvent(input$set_hp,{
-    hp_nr <- input$set_hp
+  observeEvent(input$save_hp,{
+    hp_nr <- input$hp_nr
     hps[[str_glue("hp{hp_nr}")]] <- get_brush_range(input$heat_pulses_plot_brush, str_glue("brush heat-puls-plot to set hp {hp_nr}"))
   })
 
@@ -72,10 +74,8 @@ importTeviData <- function(input, output, session) {
       ggplot(aes(x = t, y = htr_i)) +
       geom_line()
   })
-  output$heat_pulses_info <- renderText({
-    reactiveValuesToList(hps) %>%
-      modify(~str_glue("[{.x[1]}, {.x[2]}]")) %>%
-      reduce(~paste(.x, .y))
+  output$hp_range <- renderText({
+    hps[[str_glue("hp{input$hp_nr}")]]
   })
   # return-values ----------
   list(
