@@ -29,13 +29,15 @@ signalAnalysis <- function(input, output, session, tevi_model, sample_specs, dyn
   observeEvent({selected_tab()},{
                  if (selected_tab() != "importTeviData") {
                    dynamicSidebarItems$signal_selection <-
-                     selectInput(session$ns("selected_signal"), label = NULL, choices = names(tevi_model()$tevi_data), selected = "radius_y")
+                     div(
+                       selectInput(session$ns("selected_signal"), label = NULL, choices = names(tevi_model()$tevi_data), selected = "radius_y"),
+                     )
                  } else{
                    dynamicSidebarItems$signal_selection <- NULL
                  }
                }) #update signal-selection
 
-  time_range <- reactive({get_brush_range(input$signal_brush)})
+  time_range <- reactive({get_brush_range(input$signal_brush, "set time range in Signal Analysis")})
   signal_name  = reactive({input$selected_signal})
 
   # UIs -------------
@@ -83,8 +85,9 @@ signalAnalysis <- function(input, output, session, tevi_model, sample_specs, dyn
   # return-values ----------
   reactive({
     list(
-      signal_name = signal_name(),
-      time_range = time_range()
+      selected_signal = signal_name(),
+      time_range = time_range(),
+      bp = bp()
     )
   })
 }
