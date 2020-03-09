@@ -2,12 +2,10 @@
 resultsUI <- function(id){
   ns <- NS(id)
   tagList(
-      box(width = 12, {
+      box(width = 12, title = "Table of Spectrum-Annalysis-Results", collapsible = TRUE, collapsed = TRUE, {
         DT::dataTableOutput(ns("spec_analsis_results_DT"))
-        },
-        title = "Table of Spectrum-Annalysis-Results",
-        collapsible = TRUE, collapsed = TRUE),
-      box(width = 6, {
+        }),
+      box(width = 6, title = "Surface-Tension/Frequency-Plot", collapsible = TRUE, collapsed = FALSE, {
         div(
           plotlyOutput(ns("surface_tension_plot")),
           fluidRow(
@@ -15,10 +13,8 @@ resultsUI <- function(id){
             column(width = 6, selectInput(ns("st_yvar"), label = "", selected = "f", choices = c("f", "st")))
           )
         )
-      },
-        title = "Surface-Tension/Frequency-Plot",
-        collapsible = TRUE, collapsed = FALSE),
-      box(width = 6, {
+      }),
+      box(width = 6, title = "Viscosity/Damping-Plot", collapsible = TRUE, collapsed = FALSE, {
         div(
           plotlyOutput(ns("viscosity_plot")),
           fluidRow(
@@ -26,9 +22,7 @@ resultsUI <- function(id){
             column(width = 6, selectInput(ns("visc_yvar"), label = "", selected = "d", choices = c("d", "viscosity")))
           )
         )
-      },
-        title = "Viscosity/Damping-Plot",
-        collapsible = TRUE, collapsed = FALSE)
+      })
   )
 }
 
@@ -77,22 +71,14 @@ results_ctrl <-
       }
     })
     # output-ctrls -----------
-    output$spec_analsis_results_DT <-
-      DT::renderDataTable({
+    output$spec_analsis_results_DT <- DT::renderDataTable({
         validate(need(spec_analysis_results(), label = "spec_analysis_results"))
         spec_analysis_results() %>% arrange(type, t)
         },
-      server = TRUE,
-      filter = 'top',
-      extensions = c('Buttons'),
-      options = list(
-        dom = 'lftipB',
-        buttons = c('copy', 'csv', 'excel', 'pdf', 'print'),
-        pageLength = 5, autoWidth = TRUE)
+      server = TRUE, filter = 'top', extensions = c('Buttons'),
+      options = list(dom = 'lftipB', buttons = c('csv', 'excel', 'pdf'), pageLength = 5, autoWidth = TRUE)
       )
-
-  output$surface_tension_plot <-
-    renderPlotly({
+  output$surface_tension_plot <- renderPlotly({
       validate(need(spec_analysis_results(), label = "spec_analysis_results"))
       spec_analysis_results() %>%
         mutate(
@@ -108,9 +94,7 @@ results_ctrl <-
         labs(x = "time/Temp", y = "Freqs/Surface-Tension") +
         theme(legend.position="none")
     })
-
-  output$viscosity_plot <-
-    renderPlotly({
+  output$viscosity_plot <- renderPlotly({
       validate(need(spec_analysis_results(), label = "spec_analysis_results"))
       spec_analysis_results() %>%
         mutate(
