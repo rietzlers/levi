@@ -15,13 +15,13 @@ signalUI <- function(id, height = 150){
 }
 
 # controller ----------
-signal_ctrl <- function(input, output, session, data, variable = NULL, bp, dynamicSidebarItems, selected_tab){
+signal_ctrl <- function(input, output, session, tevi_model, variable = NULL, dynamicSidebarItems, selected_tab){
 
   observeEvent({selected_tab()},
     {
     if (selected_tab() == "signalAnalysis") {
       dynamicSidebarItems$signal_selection <-
-        selectInput(session$ns("selected_signal"), label = NULL, choices = names(data()), selected = variable)
+        selectInput(session$ns("selected_signal"), label = NULL, choices = names(tevi_model()$tevi_data), selected = variable)
     } else{
       dynamicSidebarItems$signal_selection <- NULL
     }
@@ -32,7 +32,7 @@ signal_ctrl <- function(input, output, session, data, variable = NULL, bp, dynam
 
   output$signal <- renderPlot({
     validate(need(input$selected_signal, label = "signal"))
-    gen_signal_plot(data(), input$selected_signal)
+    gen_signal_plot(tevi_model()$tevi_data, input$selected_signal)
     })
 
    # return-values ---------

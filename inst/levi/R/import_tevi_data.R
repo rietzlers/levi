@@ -49,14 +49,20 @@ importTeviData <- function(input, output, session) {
     hp_nr <- input$hp_nr
     hps[[str_glue("hp{hp_nr}")]] <- get_brush_range(input$heat_pulses_plot_brush, str_glue("brush heat-puls-plot to set hp {hp_nr}"))
   })
-
   observeEvent(imported_tevi_data(), {
       # estimate sample/frame-rate from mean dt
       c(est_sample_freq) %<-%
         (imported_tevi_data() %>% summarize(est_sample_freq = round(1 / mean(diff(t), na.rm = TRUE))))
       updateNumericInput(session, "frame_rate", value = est_sample_freq)
     })
-
+  frame_rate = reactive({
+    validate(need(input$frame_rate, label = "frame_rate"))
+    input$frame_rate
+  })
+  HPs = reactive({
+    validate(need(hps, label = "heat-puls-data"))
+    reactiveValuesToList(hps)
+  })
   # output-ctrls -------------
   output$plot_center_xy <- renderPlot({
     center_xy_plot <-
@@ -74,13 +80,10 @@ importTeviData <- function(input, output, session) {
     center_xy_plot
     })
   output$temp_plot <- renderPlot({
-    plot <- function(ds){
-      ds %>%
+    tevi_data() %>%
         ggplot(aes(x = t)) +
         geom_line(aes(y = pyro_temp)) +
         geom_line(aes(y = smoothed_temp), color = "red")
-    }
-    plot(tevi_data())
   })
   output$exp_time_range_info <- renderText({
     ss <- exp_time_range() %>% round(2)
@@ -95,15 +98,15 @@ importTeviData <- function(input, output, session) {
     hps[[str_glue("hp{input$hp_nr}")]]
   })
   # return-values ----------
-  list(
-    tevi_data,
-    tevi_data_name,
-    exp_time_range,
-    frame_rate = reactive({
-      validate(need(input$frame_rate, label = "frame_rate"))
-      input$frame_rate
-    })
+  reactive(
+    list(
+      tevi_data = tevi_data(),
+      tevi_data_name = tevi_data_name(),
+      exp_time_range = exp_time_range(),
+      HPs = HPs(),
+      frame_rate = frame_rate()
     )
+  )
 }
 
 

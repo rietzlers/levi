@@ -32,13 +32,13 @@ spectrumUI <- function(id) {
 }
 
 # controller ------------
-spectrum_ctrl <- function(input, output, session, data_selection, signal_name, frame_rate, time_range){
+spectrum_ctrl <- function(input, output, session, tevi_model, data_selection, signal_name){
   # data ----
   est_spec <- reactive({
     levi::estimate_signal_spectrum(
       data_selection(),
       signal_name(),
-      frame_rate(),
+      tevi_model()$frame_rate,
       spans = eval(rlang::parse_expr(input$spans)),
       taper = input$taper
     )
@@ -47,7 +47,7 @@ spectrum_ctrl <- function(input, output, session, data_selection, signal_name, f
     levi::fit_lorentz(
       dplyr::filter(est_spec(), type == input$type),
       bp = bp(),
-      sr = frame_rate())
+      sr = tevi_model()$frame_rate)
   })
   bp <- reactive(({
     input$brush %>%
@@ -58,7 +58,7 @@ spectrum_ctrl <- function(input, output, session, data_selection, signal_name, f
     c(f_dom, ...)  %<-%
       (est_spec() %>%
          dplyr::filter(type == input$type, f %>% between(bp()[1], bp()[2])) %>%
-         levi::get_dom_freq(sample_rate = frame_rate()) %>%
+         levi::get_dom_freq(sample_rate = tevi_model()$frame_rate) %>%
         round(2))
     f_dom
   })
@@ -90,11 +90,11 @@ spectrum_ctrl <- function(input, output, session, data_selection, signal_name, f
         lfit = NULL,
           # levi::fit_lorentz(
           # dplyr::filter(est_spec(), type == input$type),
-          # bp = c(0, frame_rate()/2),
-          # sr = frame_rate()),
+          # bp = c(0, tevi_model()$frame_rate/2),
+          # sr = tevi_model()$frame_rate),
         scale = input$scale,
-        bp = c(0, frame_rate()/2),
-        sample_rate = frame_rate(),
+        bp = c(0, tevi_model()$frame_rate/2),
+        sample_rate = tevi_model()$frame_rate,
         type_choosen= input$type
         )
     })
@@ -104,7 +104,7 @@ spectrum_ctrl <- function(input, output, session, data_selection, signal_name, f
         lfit = lfit(),
         scale = input$scale,
         bp = bp(),
-        sample_rate = frame_rate(),
+        sample_rate = tevi_model()$frame_rate,
         type_choosen =  input$type
       ) %>%
         ggplotly()

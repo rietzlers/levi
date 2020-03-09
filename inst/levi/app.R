@@ -46,9 +46,9 @@ server <-
 
     sample_specs <- callModule(sample_specs_ctrl, "sample_specs")
 
-    c(tevi_data, tevi_data_name, exp_time_range, frame_rate) %<-% callModule(importTeviData, "tdi")
+    tevi_model <-  callModule(importTeviData, "tdi")
 
-    callModule(signalAnalysis, "sa", tevi_data, tevi_data_name, exp_time_range, frame_rate, sample_specs, dynamicSidebarItems, selectedSidebarMenu)
+    callModule(signalAnalysis, "sa", tevi_model, sample_specs, dynamicSidebarItems, selectedSidebarMenu)
 
   }
 

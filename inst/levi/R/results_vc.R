@@ -35,8 +35,8 @@ resultsUI <- function(id){
 
 results_ctrl <-
   function(input, output, session,
-           raw_tevi_data, tevi_data_name, signal_name, sample_specs, data_selection,
-           signal_brush, type, bp, dom_freq, f0, d, spans, taper, add_result){
+           tevi_model, sample_specs, data_selection, signal_brush, signal_name,
+           type, bp, dom_freq, f0, d, spans, taper, add_result){
     # data ----------
     time_range <- reactive({get_brush_range(signal_brush())})
     spec_analysis_results <- reactiveVal()
@@ -53,7 +53,7 @@ results_ctrl <-
             spans = spans(),
             taper = taper(),
             signal = signal_name(),
-            data = tevi_data_name()
+            data = tevi_model()$tevi_data_name
           )
         )
       }
@@ -71,7 +71,7 @@ results_ctrl <-
                 spans = spans(),
                 taper = taper(),
                 signal = signal_name(),
-                data = tevi_data_name()
+                data = tevi_model()$tevi_data_name
               )
             ))
       }
@@ -96,7 +96,7 @@ results_ctrl <-
       validate(need(spec_analysis_results(), label = "spec_analysis_results"))
       spec_analysis_results() %>%
         mutate(
-          smoothed_temp = convert_to_temp(t, raw_tevi_data()),
+          smoothed_temp = convert_to_temp(t, tevi_model()$tevi_data),
           f_dom_freq = dom_freq,
           f_f0 = f0,
           st_dom_freq = to_surface_tension(dom_freq, sample_specs()$mass),
@@ -114,7 +114,7 @@ results_ctrl <-
       validate(need(spec_analysis_results(), label = "spec_analysis_results"))
       spec_analysis_results() %>%
         mutate(
-          smoothed_temp = convert_to_temp(t, raw_tevi_data()),
+          smoothed_temp = convert_to_temp(t, tevi_model()$tevi_data),
           viscosity = to_viscosity(d, sample_specs()$mass, sample_specs()$radius),
         ) %>%
         ggplot(aes(x = .data[[input$visc_xvar]], color = type)) +
