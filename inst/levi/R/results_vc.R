@@ -17,7 +17,7 @@ resultsUI <- function(id){
         )
       },
         title = "Surface-Tension/Frequency-Plot",
-        collapsible = TRUE, collapsed = TRUE),
+        collapsible = TRUE, collapsed = FALSE),
       box(width = 6, {
         div(
           plotlyOutput(ns("viscosity_plot")),
@@ -28,7 +28,7 @@ resultsUI <- function(id){
         )
       },
         title = "Viscosity/Damping-Plot",
-        collapsible = TRUE, collapsed = TRUE)
+        collapsible = TRUE, collapsed = FALSE)
   )
 }
 
