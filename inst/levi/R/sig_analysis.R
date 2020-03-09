@@ -57,5 +57,9 @@ signalAnalysis <- function(input, output, session, tevi_model, sample_specs,
              tevi_model, sample_specs, data_selection, signal_brush, signal_name,
              type, bp, dom_freq, f0, d, spans, taper, add_result)
 
+  # return-values ----------
+  reactive({
+    signal_name()
+  })
 }
 
