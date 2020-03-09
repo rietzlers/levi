@@ -5,35 +5,42 @@ seewave_view <- function(id){
   )
 }
 
-seewave_ctrl <- function(input, output, session, tevi_model, selected_signal, selectedSidebarMenu){
+seewave_ctrl <- function(input, output, session, tevi_model, signal_selections, selectedSidebarMenu){
 
   output$seewave_plot <- renderPlot({
-    t <- tevi_model()$tevi_data[["t"]]
-    signal <- tevi_model()$tevi_data[[selected_signal()]]
+    sig_name <- signal_selections()$selected_signal
+    time_range <- signal_selections()$time_range
+    bp <- signal_selections()$bp
+
+    data_selection <- tevi_model()$tevi_data %>% filter(t %>% between(time_range[1], time_range[2]))
+    t <- data_selection[["t"]]
+    signal <- data_selection[[sig_name]]
     signal <- signal - mean(signal, na.rm = TRUE)
     sr <- tevi_model()$frame_rate
-    sig_name <- selected_signal()
+
+
 
     if(selectedSidebarMenu() == "spec_osc"){
       return(
         seewave::spectro(
-        signal, f = sr, wl = 2^8, ovlp = 50, flim = c(20, 70)/1000,
+        signal, f = sr, wl = 2^8, ovlp = 50, flim = bp/1000,
         osc = TRUE, alab = sig_name
       )
      )
     }
     if(selectedSidebarMenu() == "spec_dom_freq"){
-      dom_freqs <- seewave::dfreq(signal, f = sr, wl = 2^8, ovlp = 50, bandpass = c(5, 50), threshold = 10, plot = FALSE)
+      dom_freqs <- seewave::dfreq(signal, f = sr, wl = 2^8, ovlp = 50, bandpass = bp, threshold = 10, plot = FALSE)
         return(
           {
-            seewave::spectro(signal, f = sr, wl = 2^8, ovlp = 50, flim = c(25, 50)/1000)
+            seewave::spectro(signal, f = sr, wl = 2^8, ovlp = 50, flim = bp/1000)
             points(dom_freqs, col = "red", bg = "yellow", pch = 21)
           }
         )
     }
     if(selectedSidebarMenu() == "inst_freqs"){
       return(
-        seewave::ifreq(signal, f = sr, threshold = 10, col="darkviolet", main="Instantaneous frequency with Hilbert transform")
+        seewave::ifreq(signal, f = sr, threshold = 10, col="darkviolet", ylim = bp/1000,
+                       main="Instantaneous frequency with Hilbert transform")
       )
     }
     if(selectedSidebarMenu() == "sig_envelope"){
