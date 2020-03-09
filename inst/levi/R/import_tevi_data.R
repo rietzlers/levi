@@ -71,11 +71,15 @@ importTeviData <- function(input, output, session) {
         geom_line(aes(y = center_x)) +
         geom_line(aes(y = center_y), color = "red") +
         labs(y = "center-coordinates")
-    hps <- reactiveValuesToList(hps) %>% flatten_dbl()
     if(is.null(need(hps, "hps"))){
       center_xy_plot <-
         center_xy_plot +
-        geom_vline(xintercept = hps, linetype = "dashed", color = "red")
+        geom_vline(xintercept = HPs() %>% flatten_dbl(), linetype = "dashed", color = "red")
+    }
+    if(is.null(need(exp_time_range, "exp_time_range"))){
+      center_xy_plot <-
+        center_xy_plot +
+        geom_vline(xintercept = exp_time_range(), linetype = "dashed", color = "blue")
     }
     center_xy_plot
     })
