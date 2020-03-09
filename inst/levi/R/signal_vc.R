@@ -19,7 +19,7 @@ signal_ctrl <- function(input, output, session, tevi_model, variable = NULL, dyn
 
   observeEvent({selected_tab()},
     {
-    if (selected_tab() == "signalAnalysis") {
+    if (selected_tab() != "importTeviData") {
       dynamicSidebarItems$signal_selection <-
         selectInput(session$ns("selected_signal"), label = NULL, choices = names(tevi_model()$tevi_data), selected = variable)
     } else{
