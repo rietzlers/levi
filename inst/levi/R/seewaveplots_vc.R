@@ -1,7 +1,7 @@
 seewave_view <- function(id){
   ns <- NS(id)
   tagList(
-    plotOutput(ns("seewave_plot"), height = "1200px")
+    plotOutput(ns("seewave_plot"), height = "800px")
   )
 }
 
