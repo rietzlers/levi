@@ -38,13 +38,13 @@ signalAnalysis <- function(input, output, session, tevi_model, sample_specs,
             y = signal_name
           )
       }
-      ts_plot(
+      {ts_plot(
         ds = data_selection(),
         signal_name = signal_name(),
         time_range = get_brush_range(signal_brush()),
         bp = bp(),
         frame_rate = tevi_model()$frame_rate
-        )
+        )} # call ts_plot with reactives
       })
 
   c(signal_name, signal_brush) %<-%
