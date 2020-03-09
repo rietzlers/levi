@@ -29,10 +29,10 @@ resultsUI <- function(id){
 
 results_ctrl <-
   function(input, output, session,
-           tevi_model, sample_specs, data_selection, signal_brush, signal_name,
+           tevi_model, sample_specs, data_selection, time_range, signal_name,
            type, bp, dom_freq, f0, d, spans, taper, add_result){
     # data ----------
-    time_range <- reactive({get_brush_range(signal_brush())})
+
     spec_analysis_results <- reactiveVal()
     observeEvent(add_result(), {
       if (is.null(spec_analysis_results())) {

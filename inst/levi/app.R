@@ -45,12 +45,12 @@ server <- function(input, output, session) {
 
     sample_specs <- callModule(sample_specs_ctrl, "sample_specs")
     tevi_model <-  callModule(importTeviData, "tdi")
-    selected_signal <- callModule(signalAnalysis, "sa", tevi_model, sample_specs, dynamicSidebarItems, selectedSidebarMenu)
+    signal_selections <- callModule(signalAnalysis, "sa", tevi_model, sample_specs, dynamicSidebarItems, selectedSidebarMenu)
 
-    callModule(seewave_ctrl, "spec_osc", tevi_model, selected_signal, selectedSidebarMenu)
-    callModule(seewave_ctrl, "spec_dom_freq", tevi_model, selected_signal, selectedSidebarMenu)
-    callModule(seewave_ctrl, "inst_freqs", tevi_model, selected_signal, selectedSidebarMenu)
-    callModule(seewave_ctrl, "sig_envelope", tevi_model, selected_signal, selectedSidebarMenu)
+    callModule(seewave_ctrl, "spec_osc", tevi_model, signal_selections, selectedSidebarMenu)
+    callModule(seewave_ctrl, "spec_dom_freq", tevi_model, signal_selections, selectedSidebarMenu)
+    callModule(seewave_ctrl, "inst_freqs", tevi_model, signal_selections, selectedSidebarMenu)
+    callModule(seewave_ctrl, "sig_envelope", tevi_model, signal_selections, selectedSidebarMenu)
   }
 
 shinyApp(ui, server)

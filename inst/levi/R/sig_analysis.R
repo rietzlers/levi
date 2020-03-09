@@ -16,7 +16,7 @@ signalAnalysis <- function(input, output, session, tevi_model, sample_specs, dyn
   ns <- session$ns
   # data ----
   data_selection <- reactive({
-      selected_data <-brushedPoints(tevi_model()$tevi_data, signal_brush())
+      selected_data <-brushedPoints(tevi_model()$tevi_data, input$signal_brush)
       validate(need(nrow(selected_data) > 0,
                     "select data by brushing (left-click and pull) over signal-plot"))
       selected_data
@@ -35,8 +35,9 @@ signalAnalysis <- function(input, output, session, tevi_model, sample_specs, dyn
                  }
                }) #update signal-selection
 
-  signal_brush <- reactive({input$signal_brush})
+  time_range <- reactive({get_brush_range(input$signal_brush)})
   signal_name  = reactive({input$selected_signal})
+
   # UIs -------------
   output$complete_signal <- renderPlot({
     validate(need(input$selected_signal, label = "signal"))
@@ -76,12 +77,15 @@ signalAnalysis <- function(input, output, session, tevi_model, sample_specs, dyn
     callModule(spectrum_ctrl, "spectrum_analysis", tevi_model, data_selection, signal_name)
 
   callModule(results_ctrl, "results",
-             tevi_model, sample_specs, data_selection, signal_brush, signal_name,
+             tevi_model, sample_specs, data_selection, time_range, signal_name,
              type, bp, dom_freq, f0, d, spans, taper, add_result)
 
   # return-values ----------
   reactive({
-    signal_name()
+    list(
+      signal_name = signal_name(),
+      time_range = time_range()
+    )
   })
 }
 
