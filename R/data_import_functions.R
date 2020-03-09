@@ -1,7 +1,7 @@
 
 #' loads tevi-data
 #'
-#' @param file_path
+#' @param file_path path as supplied from fileInput
 #'
 #' @return a tibble with all signals + vars: \emph{t, smoothed_temperature}
 #' @export

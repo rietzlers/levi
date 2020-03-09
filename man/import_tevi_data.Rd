@@ -7,7 +7,7 @@
 import_tevi_data(file_path)
 }
 \arguments{
-\item{file_path}{}
+\item{file_path}{path as supplied from fileInput}
 }
 \value{
 a tibble with all signals + vars: \emph{t, smoothed_temperature}
