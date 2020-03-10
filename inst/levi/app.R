@@ -11,8 +11,10 @@ header <-
     dropdownMenu(type = "tasks")
   )
 sidebar <-
-  dashboardSidebar(sidebarMenu(id = "sidebarMenu",
-    menuItem("Import Tevi Data",tabName = "importTeviData", icon = icon("dashboard")),
+  dashboardSidebar(sidebarMenu(id = "sidebarMenu_ID",
+    menuItem("Setup Data",tabName = "data_setup", icon = icon("dashboard"),
+             menuSubItem("Import Signals from Tevi (.csv)", tabName = "importTeviData"),
+             menuSubItem("Set up sample specs", tabName = "setup_sample_specs")),
     menuItem("Signal Analysis", tabName = "signalAnalysis", icon = icon("signal")),
     uiOutput("signal_selection"),
     menuItem("seewave", tabName = "Visualization", icon = icon("chart-bar"),
@@ -26,6 +28,7 @@ body <-
   dashboardBody(
     tabItems(
       tabItem(tabName = "importTeviData", importTeviDataUI("tdi")),
+      tabItem(tabName = "setup_sample_specs", "setup sample specs"),
       tabItem(tabName = "signalAnalysis", signalAnalysisUI("sa")),
       tabItem(tabName = "spec_osc", seewave_view("spec_osc")),
       tabItem(tabName = "spec_dom_freq", seewave_view("spec_dom_freq")),
@@ -37,7 +40,7 @@ ui <- dashboardPage(header, sidebar, body, title = "Alloy-EML-Analysis")
 # ctrl --------
 server <- function(input, output, session) {
 
-    selectedSidebarMenu <- reactive(input$sidebarMenu) #returns the selected sidebar-tab
+    selected_sidebar_tab <- reactive(input$sidebarMenu_ID) #returns the selected sidebar-tab
     dynamicSidebarItems <- reactiveValues(signal_selection = NULL)
     output$signal_selection <- renderUI({
       dynamicSidebarItems$signal_selection
@@ -45,12 +48,12 @@ server <- function(input, output, session) {
 
     sample_specs <- callModule(sample_specs_ctrl, "sample_specs")
     tevi_model <-  callModule(importTeviData, "tdi")
-    signal_selections <- callModule(signalAnalysis, "sa", tevi_model, sample_specs, dynamicSidebarItems, selectedSidebarMenu)
+    signal_selections <- callModule(signalAnalysis, "sa", tevi_model, sample_specs, dynamicSidebarItems, selected_sidebar_tab)
 
-    callModule(seewave_ctrl, "spec_osc", tevi_model, signal_selections, selectedSidebarMenu)
-    callModule(seewave_ctrl, "spec_dom_freq", tevi_model, signal_selections, selectedSidebarMenu)
-    callModule(seewave_ctrl, "inst_freqs", tevi_model, signal_selections, selectedSidebarMenu)
-    callModule(seewave_ctrl, "sig_envelope", tevi_model, signal_selections, selectedSidebarMenu)
+    callModule(seewave_ctrl, "spec_osc", tevi_model, signal_selections, selected_sidebar_tab)
+    callModule(seewave_ctrl, "spec_dom_freq", tevi_model, signal_selections, selected_sidebar_tab)
+    callModule(seewave_ctrl, "inst_freqs", tevi_model, signal_selections, selected_sidebar_tab)
+    callModule(seewave_ctrl, "sig_envelope", tevi_model, signal_selections, selected_sidebar_tab)
   }
 
 shinyApp(ui, server)

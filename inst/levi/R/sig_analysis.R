@@ -27,7 +27,7 @@ signalAnalysis <- function(input, output, session, tevi_model, sample_specs, dyn
     updateSelectInput(session, "signal_choice", choices = signal_names)
   })
   observeEvent({selected_tab()},{
-                 if (selected_tab() != "importTeviData") {
+                 if (!(selected_tab() %in% c("data_setup", "importTeviData", "setup_sample_specs"))) {
                    dynamicSidebarItems$signal_selection <-
                      div(
                        selectInput(session$ns("selected_signal"), label = NULL, choices = names(tevi_model()$tevi_data), selected = "radius_y"),
