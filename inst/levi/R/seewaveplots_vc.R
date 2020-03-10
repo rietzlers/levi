@@ -18,21 +18,28 @@ seewave_ctrl <- function(input, output, session, tevi_model, signal_selections, 
     signal <- signal - mean(signal, na.rm = TRUE)
     sr <- tevi_model()$frame_rate
 
+    N <- length(signal) # Nr. samples T = N * sample_rate
+    T <- N / sr # Observation-length
 
+    wl <- 2^8
+    #to do: select window-length conditional on Observation-length
 
     if(selectedSidebarMenu() == "spec_osc"){
+      validate(need(N > 2^8, message = str_glue("selected time range is to short (it is only {round(T, 2)}s long)")))
       return(
         seewave::spectro(
-        signal, f = sr, wl = 2^8, ovlp = 50, flim = bp/1000,
+        signal, f = sr, wl = wl, ovlp = 50, flim = bp/1000,
         osc = TRUE, alab = sig_name
       )
      )
     }
     if(selectedSidebarMenu() == "spec_dom_freq"){
-      dom_freqs <- seewave::dfreq(signal, f = sr, wl = 2^8, ovlp = 50, bandpass = bp, threshold = 10, plot = FALSE)
+      validate(need(N > 2^8, message = str_glue("selected time range is to short (it is only {round(T, 2)} s long)")))
+      dom_freqs <- seewave::dfreq(signal, f = sr, wl = wl, ovlp = 50, bandpass = bp, threshold = 10, plot = FALSE)
+      print(dom_freqs)
         return(
           {
-            seewave::spectro(signal, f = sr, wl = 2^8, ovlp = 50, flim = bp/1000)
+            seewave::spectro(signal, f = sr, wl = wl, ovlp = 50, flim = bp/1000)
             points(dom_freqs, col = "red", bg = "yellow", pch = 21)
           }
         )
