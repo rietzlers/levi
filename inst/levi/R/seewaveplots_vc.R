@@ -36,7 +36,6 @@ seewave_ctrl <- function(input, output, session, tevi_model, signal_selections, 
     if(selectedSidebarMenu() == "spec_dom_freq"){
       validate(need(N > 2^8, message = str_glue("selected time range is to short (it is only {round(T, 2)} s long)")))
       dom_freqs <- seewave::dfreq(signal, f = sr, wl = wl, ovlp = 50, bandpass = bp, threshold = 10, plot = FALSE)
-      print(dom_freqs)
         return(
           {
             seewave::spectro(signal, f = sr, wl = wl, ovlp = 50, flim = bp/1000)
