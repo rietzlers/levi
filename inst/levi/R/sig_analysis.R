@@ -12,7 +12,7 @@ signalAnalysisUI <- function(id, width = 12) {
   )
 }
 
-signalAnalysis <- function(input, output, session, tevi_model, sample_specs, dynamicSidebarItems, selected_tab){
+signalAnalysis <- function(input, output, session, tevi_model, sample_specs, signal_selection_UI, selected_tab){
   ns <- session$ns
   # data ----
   data_selection <- reactive({
@@ -28,12 +28,10 @@ signalAnalysis <- function(input, output, session, tevi_model, sample_specs, dyn
   })
   observeEvent({selected_tab()},{
                  if (!(selected_tab() %in% c("data_setup", "importTeviData", "setup_sample_specs"))) {
-                   dynamicSidebarItems$signal_selection <-
-                     div(
-                       selectInput(session$ns("selected_signal"), label = NULL, choices = names(tevi_model()$tevi_data), selected = "radius_y"),
-                     )
+                   signal_selection_UI(div(
+                       selectInput(session$ns("selected_signal"), label = NULL, choices = names(tevi_model()$tevi_data), selected = "radius_y")))
                  } else{
-                   dynamicSidebarItems$signal_selection <- NULL
+                   signal_selection_UI(NULL)
                  }
                }) #update signal-selection
 

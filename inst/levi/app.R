@@ -12,7 +12,7 @@ header <-
   )
 sidebar <-
   dashboardSidebar(sidebarMenu(id = "sidebarMenu_ID",
-    uiOutput("signal_selection"),
+    uiOutput("signal_selection_UI"),
     menuItem("Setup Data",tabName = "data_setup", icon = icon("dashboard"),
              menuSubItem("Import Signals from Tevi (.csv)", tabName = "importTeviData"),
              menuSubItem("Set up sample specs", tabName = "setup_sample_specs")),
@@ -41,17 +41,15 @@ ui <- dashboardPage(header, sidebar, body, title = "Alloy-EML-Analysis")
 server <- function(input, output, session) {
 
     selected_sidebar_tab <- reactive(input$sidebarMenu_ID) #returns the selected sidebar-tab
-    dynamic_sidebar_UIs <- reactiveValues(signal_selection = NULL)
-    output$signal_selection <- renderUI({
-      dynamic_sidebar_UIs$signal_selection
-      })
+    signal_selection_UI <- reactiveVal()
+    output$signal_selection_UI <- renderUI({signal_selection_UI()})
 
     sample_spec_info_UI <- reactiveVal()
     output$sample_specs_info_UI <- renderUI({sample_spec_info_UI()})
 
     sample_specs <- callModule(sample_specs_ctrl, "sample_specs", sample_spec_info_UI, selected_sidebar_tab)
     tevi_model <-  callModule(importTeviData, "tdi")
-    signal_selections <- callModule(signalAnalysis, "sa", tevi_model, sample_specs, dynamic_sidebar_UIs, selected_sidebar_tab)
+    signal_selections <- callModule(signalAnalysis, "sa", tevi_model, sample_specs, signal_selection_UI, selected_sidebar_tab)
 
     callModule(seewave_ctrl, "spec_osc", tevi_model, signal_selections, selected_sidebar_tab)
     callModule(seewave_ctrl, "spec_dom_freq", tevi_model, signal_selections, selected_sidebar_tab)
