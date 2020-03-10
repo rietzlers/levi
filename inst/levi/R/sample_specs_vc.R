@@ -48,7 +48,7 @@ sample_specs_ctrl <- function(input, output, session, sample_spec_info_UI, selec
 
   # return-Values ------
   reactive({
-    #validate(need(selected_alloy(), message = "Select alloy-specs in tab 'Set up sample specs'"))
+    validate(need(selected_alloy(), message = "Select alloy-specs in tab 'Set up sample specs'"))
     list(
       alloy = input$alloy_name,
       mass = input$mass,
