@@ -12,17 +12,17 @@ header <-
   )
 sidebar <-
   dashboardSidebar(sidebarMenu(id = "sidebarMenu_ID",
+    uiOutput("signal_selection"),
     menuItem("Setup Data",tabName = "data_setup", icon = icon("dashboard"),
              menuSubItem("Import Signals from Tevi (.csv)", tabName = "importTeviData"),
              menuSubItem("Set up sample specs", tabName = "setup_sample_specs")),
     menuItem("Signal Analysis", tabName = "signalAnalysis", icon = icon("signal")),
-    uiOutput("signal_selection"),
     menuItem("seewave", tabName = "Visualization", icon = icon("chart-bar"),
              menuSubItem("Spectrum and Oscillogram", tabName = "spec_osc"),
              menuSubItem("Spec+Dom-Freq", tabName = "spec_dom_freq"),
              menuSubItem("Instantanous Frequency", tabName = "inst_freqs"),
              menuSubItem("Smoothed Signal Envelope", tabName = "sig_envelope")),
-    sample_specs_view("sample_specs")
+    uiOutput("sample_specs_info_UI")
   ))
 body <-
   dashboardBody(
@@ -41,14 +41,17 @@ ui <- dashboardPage(header, sidebar, body, title = "Alloy-EML-Analysis")
 server <- function(input, output, session) {
 
     selected_sidebar_tab <- reactive(input$sidebarMenu_ID) #returns the selected sidebar-tab
-    dynamicSidebarItems <- reactiveValues(signal_selection = NULL)
+    dynamic_sidebar_UIs <- reactiveValues(signal_selection = NULL)
     output$signal_selection <- renderUI({
-      dynamicSidebarItems$signal_selection
+      dynamic_sidebar_UIs$signal_selection
       })
 
-    sample_specs <- callModule(sample_specs_ctrl, "sample_specs")
+    sample_spec_info_UI <- reactiveVal()
+    output$sample_specs_info_UI <- renderUI({sample_spec_info_UI()})
+
+    sample_specs <- callModule(sample_specs_ctrl, "sample_specs", sample_spec_info_UI, selected_sidebar_tab)
     tevi_model <-  callModule(importTeviData, "tdi")
-    signal_selections <- callModule(signalAnalysis, "sa", tevi_model, sample_specs, dynamicSidebarItems, selected_sidebar_tab)
+    signal_selections <- callModule(signalAnalysis, "sa", tevi_model, sample_specs, dynamic_sidebar_UIs, selected_sidebar_tab)
 
     callModule(seewave_ctrl, "spec_osc", tevi_model, signal_selections, selected_sidebar_tab)
     callModule(seewave_ctrl, "spec_dom_freq", tevi_model, signal_selections, selected_sidebar_tab)
