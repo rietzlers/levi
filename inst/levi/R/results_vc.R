@@ -72,12 +72,16 @@ results_ctrl <-
     })
     # output-ctrls -----------
     output$spec_analsis_results_DT <- DT::renderDataTable({
-        validate(need(spec_analysis_results(), label = "spec_analysis_results"))
-        spec_analysis_results() %>% arrange(type, t)
-        },
-      server = TRUE, filter = 'top', extensions = c('Buttons'),
-      options = list(dom = 'lftipB', buttons = c('csv', 'excel', 'pdf'), pageLength = 5, autoWidth = TRUE)
-      )
+      validate(need(spec_analysis_results(), label = "spec_analysis_results"))
+      spec_analysis_results() %>% arrange(type, t)
+    },
+    server = TRUE, filter = 'top', extensions = c('Buttons'),
+    options = list(
+      dom = 'Bftlip',
+      buttons = c('csv', 'excel', 'pdf'),
+      pageLength = 5,
+      autoWidth = TRUE
+    ))
   output$surface_tension_plot <- renderPlotly({
       validate(need(spec_analysis_results(), label = "spec_analysis_results"))
       spec_analysis_results() %>%
