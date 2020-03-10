@@ -28,7 +28,7 @@ body <-
   dashboardBody(
     tabItems(
       tabItem(tabName = "importTeviData", importTeviDataUI("tdi")),
-      tabItem(tabName = "setup_sample_specs", "setup sample specs"),
+      tabItem(tabName = "setup_sample_specs", "to do: setup/load sample specs from .xls sheet"),
       tabItem(tabName = "signalAnalysis", signalAnalysisUI("sa")),
       tabItem(tabName = "spec_osc", seewave_view("spec_osc")),
       tabItem(tabName = "spec_dom_freq", seewave_view("spec_dom_freq")),
