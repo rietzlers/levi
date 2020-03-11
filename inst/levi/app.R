@@ -16,14 +16,13 @@ sidebar <-
              menuSubItem("Import Signals from Tevi (.csv)", tabName = "importTeviData"),
              menuSubItem("Set up sample specs", tabName = "setup_sample_specs"),
              menuSubItem("Simulate Data", tabName = "simulate_data_tab")),
-    selectInput("data_choice", label = "", choices = c("Tevi-Data" = "tevi_data", "Simulated Data" = "sim_data")),
-    uiOutput("signal_selection_UI"),
     menuItem("Signal Analysis", tabName = "signalAnalysis", icon = icon("signal")),
     menuItem("seewave", tabName = "Visualization", icon = icon("chart-bar"),
              menuSubItem("Spectrum and Oscillogram", tabName = "spec_osc"),
              menuSubItem("Spec+Dom-Freq", tabName = "spec_dom_freq"),
              menuSubItem("Instantanous Frequency", tabName = "inst_freqs"),
              menuSubItem("Smoothed Signal Envelope", tabName = "sig_envelope")),
+    uiOutput("signal_selection_UI"),
     uiOutput("sample_specs_info_UI"),
     uiOutput("gen_report_UI")
   ))
