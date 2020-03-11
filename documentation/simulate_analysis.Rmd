@@ -41,8 +41,7 @@ fluidRow(
 )
 
 observeEvent(input$sr, updateNumericInput(session, "hp", value = input$sr/2, max = input$sr/2))
-ex_data <- 
-reactive({
+ex_data <- reactive({
   input$resample
   gen_example_data(
       T = input$T,
@@ -65,38 +64,34 @@ renderPlot({
   # calculate fc
   bp_values = tibble(cut = c(input$lp, input$hp, sr-input$hp, sr-input$lp))
   sig_fc <- levi::fftc(ex_data, "s", sr)
+  # max amplitude
+  c(f_max, fmax_amp) %<-% get_dom_freq(sig_fc, sr)
   
   fcp <- 
     sig_fc %>% 
-    ggplot(aes(x = f)) +
+    ggplot() +
+    geom_line(aes(x = f, y = fc_amp)) +
     geom_vline(data = bp_values, aes(xintercept = cut)) + 
-    xlim(c(input$lp, input$hp))
+    xlim(c(input$lp, input$hp))+
+    labs(subtitle = str_glue("Est. from max. Amp: f={round(f_max, 2)}Hz/ Amp = {2 * round(fmax_amp, 1)}"))
   
   # bp filter
   bp_signal <- levi::bp_filter(ex_data, "s", bp = c(input$lp, input$hp), sr)
   sig_plot <-
     sig_plot + geom_line(data = bp_signal, aes(x = t, y = s), color = "red")
-  
-  # max amplitude
-  c(f_max, fmax_amp) %<-% get_dom_freq(sig_fc, sr)
-  #print(sr)
-  c(fit_params, fitted, model, ...) %<-%
+  # fit lorentz
+  model <-
     (ex_data %>%
        fftc("s", sr) %>%
        dplyr::filter(between(f, input$lp, input$hp)) %>%
        fit_lorentz(sr = sr))
-    
-  # visualize
-  fcp <-
-    fcp + 
-    geom_point(aes(y = fc_amp)) +
-    geom_point(data = fitted, aes(x = f, y = lf_amp), color = "red") +
-    geom_line(data = tibble(f = seq(10, 70, by = .01), lf_amp = sqrt(predict(model, newdata = list(f = f)))),
-              aes(x = f, y = lf_amp), color = "red") +
-    geom_vline(xintercept = fit_params$estimate[2], color = "red") + 
-    labs(subtitle = str_glue("Est. from max. Amp: f={round(f_max, 2)}Hz/ Amp = {2 * round(fmax_amp, 1)} 
-                              Est. from Lorentz-Fit: f= {round(fit_params$estimate[2], 2)}Hz/ d={round(fit_params$estimate[3], 2)}Hz"))
   
+  if(!is.null(model)){
+    fcp <- 
+      fcp +
+      geom_line(data = tibble(f = seq(10, 70, by = .01), lf_amp = sqrt(predict(model, newdata = list(f = f)))),
+              aes(x = f, y = lf_amp), color = "red")
+  }
   plot_grid(
     sig_plot, 
     fcp, 
@@ -111,11 +106,7 @@ renderPlot({
 renderPlot({
  spectro(ex_data()$s, f=input$sr, wl = nextn(floor(input$sr), factors = c(2))/4, ovlp = 50, osc = TRUE, 
          flim = c(input$lp, input$hp - 1)/1000)
- # par(new=TRUE)
- # dfreq(ex_data()$s, f=input$sr, wl = nextn(floor(input$sr), factors = c(2))/4, ovlp=50, threshold=10, 
- #       bandpass = c(input$lp, input$hp - 1), 
- #       type="l", col="black", lwd=4)
- })
+  })
 
 ```
 
