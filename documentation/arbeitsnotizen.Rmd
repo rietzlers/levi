@@ -205,9 +205,9 @@ f0 <- get_dom_freq(ep_data, sample_rate = sr)$f
 
 bp = c(f0 - 10 , f0 + 10)
 
-c(params_complete, lf_complete, lfm_complete, sv_complete) %<-% (ep_data %>%  fit_lorentz(sr = sr))
+lfm_complete <-(ep_data %>%  fit_lorentz(sr = sr))
 
-c(params_bp, lf_bp, lfm_bp, sv_bp) %<-% 
+lfm_bp <- 
   (ep_data %>%  
      transmute(
        f = f,
@@ -242,25 +242,17 @@ plot_caption <- str_glue("Start-Values: ")
 if(!is.null(lfm_complete)){
   specs_plot <-
     specs_plot +
-    geom_line(data = tibble(w = seq(0, .5, by = 1/10^5) , lf_amp = sqrt(predict(lfm_complete, newdata = list(f = w*srn)))), 
+    geom_line(data = tibble(w = seq(0, .5, by = 1/10^5) , 
+                            lf_amp = sqrt(predict(lfm_complete, newdata = list(f = w*srn)))), 
               aes(x = w, y = lf_amp^2), color = "green", linetype = "dashed") 
-  
-  plot_title <- str_glue("{plot_title}
-                         complete: f = {round(params_complete$estimate[2], 2)}, d = {round(params_complete$estimate[3], 2)}")
-  sv_complete <- round(sv_complete, 2)
-  plot_caption <- plot_caption + str_glue("complete: {sv_complete[2]}/  {sv_complete[3]},")
 }
 
 if(!is.null(lfm_bp)){
     specs_plot <-
       specs_plot +
-      geom_line(data = tibble(w = seq(0, .5, by = 1/10^5) , lf_amp = sqrt(predict(lfm_bp, newdata = list(f = w*srn)))), 
+      geom_line(data = tibble(w = seq(0, .5, by = 1/10^5) , 
+                              lf_amp = sqrt(predict(lfm_bp, newdata = list(f = w*srn)))), 
             aes(x = w, y = lf_amp^2), color = "orange") 
-    
-    plot_title <- str_glue("{plot_title}
-                         bp:  f = {round(params_bp$estimate[2],2)}, d = {round(params_bp$estimate[3],2)}")
-    sv_bp <- round(sv_bp, 2)
-    plot_caption <- plot_caption + str_glue("bp: {sv_bp[2]}/ {sv_bp[3]}")
 }
 
 specs_plot <-
