@@ -13,6 +13,7 @@ library(zeallot)
 library(crosstalk)
 library(shinyBS)
 library(levi)
+library(readxl)
 
 # source code which needs to run once -------------------------------------
 source("R/sample_specs_vc.R")
