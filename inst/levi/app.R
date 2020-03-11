@@ -6,9 +6,9 @@ source(file.path("R/load_dependencies.R"), local = TRUE, encoding = "UTF-8")
 header <-
   dashboardHeader(
     title = "levi",
-    dropdownMenu(type = "notifications"),
-    dropdownMenu(type = "messages"),
-    dropdownMenu(type = "tasks")
+    dropdownMenuOutput("notifications"),
+    dropdownMenuOutput("tasks"),
+    dropdownMenuOutput("messages")
   )
 sidebar <-
   dashboardSidebar(sidebarMenu(id = "sidebarMenu_ID",
@@ -43,9 +43,16 @@ server <- function(input, output, session) {
     selected_sidebar_tab <- reactive(input$sidebarMenu_ID) #returns the selected sidebar-tab
     signal_selection_UI <- reactiveVal()
     output$signal_selection_UI <- renderUI({signal_selection_UI()})
-
     sample_spec_info_UI <- reactiveVal()
     output$sample_specs_info_UI <- renderUI({sample_spec_info_UI()})
+
+    notifications <- reactiveVal(list())
+    tasks <- reactiveVal(list())
+    msgs <- reactiveVal(list())
+
+    output$notifications <- renderMenu({dropdownMenu(type = "notifications", .list = notifications())})
+    output$tasks <- renderMenu({dropdownMenu(type = "tasks", .list = tasks())})
+    output$messages <- renderMenu({dropdownMenu(type = "messages", .list = msgs())})
 
     sample_specs <- callModule(sample_specs_ctrl, "sample_specs", sample_spec_info_UI, selected_sidebar_tab)
     tevi_model <-  callModule(importTeviData, "tdi")
