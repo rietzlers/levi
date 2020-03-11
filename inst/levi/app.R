@@ -64,14 +64,15 @@ server <- function(input, output, session) {
   } # dynamic sidebar content
 
   model <- reactive({
-    if(input$data_choice == "sim_data"){
+    if(model_choice() == "sim_data"){
       return(sim_data_model())
     }
     tevi_model()
-  })
+  }) #toggle between simulated and tevi-data
+
   sample_specs <- callModule(sample_specs_ctrl, "sample_specs", sample_spec_info_UI, selected_sidebar_tab, tasks, notifications)
   tevi_model <-  callModule(importTeviData, "tdi")
-  sim_data_model <- callModule(simulate_data_ctrl, "simulate_data")
+  c(sim_data_model, model_choice) %<-% callModule(simulate_data_ctrl, "simulate_data")
   signal_selections <- callModule(signalAnalysis, "sa", model, sample_specs, signal_selection_UI, selected_sidebar_tab)
   callModule(gen_report_ctrl, "gen_report", sample_specs, gen_report_UI, selected_sidebar_tab, tasks, notifications)
   {

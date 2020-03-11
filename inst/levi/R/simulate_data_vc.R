@@ -68,6 +68,7 @@ simulate_data_ctrl <- function(input, output, session){
   })
 
   return(
+    list(
     reactive(
       list(
         tevi_data = ex_data(),
@@ -76,6 +77,8 @@ simulate_data_ctrl <- function(input, output, session){
         HPs = NULL,
         frame_rate = input$sr
       )
+    ),
+    reactive(input$data_choice)
     )
   )
 }
