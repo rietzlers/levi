@@ -24,5 +24,7 @@ Imports:
     tibble,
     zeallot,
     rlang,
-    cowplot
+    cowplot,
+    seewave,
+    readxl
 RoxygenNote: 7.0.2
