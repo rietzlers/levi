@@ -3,13 +3,13 @@ gen_report_view <- function(id){
 }
 
 
-gen_report_ctrl <- function(input, output, session, alloy_specs, gen_report_UI, selected_tab, tasks, notifications){
+gen_report_ctrl <- function(input, output, session, alloy, gen_report_UI, selected_tab, tasks, notifications){
 
-  observeEvent(selected_tab(),{
+  observeEvent(alloy(),{
     gen_report_UI(
       div(
         downloadButton(session$ns("gen_report"), "Generate report"),
-        bsTooltip(session$ns("gen_report"), "alloy needs to be selected", "right", options = list(container = "body")))
+        bsTooltip(session$ns("gen_report"), "if file is not found: maybe some parameters are not set", "right", options = list(container = "body")))
       )
   })
 
@@ -24,7 +24,7 @@ gen_report_ctrl <- function(input, output, session, alloy_specs, gen_report_UI, 
       file.copy("./report_templates/test_report_template.Rmd", tempReport, overwrite = TRUE)
 
       # Set up parameters to pass to Rmd document
-      params <- list(alloy_specs = alloy_specs())
+      params <- list(alloy_specs = alloy())
 
       # Knit the document, passing in the `params` list, and eval it in a
       # child of the global environment (this isolates the code in the document
