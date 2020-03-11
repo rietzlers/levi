@@ -10,13 +10,16 @@ seewave_ctrl <- function(input, output, session, tevi_model, signal_selections, 
   output$seewave_plot <- renderPlot({
     sig_name <- signal_selections()$selected_signal
     time_range <- signal_selections()$time_range
+    sr <- tevi_model()$frame_rate
     bp <- signal_selections()$bp
+    bp[1] <- max(0, bp[1])
+    bp[2] <- min(sr, bp[2])
 
     data_selection <- tevi_model()$tevi_data %>% filter(t %>% between(time_range[1], time_range[2]))
     t <- data_selection[["t"]]
     signal <- data_selection[[sig_name]]
     signal <- signal - mean(signal, na.rm = TRUE)
-    sr <- tevi_model()$frame_rate
+
 
     N <- length(signal) # Nr. samples T = N * sample_rate
     T <- N / sr # Observation-length
@@ -45,7 +48,7 @@ seewave_ctrl <- function(input, output, session, tevi_model, signal_selections, 
     }
     if(selectedSidebarMenu() == "inst_freqs"){
       return(
-        seewave::ifreq(signal, f = sr, threshold = 10, col="darkviolet", ylim = bp/1000,
+        seewave::ifreq(signal, f = sr, threshold = 10,  ylim = bp/1000,
                        main="Instantaneous frequency with Hilbert transform")
       )
     }
