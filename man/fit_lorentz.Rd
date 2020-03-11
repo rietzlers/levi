@@ -19,13 +19,7 @@ fit_lorentz(fc_data, c0, bp, sr, nr_tries = 10)
 it did not converge the first time.}
 }
 \value{
-list with elements (all element will be NULL if non-convergence):
-\itemize{
-\item est_params: c(A, f0, d)
-\item fitted: tibble with vars: f, lf_amp
-\item lfit: model-object
-\item start_values:
-}
+nls-fit-object or NULL
 }
 \description{
 fits a lorentz-curve to the supplied amplitudes of the

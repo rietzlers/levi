@@ -107,13 +107,7 @@ estimate_signal_spectrum <- function(signal_data, signal_name, frame_rate,  span
 #' it did not converge the first time.
 #' @param bp numeric vector of length 2 specifying a Band-Pass; fit to bp-filtered data
 #'
-#' @return list with elements (all element will be NULL if non-convergence):
-#' \itemize{
-#' \item est_params: c(A, f0, d)
-#' \item fitted: tibble with vars: f, lf_amp
-#' \item lfit: model-object
-#' \item start_values:
-#' }
+#' @return nls-fit-object or NULL
 #' @export
 fit_lorentz <- function(fc_data, c0, bp, sr, nr_tries = 10){
 
