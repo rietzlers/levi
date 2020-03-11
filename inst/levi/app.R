@@ -22,9 +22,9 @@ sidebar <-
              menuSubItem("Spec+Dom-Freq", tabName = "spec_dom_freq"),
              menuSubItem("Instantanous Frequency", tabName = "inst_freqs"),
              menuSubItem("Smoothed Signal Envelope", tabName = "sig_envelope")),
+    menuItem("Generate Report", tabName = "gen_report"),
     uiOutput("signal_selection_UI"),
-    uiOutput("sample_specs_info_UI"),
-    uiOutput("gen_report_UI")
+    uiOutput("sample_specs_info_UI")
   ))
 body <-
   dashboardBody(
@@ -36,7 +36,8 @@ body <-
       tabItem(tabName = "spec_osc", seewave_view("spec_osc")),
       tabItem(tabName = "spec_dom_freq", seewave_view("spec_dom_freq")),
       tabItem(tabName = "inst_freqs", seewave_view("inst_freqs")),
-      tabItem(tabName = "sig_envelope", seewave_view("sig_envelope"))
+      tabItem(tabName = "sig_envelope", seewave_view("sig_envelope")),
+      tabItem(tabName = "gen_report", gen_report_view("gen_report"))
       )
     )
 ui <- dashboardPage(header, sidebar, body, title = "Alloy-EML-Analysis")
@@ -59,8 +60,6 @@ server <- function(input, output, session) {
     signal_selection_UI <- reactiveVal()
     output$sample_specs_info_UI <- renderUI({sample_spec_info_UI()})
     sample_spec_info_UI <- reactiveVal()
-    output$gen_report_UI <- renderUI({gen_report_UI()})
-    gen_report_UI <- reactiveVal()
   } # dynamic sidebar content
 
   model <- reactive({
@@ -74,7 +73,9 @@ server <- function(input, output, session) {
   tevi_model <-  callModule(importTeviData, "tdi")
   c(sim_data_model, model_choice) %<-% callModule(simulate_data_ctrl, "simulate_data")
   signal_selections <- callModule(signalAnalysis, "sa", model, sample_specs, signal_selection_UI, selected_sidebar_tab)
-  callModule(gen_report_ctrl, "gen_report", sample_specs, gen_report_UI, selected_sidebar_tab, tasks, notifications)
+
+  callModule(gen_report_ctrl, "gen_report", sample_specs, selected_sidebar_tab, tasks, notifications)
+
   {
     callModule(seewave_ctrl, "spec_osc", model, signal_selections, selected_sidebar_tab)
     callModule(seewave_ctrl, "spec_dom_freq", model, signal_selections, selected_sidebar_tab)

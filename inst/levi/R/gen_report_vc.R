@@ -1,17 +1,13 @@
 gen_report_view <- function(id){
   ns <- NS(id)
+  tagList(
+    HTML("To Do: add UI to customize report: @Markus Wie sollte so ein Report aussehen?"),
+      downloadButton(ns("gen_report"), "Generate report"),
+      bsTooltip(ns("gen_report"), "choose an alloy in Set-up sample specs submenu to generate a test-report", "right", options = list(container = "body"))
+  )
 }
 
-
-gen_report_ctrl <- function(input, output, session, alloy, gen_report_UI, selected_tab, tasks, notifications){
-
-  observeEvent(alloy(),{
-    gen_report_UI(
-      div(
-        downloadButton(session$ns("gen_report"), "Generate report"),
-        bsTooltip(session$ns("gen_report"), "if file is not found: maybe some parameters are not set", "right", options = list(container = "body")))
-      )
-  })
+gen_report_ctrl <- function(input, output, session, alloy, selected_tab, tasks, notifications){
 
   output$gen_report <- downloadHandler(
     # For PDF output, change this to "report.pdf"
