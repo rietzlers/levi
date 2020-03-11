@@ -16,6 +16,7 @@ sidebar <-
              menuSubItem("Import Signals from Tevi (.csv)", tabName = "importTeviData"),
              menuSubItem("Set up sample specs", tabName = "setup_sample_specs"),
              menuSubItem("Simulate Data", tabName = "simulate_data_tab")),
+    selectInput("data_choice", label = "", choices = c("Tevi-Data" = "tevi_data", "Simulated Data" = "sim_data")),
     uiOutput("signal_selection_UI"),
     menuItem("Signal Analysis", tabName = "signalAnalysis", icon = icon("signal")),
     menuItem("seewave", tabName = "Visualization", icon = icon("chart-bar"),
@@ -31,7 +32,7 @@ body <-
     tabItems(
       tabItem(tabName = "importTeviData", importTeviDataUI("tdi")),
       tabItem(tabName = "setup_sample_specs", sample_specs_view("sample_specs")),
-      tabItem(tabName = "simulate_data_tab", "to do: generate simulated data to analyse"),
+      tabItem(tabName = "simulate_data_tab", simulate_data_view("simulate_data")),
       tabItem(tabName = "signalAnalysis", signalAnalysisUI("sa")),
       tabItem(tabName = "spec_osc", seewave_view("spec_osc")),
       tabItem(tabName = "spec_dom_freq", seewave_view("spec_dom_freq")),
@@ -63,15 +64,22 @@ server <- function(input, output, session) {
     gen_report_UI <- reactiveVal()
   } # dynamic sidebar content
 
+  model <- reactive({
+    if(input$data_choice == "sim_data"){
+      return(sim_data_model())
+    }
+    tevi_model()
+  })
   sample_specs <- callModule(sample_specs_ctrl, "sample_specs", sample_spec_info_UI, selected_sidebar_tab, tasks, notifications)
   tevi_model <-  callModule(importTeviData, "tdi")
-  signal_selections <- callModule(signalAnalysis, "sa", tevi_model, sample_specs, signal_selection_UI, selected_sidebar_tab)
+  sim_data_model <- callModule(simulate_data_ctrl, "simulate_data")
+  signal_selections <- callModule(signalAnalysis, "sa", model, sample_specs, signal_selection_UI, selected_sidebar_tab)
   callModule(gen_report_ctrl, "gen_report", sample_specs, gen_report_UI, selected_sidebar_tab, tasks, notifications)
   {
-    callModule(seewave_ctrl, "spec_osc", tevi_model, signal_selections, selected_sidebar_tab)
-    callModule(seewave_ctrl, "spec_dom_freq", tevi_model, signal_selections, selected_sidebar_tab)
-    callModule(seewave_ctrl, "inst_freqs", tevi_model, signal_selections, selected_sidebar_tab)
-    callModule(seewave_ctrl, "sig_envelope", tevi_model, signal_selections, selected_sidebar_tab)
+    callModule(seewave_ctrl, "spec_osc", model, signal_selections, selected_sidebar_tab)
+    callModule(seewave_ctrl, "spec_dom_freq", model, signal_selections, selected_sidebar_tab)
+    callModule(seewave_ctrl, "inst_freqs", model, signal_selections, selected_sidebar_tab)
+    callModule(seewave_ctrl, "sig_envelope", model, signal_selections, selected_sidebar_tab)
   } # seewave-plots
   }
 
