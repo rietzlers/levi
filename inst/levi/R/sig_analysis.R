@@ -21,15 +21,13 @@ signalAnalysis <- function(input, output, session, tevi_model, sample_specs, sig
                     "select data by brushing (left-click and pull) over signal-plot"))
       selected_data
     })
-  observeEvent(tevi_model()$tevi_data, {
-    col_names <- tevi_model()$tevi_data %>% names()
-    signal_names <- col_names[col_names != "t"]
-    updateSelectInput(session, "signal_choice", choices = signal_names)
-  })
   observeEvent({selected_tab()},{
                  if (!(selected_tab() %in% c("data_setup", "importTeviData", "setup_sample_specs"))) {
                    signal_selection_UI(div(
-                       selectInput(session$ns("selected_signal"), label = NULL, choices = names(tevi_model()$tevi_data), selected = "radius_y")))
+                       selectInput(session$ns("selected_signal"),
+                                   label = "Select Signal to analyse",
+                                   choices = names(tevi_model()$tevi_data),
+                                   selected = "radius_y")))
                  } else{
                    signal_selection_UI(NULL)
                  }
