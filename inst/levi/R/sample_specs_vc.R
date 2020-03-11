@@ -9,7 +9,7 @@ sample_specs_view <- function(id){
 
 sample_specs_ctrl <- function(input, output, session, sample_spec_info_UI, selected_tab){
 
-  sample_specs <-  read_excel(file.path("www/sample_specs", "Samples-Database.xlsx"))
+  sample_specs <-  read_excel(file.path("./www/sample_specs", "Samples-Database.xlsx"))
 
   selected_alloy <- reactive({
     validate(need(input$sample_specs_DT_rows_selected, message = "Select Alloy-Spec in tab 'Set up sample specs'"))
