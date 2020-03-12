@@ -5,8 +5,8 @@ account: rietzlers
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 1579355
-bundleId: 2868510
+bundleId: 2872337
 url: https://rietzlers.shinyapps.io/levi/
-when: 1583861760.36254
+when: 1583949868.10682
 asMultiple: FALSE
 asStatic: FALSE
