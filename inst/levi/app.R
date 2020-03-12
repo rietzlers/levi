@@ -23,6 +23,7 @@ sidebar <-
              menuSubItem("Instantanous Frequency", tabName = "inst_freqs"),
              menuSubItem("Smoothed Signal Envelope", tabName = "sig_envelope")),
     menuItem("Generate Report", tabName = "gen_report"),
+    uiOutput("resample_UI"),
     uiOutput("signal_selection_UI"),
     uiOutput("sample_specs_info_UI")
   ))
@@ -60,6 +61,8 @@ server <- function(input, output, session) {
     signal_selection_UI <- reactiveVal()
     output$sample_specs_info_UI <- renderUI({sample_spec_info_UI()})
     sample_spec_info_UI <- reactiveVal()
+    output$resample_UI <- renderUI(resample_UI())
+    resample_UI <- reactiveVal()
   } # dynamic sidebar content
 
   model <- reactive({
@@ -71,7 +74,7 @@ server <- function(input, output, session) {
 
   sample_specs <- callModule(sample_specs_ctrl, "sample_specs", sample_spec_info_UI, selected_sidebar_tab, tasks, notifications)
   tevi_model <-  callModule(importTeviData, "tdi")
-  c(sim_data_model, model_choice) %<-% callModule(simulate_data_ctrl, "simulate_data")
+  c(sim_data_model, model_choice) %<-% callModule(simulate_data_ctrl, "simulate_data", resample_UI, selected_sidebar_tab)
   signal_selections <- callModule(signalAnalysis, "sa", model, sample_specs, signal_selection_UI, selected_sidebar_tab)
 
   callModule(gen_report_ctrl, "gen_report", sample_specs, selected_sidebar_tab, tasks, notifications)
