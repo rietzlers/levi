@@ -2,10 +2,8 @@
 resultsUI <- function(id){
   ns <- NS(id)
   tagList(
-      box(width = 12, title = "Table of Spectrum-Annalysis-Results", collapsible = TRUE, collapsed = TRUE, {
-        DT::dataTableOutput(ns("spec_analsis_results_DT"))
-        }),
-      box(width = 6, title = "Surface-Tension/Frequency-Plot", collapsible = TRUE, collapsed = FALSE, {
+    fluidRow(
+      column(width = 6,
         div(
           plotlyOutput(ns("surface_tension_plot")),
           fluidRow(
@@ -13,8 +11,8 @@ resultsUI <- function(id){
             column(width = 6, selectInput(ns("st_yvar"), label = "", selected = "f", choices = c("f", "st")))
           )
         )
-      }),
-      box(width = 6, title = "Viscosity/Damping-Plot", collapsible = TRUE, collapsed = FALSE, {
+      ),
+      column(width = 6,
         div(
           plotlyOutput(ns("viscosity_plot")),
           fluidRow(
@@ -22,7 +20,12 @@ resultsUI <- function(id){
             column(width = 6, selectInput(ns("visc_yvar"), label = "", selected = "d", choices = c("d", "viscosity")))
           )
         )
+      ),
+      box(width = 12,
+          title = "Table of Spectrum-Annalysis-Results", collapsible = TRUE, collapsed = TRUE, {
+          DT::dataTableOutput(ns("spec_analsis_results_DT"))
       })
+    )
   )
 }
 
