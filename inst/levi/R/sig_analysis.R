@@ -18,7 +18,7 @@ signalAnalysis <- function(input, output, session, tevi_model, sample_specs, sig
   data_selection <- reactive({
       selected_data <-brushedPoints(tevi_model()$tevi_data, input$signal_brush)
       validate(need(nrow(selected_data) > 0,
-                    "select data by brushing (left-click and pull) over signal-plot"))
+                    "choose time-window by brushing (left-click and pull) over signal-plot"))
       selected_data
     })
   observeEvent({selected_tab()},{
