@@ -24,7 +24,7 @@ sample_specs_ctrl <- function(input, output, session, sample_spec_info_UI, selec
       c(alloy_name, . , d, m, Temp_liquid) %<-% selected_alloy()
       if (!(selected_tab() %in% c("spec_osc", "spec_dom_freq", "inst_freqs", "sig_envelope"))){
         sample_spec_info_UI(
-        div(
+        box(width = 12, title = "Alloy-Info", collapsible = TRUE, collapsed = TRUE,
           textInput(session$ns("alloy_name"), label = "Alloy", value = alloy_name),
           numericInput(session$ns("mass"), label = "Sample-Mass [g]", value = m),
           numericInput(session$ns("radius"), label = "Sphere-Radius [mm]", value = d/2),
