@@ -25,6 +25,7 @@ sidebar <-
     menuItem("Generate Report", tabName = "gen_report"),
     uiOutput("resample_UI"),
     uiOutput("signal_selection_UI"),
+    uiOutput("spectrum_view_UI"),
     uiOutput("sample_specs_info_UI")
   ))
 body <-
@@ -63,6 +64,8 @@ server <- function(input, output, session) {
     sample_spec_info_UI <- reactiveVal()
     output$resample_UI <- renderUI(resample_UI())
     resample_UI <- reactiveVal()
+    output$spectrum_view_UI <- renderUI(spectrum_view_UI())
+    spectrum_view_UI <- reactiveVal()
   } # dynamic sidebar content
 
   model <- reactive({
@@ -75,7 +78,8 @@ server <- function(input, output, session) {
   sample_specs <- callModule(sample_specs_ctrl, "sample_specs", sample_spec_info_UI, selected_sidebar_tab, tasks, notifications)
   tevi_model <-  callModule(importTeviData, "tdi")
   c(sim_data_model, model_choice) %<-% callModule(simulate_data_ctrl, "simulate_data", resample_UI, selected_sidebar_tab)
-  signal_selections <- callModule(signalAnalysis, "sa", model, sample_specs, signal_selection_UI, selected_sidebar_tab)
+  signal_selections <- callModule(signalAnalysis, "sa",
+                                  model, sample_specs, signal_selection_UI, selected_sidebar_tab, signal_view_UI)
 
   callModule(gen_report_ctrl, "gen_report", sample_specs, selected_sidebar_tab, tasks, notifications)
 
