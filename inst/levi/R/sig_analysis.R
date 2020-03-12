@@ -12,7 +12,8 @@ signalAnalysisUI <- function(id, width = 12) {
 }
 
 signalAnalysis <- function(input, output, session,
-                           tevi_model, sample_specs, signal_selection_UI, selected_tab, signal_view_UI){
+                           tevi_model, sample_specs, signal_selection_UI, selected_tab, signal_view_UI,
+                           tasks, notifications){
   ns <- session$ns
   # data ----
   data_selection <- reactive({
@@ -72,7 +73,8 @@ signalAnalysis <- function(input, output, session,
       })
 
   c(type, bp, dom_freq, f0, d, spans, taper, add_result) %<-%
-    callModule(spectrum_ctrl, "spectrum_analysis", tevi_model, data_selection, signal_name)
+    callModule(spectrum_ctrl, "spectrum_analysis", tevi_model, data_selection, signal_name,
+               tasks, notifications)
 
   callModule(results_ctrl, "results",
              tevi_model, sample_specs, data_selection, time_range, signal_name,

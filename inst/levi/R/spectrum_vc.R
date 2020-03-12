@@ -34,7 +34,8 @@ spectrumUI <- function(id) {
 }
 
 # controller ------------
-spectrum_ctrl <- function(input, output, session, tevi_model, data_selection, signal_name){
+spectrum_ctrl <- function(input, output, session, tevi_model, data_selection, signal_name,
+                          tasks, notifcations){
   spans <- reactive({
     spans <- -1
     tryCatch(
