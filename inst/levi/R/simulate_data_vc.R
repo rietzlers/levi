@@ -27,12 +27,22 @@ simulate_data_ctrl <- function(input, output, session){
   observeEvent(input$sr, updateNumericInput(session, "hp", value = input$sr/2, max = input$sr/2))
   ex_data <- reactive({
     input$resample
-    gen_example_data(
-      T = input$T,
-      sr = input$sr,
-      signal = input$signal,
-      noise_sd = input$noise
+    example_data <- NULL
+    tryCatch(
+      error = function(e) {
+        e
+      },
+      {
+      example_data <- gen_example_data(
+        T = input$T,
+        sr = input$sr,
+        signal = input$signal,
+        noise_sd = input$noise
+      )
+      }
     )
+    validate(need(example_data, message = "can not simulate data; Probably you misspecified the function-term"))
+    example_data
   })
 
   output$signal_plot <- renderPlot({
