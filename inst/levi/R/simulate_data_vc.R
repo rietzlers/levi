@@ -30,7 +30,7 @@ simulate_data_ctrl <- function(input, output, session, resample_UI, selected_sid
     },
                {
                  if(input$data_choice == "sim_data"){
-                   resample_UI(actionButton(session$ns("resample"), "resample"))
+                   resample_UI(actionButton(session$ns("resample"), "resample sim-data"))
                  }else{
                    resample_UI(NULL)
                  }
