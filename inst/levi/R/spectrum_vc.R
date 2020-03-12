@@ -22,7 +22,7 @@ spectrumUI <- function(id) {
              bsTooltip(ns("spans"), "specify daniell-smoother: NULL for no smoothing", "top", options = list(container = "body"))),
       column(width = 3,
              numericInput(ns("taper"), label = "taper", value = 0.1, step = .1, min = 0, max = 1),
-             bsTooltip(ns("taper"), "apply cosine-taper to % of window"), "top")
+             bsTooltip(ns("taper"), "apply cosine-taper to % of window", "top"))
     ),
     fluidRow(
       column(3, textOutput(ns("dom_freq"))),
@@ -35,7 +35,7 @@ spectrumUI <- function(id) {
 
 # controller ------------
 spectrum_ctrl <- function(input, output, session, tevi_model, data_selection, signal_name,
-                          tasks, notifcations){
+                          tasks, notifications){
   spans <- reactive({
     spans <- -1
     tryCatch(
@@ -61,10 +61,19 @@ spectrum_ctrl <- function(input, output, session, tevi_model, data_selection, si
     )
   })
   lfit <- reactive({
-    levi::fit_lorentz(
+    lfit <-
+      levi::fit_lorentz(
       dplyr::filter(est_spec(), type == input$type),
       bp = bp(),
       sr = tevi_model()$frame_rate)
+    notifications_list <- notifications()
+    if(is.null(lfit)){
+      notifications_list[["lfit"]] <- notificationItem("lorentz-fit did not succed")
+    }else{
+      notifications_list[["lfit"]] <- NULL
+    }
+    notifications(notifications_list)
+    lfit
   })
   bp <- reactive(({
     input$brush %>%
@@ -80,20 +89,12 @@ spectrum_ctrl <- function(input, output, session, tevi_model, data_selection, si
     f_dom
   })
   f0 <- reactive({
-    if(!is.null(lfit())){
-      params <- lorentz_parameters(lfit())
-    }else{
-      params <- c(A = NA_real_, f0 = NA_real_, d = NA_real_)
-    }
-    params[2]
+    validate(need(lfit(), message = "lorentz-fit did not succed"))
+    lorentz_parameters(lfit())[2]
   })
   d <- reactive({
-    if(!is.null(lfit())){
-      params <- lorentz_parameters(lfit())
-    }else{
-      params <- c(A = NA_real_, f0 = NA_real_, d = NA_real_)
-    }
-    params[3]
+    validate(need(lfit(), message = "lorentz-fit did not succed"))
+    lorentz_parameters(lfit())[3]
   })
 
   # output-ctrls -----------
