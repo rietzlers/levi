@@ -35,14 +35,28 @@ spectrumUI <- function(id) {
 
 # controller ------------
 spectrum_ctrl <- function(input, output, session, tevi_model, data_selection, signal_name){
+  spans <- reactive({
+    spans <- -1
+    tryCatch(
+      error = function(e) e,
+      spans <- eval(rlang::parse_expr(input$spans))
+    )
+    validate(need(min(spans) > 1,
+                  message = "No valid spans for Daniell-Smoother! It must be a numeric vector of positve integers, i.e. c(3,3), c(2)"))
+    spans
+  })
+  taper <- reactive({
+    validate(need(input$taper, label = "taper"))
+    input$taper
+  })
   # data ----
   est_spec <- reactive({
     levi::estimate_signal_spectrum(
       data_selection(),
       signal_name(),
       tevi_model()$frame_rate,
-      spans = eval(rlang::parse_expr(input$spans)),
-      taper = input$taper
+      spans = spans(),
+      taper = taper()
     )
   })
   lfit <- reactive({
