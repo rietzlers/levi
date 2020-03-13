@@ -87,7 +87,8 @@ results_ctrl <-
     ))
   output$surface_tension_plot <- renderPlotly({
       validate(need(spec_analysis_results(), label = "spec_analysis_results"))
-      spec_analysis_results() %>%
+      sf_plot <-
+        spec_analysis_results() %>%
         mutate(
           smoothed_temp = convert_to_temp(t, tevi_model()$tevi_data),
           f_dom_freq = dom_freq,
@@ -99,7 +100,13 @@ results_ctrl <-
         geom_point(aes(y = .data[[paste0(input$st_yvar, "_dom_freq")]]), shape = "x", size = 2) +
         geom_point(aes(y = .data[[paste0(input$st_yvar,"_f0")]]), size = 2) +
         labs(x = "time/Temp", y = "Freqs/Surface-Tension") +
-        theme(legend.position="none")
+        theme(legend.position="none") +
+        ylim(ylim)
+
+      sf_plot <-
+        sf_plot +
+        geom_point(aes(x = mean(time_range()) %>% round(2), y = dom_freq()), size = 2, color = "blue")
+      sf_plot
     })
   output$viscosity_plot <- renderPlotly({
       validate(need(spec_analysis_results(), label = "spec_analysis_results"))
