@@ -87,6 +87,11 @@ results_ctrl <-
     ))
   output$surface_tension_plot <- renderPlotly({
       validate(need(spec_analysis_results(), label = "spec_analysis_results"))
+
+      ylim <- bp()
+      if(input$st_yvar == "st"){
+        ylim <- to_surface_tension(ylim, sample_specs()$mass)
+      }
       sf_plot <-
         spec_analysis_results() %>%
         mutate(
