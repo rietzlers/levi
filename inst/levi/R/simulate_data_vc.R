@@ -27,14 +27,14 @@ simulate_data_ctrl <- function(input, output, session, resample_UI, selected_sid
   observeEvent({
     selected_sidebar_tab()
     input$data_choice
-    },
-               {
-                 if(input$data_choice == "sim_data"){
-                   resample_UI(actionButton(session$ns("resample"), "resample sim-data"))
-                 }else{
-                   resample_UI(NULL)
-                 }
-               })
+  },
+  {
+    if (input$data_choice == "sim_data") {
+      resample_UI(actionButton(session$ns("resample"), "resample sim-data"))
+    } else{
+      resample_UI(NULL)
+    }
+  })
   observeEvent(input$sr, updateNumericInput(session, "hp", value = input$sr/2, max = input$sr/2))
   ex_data <- reactive({
     input$resample
@@ -44,15 +44,19 @@ simulate_data_ctrl <- function(input, output, session, resample_UI, selected_sid
         e
       },
       {
-      example_data <- gen_example_data(
-        T = input$T,
-        sr = input$sr,
-        signal = input$signal,
-        noise_sd = input$noise
-      )
+        example_data <-
+          gen_example_data(
+            T = input$T,
+            sr = input$sr,
+            signal = input$signal,
+            noise_sd = input$noise
+          ) %>%
+          mutate(radius_y = s)
       }
     )
-    validate(need(example_data, message = "can not simulate data; Probably you misspecified the function-term"))
+    validate(
+      need(example_data, message = "can not simulate data; Probably you misspecified the function-term")
+    )
     example_data
   })
 
