@@ -1,0 +1,8 @@
+---
+title: "Notes and comments ond levi-softwar"
+output: 
+  flexdashboard::flex_dashboard:
+    storyboard: true
+runtime: shiny
+---
+
