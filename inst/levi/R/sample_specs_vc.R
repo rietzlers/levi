@@ -16,35 +16,7 @@ sample_specs_ctrl <- function(input, output, session, sample_spec_info_UI, selec
     sample_specs[input$sample_specs_DT_rows_selected, ]
   })
 
-  observeEvent({
-    selected_tab()
-    input$sample_specs_DT_rows_selected
-    },
-    {
-      c(alloy_name, . , d, m, Temp_liquid) %<-% selected_alloy()
-      if (!(selected_tab() %in% c("spec_osc", "spec_dom_freq", "inst_freqs", "sig_envelope"))){
-        sample_spec_info_UI(
-        box(width = 12, title = "Alloy-Info", collapsible = TRUE, collapsed = TRUE,
-          textInput(session$ns("alloy_name"), label = "Alloy", value = alloy_name),
-          numericInput(session$ns("mass"), label = "Sample-Mass [g]", value = m),
-          numericInput(session$ns("radius"), label = "Sphere-Radius [mm]", value = d/2),
-          numericInput(session$ns("Temp_liquid"), label = "Liquid-Temp. [K]", value = Temp_liquid)
-          ))
-      }else{
-        sample_spec_info_UI(NULL)
-      }
 
-      if(!is.null(selected_alloy())){
-        task_list <- tasks()
-        task_list[["select_alloy"]] <- taskItem(text = str_glue("Selected {alloy_name}"), value = 100, color = "green")
-        tasks(task_list)
-        notifications_list <- notifications()
-        notifications_list[["alloy_info"]] <- notificationItem(text = str_glue("Alloy: {alloy_name}",  status = "info", icon = icon("info")))
-        notifications(notifications_list)
-      }
-
-    } # update alloy-specs display in sidebar
-    )
 
   output$sample_specs_DT <- DT::renderDataTable({
     validate(need(sample_specs, label = "sample-specs data"))
@@ -62,11 +34,12 @@ sample_specs_ctrl <- function(input, output, session, sample_spec_info_UI, selec
   # return-Values ------
   reactive({
     validate(need(selected_alloy(), message = "Select alloy-specs in tab 'Set up sample specs'"))
+    c(alloy_name, . , d, m, Temp_liquid) %<-% selected_alloy()
     list(
-      alloy = input$alloy_name,
-      mass = input$mass,
-      radius = input$radius,
-      Temp_liquid = input$Temp_liquid
+      alloy = alloy_name,
+      mass = m,
+      radius = d/2,
+      Temp_liquid = Temp_liquid
       )
   })
 }

@@ -55,9 +55,27 @@ server <- function(input, output, session) {
       list(select_alloy = taskItem(text = "Select alloy in sub-menu: 'Set up sample specs'", value = 0, color = "red"))
       })
     msgs <- reactiveVal(list())
+
+    observeEvent(tevi_model(), {
+        task_list <- tasks()
+        task_list[["select_alloy"]] <-  taskItem(text = "Select alloy in sub-menu: 'Set up sample specs'", value = 0, color = "red")
+        tasks(task_list)
+      })# update tasks
+    observeEvent(sample_specs(),{
+      {
+      c(alloy_name, d, m, Temp_liquid) %<-% sample_specs()
+      notifications_list <- notifications()
+      notifications_list[["alloy_info"]] <- notificationItem(text = str_glue("{alloy_name}, m = {m} g, d = {d} mm"),  status = "info", icon = icon("info-circle"))
+      notifications(notifications_list)
+      task_list <- tasks()
+      task_list[["select_alloy"]] <-  NULL
+      tasks(task_list)
+      } # sample_specs
+    })# update notes
   } # notes, tasks and massages
   {
     selected_sidebar_tab <- reactive(input$sidebarMenu_ID) #returns the selected sidebar-tab
+
     output$signal_selection_UI <- renderUI({signal_selection_UI()})
     signal_selection_UI <- reactiveVal()
     output$sample_specs_info_UI <- renderUI({sample_spec_info_UI()})
