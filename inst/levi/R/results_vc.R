@@ -78,7 +78,8 @@ results_ctrl <-
       validate(need(spec_analysis_results(), label = "spec_analysis_results"))
       spec_analysis_results() %>% arrange(type, t)
     },
-    server = TRUE, filter = 'top', extensions = c('Buttons'),
+    server = TRUE, filter = 'top',
+    extensions = c('Buttons', 'Responsive'),
     options = list(
       dom = 'Bftlip',
       buttons = c('csv', 'excel', 'pdf'),
@@ -88,9 +89,10 @@ results_ctrl <-
   output$surface_tension_plot <- renderPlotly({
       validate(need(spec_analysis_results(), label = "spec_analysis_results"))
 
-      ylim <- bp()
       if(input$st_yvar == "st"){
-        ylim <- to_surface_tension(ylim, sample_specs()$mass)
+        ylim <- to_surface_tension(bp(), sample_specs()$mass)
+      }else{
+        ylim <- bp()
       }
       sf_plot <-
         spec_analysis_results() %>%
@@ -113,6 +115,7 @@ results_ctrl <-
         geom_point(aes(x = mean(time_range()) %>% round(2), y = dom_freq()), size = 2, color = "blue")
       sf_plot
     })
+
   output$viscosity_plot <- renderPlotly({
       validate(need(spec_analysis_results(), label = "spec_analysis_results"))
       spec_analysis_results() %>%
