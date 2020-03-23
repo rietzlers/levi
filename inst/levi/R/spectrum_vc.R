@@ -14,16 +14,16 @@ spectrumUI <- function(id) {
             plotlyOutput(ns("bp_spectrum"), height = 250)
         )
     ),
-    fluidRow(
-      column(width = 3, selectInput(ns("scale"), label = "", selected = "log10", choices = c("raw", "log10"))),
-      column(width = 3, selectInput(ns("type"), label = "", selected = "spectrum", choices = c("spectrum", "fft"))),
-      column(width = 3,
-             textInput(ns("spans"), label = "span", value = "c(3,3)"),
-             bsTooltip(ns("spans"), "specify daniell-smoother: NULL for no smoothing", "top", options = list(container = "body"))),
-      column(width = 3,
-             numericInput(ns("taper"), label = "taper", value = 0.1, step = .1, min = 0, max = 1),
-             bsTooltip(ns("taper"), "apply cosine-taper to % of window", "top"))
-    ),
+    # fluidRow(
+    #   column(width = 3, selectInput(ns("scale"), label = "", selected = "log10", choices = c("raw", "log10"))),
+    #   column(width = 3, selectInput(ns("type"), label = "", selected = "spectrum", choices = c("spectrum", "fft"))),
+    #   column(width = 3,
+    #          textInput(ns("spans"), label = "span", value = "c(3,3)"),
+    #          bsTooltip(ns("spans"), "specify daniell-smoother: NULL for no smoothing", "top", options = list(container = "body"))),
+    #   column(width = 3,
+    #          numericInput(ns("taper"), label = "taper", value = 0.1, step = .1, min = 0, max = 1),
+    #          bsTooltip(ns("taper"), "apply cosine-taper to % of window", "top"))
+    # ),
     fluidRow(
       column(3, textOutput(ns("dom_freq"))),
       column(3, textOutput(ns("f0"))),
@@ -35,7 +35,7 @@ spectrumUI <- function(id) {
 
 # controller ------------
 spectrum_ctrl <- function(input, output, session, tevi_model, data_selection, signal_name,
-                          spectrum_view_UI, tasks, notifications){
+                          selected_tab, spectrum_view_UI, tasks, notifications){
 
   # data ----
   est_spec <- reactive({
@@ -55,7 +55,7 @@ spectrum_ctrl <- function(input, output, session, tevi_model, data_selection, si
       sr = tevi_model()$frame_rate)
     notifications_list <- notifications()
     if(is.null(lfit)){
-      notifications_list[["lfit"]] <- notificationItem("lorentz-fit did not succed")
+      notifications_list[["lfit"]] <- notificationItem("lorentz-fit did not succed", icon = icon("frown"), status = "warning")
     }else{
       notifications_list[["lfit"]] <- NULL
     }
@@ -103,6 +103,24 @@ spectrum_ctrl <- function(input, output, session, tevi_model, data_selection, si
   output$dom_freq <- renderText({str_glue("Dom.Freq: {dom_freq()}")})
   output$f0 <- renderText({str_glue("f0: {f0()}")})
   output$d <- renderText({str_glue("D: {d()}")})
+  observeEvent(selected_tab(),{
+    if (selected_tab() == "signalAnalysis"){
+    spectrum_view_UI(
+      box(width = 12, title = "Spec/FFT-Controls", collapsible = TRUE, collapsed = FALSE,
+        #HTML(str_glue("Dom.Freq: {dom_freq()} </br> f0: {f0()} </br> D: {d()}")),
+        selectInput(session$ns("scale"), label = "", selected = "log10", choices = c("raw", "log10")),
+        bsTooltip(session$ns("scale"), "scaling of spectrogram-ordinate", "top"),
+        selectInput(session$ns("type"), label = "", selected = "spectrum", choices = c("spectrum", "fft")),
+        bsTooltip(session$ns("type"), "use FFT/spectrogram to calculate periodogram", "top"),
+        textInput(session$ns("spans"), label = "span", value = "c(3,3)"),
+        bsTooltip(session$ns("spans"), "specify daniell-smoother: NULL for no smoothing", "top", options = list(container = "body")),
+        numericInput(session$ns("taper"), label = "taper", value = 0.1, step = .1, min = 0, max = 1),
+        bsTooltip(session$ns("taper"), "apply cosine-taper to % of window", "top")
+      )
+    )}else{
+      spectrum_view_UI(NULL)
+    }
+  })
 
   output$complete_spectrum <- renderPlot({
       spec_plot(
