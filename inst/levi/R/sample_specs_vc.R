@@ -7,20 +7,19 @@ sample_specs_view <- function(id){
 }
 
 
-sample_specs_ctrl <- function(input, output, session, sample_spec_info_UI, selected_tab, tasks, notifications){
+sample_specs_ctrl <- function(input, output, session){
 
-  sample_specs <-  read_excel(file.path("./www/sample_specs", "Samples-Database.xlsx"))
+  # module-data -------------
+  sample_specs_table <-  read_excel(file.path("./www/sample_specs", "Samples-Database.xlsx"))
 
-  selected_alloy <- reactive({
+  sample_specs <- reactive({
     validate(need(input$sample_specs_DT_rows_selected, message = "Select Alloy-Spec in tab 'Set up sample specs'"))
-    sample_specs[input$sample_specs_DT_rows_selected, ]
+    sample_specs_table[input$sample_specs_DT_rows_selected, ]
   })
 
-
-
   output$sample_specs_DT <- DT::renderDataTable({
-    validate(need(sample_specs, label = "sample-specs data"))
-    sample_specs
+    validate(need(sample_specs_table, label = "sample-specs data"))
+    sample_specs_table
     },
     selection = 'single',
     server = TRUE, filter = 'top', extensions = c('Buttons'),
@@ -33,8 +32,8 @@ sample_specs_ctrl <- function(input, output, session, sample_spec_info_UI, selec
 
   # return-Values ------
   reactive({
-    validate(need(selected_alloy(), message = "Select alloy-specs in tab 'Set up sample specs'"))
-    c(alloy_name, . , d, m, Temp_liquid) %<-% selected_alloy()
+    validate(need(sample_specs(), message = "Select alloy-specs in tab 'Set up sample specs'"))
+    c(alloy_name, . , d, m, Temp_liquid) %<-% sample_specs()
     list(
       alloy = alloy_name,
       mass = m,

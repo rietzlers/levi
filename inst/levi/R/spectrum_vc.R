@@ -27,15 +27,14 @@ spectrumUI <- function(id) {
     fluidRow(
       column(3, textOutput(ns("dom_freq"))),
       column(3, textOutput(ns("f0"))),
-      column(3, textOutput(ns("d"))),
-      column(width = 3, actionButton(ns("save_result"), label = "save result"))
+      column(3, textOutput(ns("d")))
     )
   )
 }
 
 # controller ------------
 spectrum_ctrl <- function(input, output, session, tevi_model, data_selection, signal_name,
-                          selected_tab, spectrum_view_UI, tasks, notifications){
+                          selected_tab, spectrum_view_UI, spectrum_results_UI, tasks, notifications){
 
   # data ----
   est_spec <- reactive({
@@ -88,6 +87,7 @@ spectrum_ctrl <- function(input, output, session, tevi_model, data_selection, si
          dplyr::filter(type == input$type, f %>% between(bp()[1], bp()[2])) %>%
          levi::get_dom_freq(sample_rate = tevi_model()$frame_rate) %>%
         round(2))
+    validate(need(f_dom, "f_dom"))
     f_dom
   })
   f0 <- reactive({
@@ -103,11 +103,11 @@ spectrum_ctrl <- function(input, output, session, tevi_model, data_selection, si
   output$dom_freq <- renderText({str_glue("Dom.Freq: {dom_freq()}")})
   output$f0 <- renderText({str_glue("f0: {f0()}")})
   output$d <- renderText({str_glue("D: {d()}")})
+
   observeEvent(selected_tab(),{
     if (selected_tab() == "signalAnalysis"){
     spectrum_view_UI(
-      box(width = 12, title = "Spec/FFT-Controls", collapsible = TRUE, collapsed = FALSE,
-        #HTML(str_glue("Dom.Freq: {dom_freq()} </br> f0: {f0()} </br> D: {d()}")),
+      box(width = 12, title = "Spec/FFT-Controls", collapsible = TRUE, collapsed = TRUE,
         selectInput(session$ns("scale"), label = "", selected = "log10", choices = c("raw", "log10")),
         bsTooltip(session$ns("scale"), "scaling of spectrogram-ordinate", "top"),
         selectInput(session$ns("type"), label = "", selected = "spectrum", choices = c("spectrum", "fft")),
@@ -116,9 +116,14 @@ spectrum_ctrl <- function(input, output, session, tevi_model, data_selection, si
         bsTooltip(session$ns("spans"), "specify daniell-smoother: NULL for no smoothing", "top", options = list(container = "body")),
         numericInput(session$ns("taper"), label = "taper", value = 0.1, step = .1, min = 0, max = 1),
         bsTooltip(session$ns("taper"), "apply cosine-taper to % of window", "top")
-      )
-    )}else{
+      ))
+    spectrum_results_UI(
+      box(width = 12, title = "Spec/FFT-Results", collapsible = TRUE, collapsed = TRUE,
+        actionButton(session$ns("save_result"), label = "save results", icon = icon("save"))
+      ))
+    }else{
       spectrum_view_UI(NULL)
+      spectrum_results_UI(NULL)
     }
   })
 

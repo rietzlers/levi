@@ -12,21 +12,21 @@ header <-
   )
 sidebar <-
   dashboardSidebar(sidebarMenu(id = "sidebarMenu_ID",
-    menuItem("Setup Data",tabName = "data_setup", icon = icon("dashboard"),
-             menuSubItem("Import Signals from Tevi (.csv)", tabName = "importTeviData"),
-             menuSubItem("Set up sample specs", tabName = "setup_sample_specs"),
-             menuSubItem("Simulate Data", tabName = "simulate_data_tab")),
+    menuItem("Dashboard", icon = icon("dashboard"),
+             menuSubItem("Import Signals from Tevi (.csv)", tabName = "importTeviData", icon = icon("upload")),
+             menuSubItem("Set up sample specs", tabName = "setup_sample_specs", icon = icon("database")),
+             menuSubItem("Simulate Data", tabName = "simulate_data_tab", icon = icon("microscope")),
+             menuSubItem("Generate Report", tabName = "gen_report", icon = icon("download"))),
     menuItem("Signal Analysis", tabName = "signalAnalysis", icon = icon("signal")),
-    menuItem("seewave", tabName = "Visualization", icon = icon("chart-bar"),
+    menuItem("seewave", icon = icon("chart-bar"),
              menuSubItem("Spectrum and Oscillogram", tabName = "spec_osc"),
              menuSubItem("Spec+Dom-Freq", tabName = "spec_dom_freq"),
              menuSubItem("Instantanous Frequency", tabName = "inst_freqs"),
              menuSubItem("Smoothed Signal Envelope", tabName = "sig_envelope")),
-    menuItem("Generate Report", tabName = "gen_report"),
     uiOutput("resample_UI"),
     uiOutput("signal_selection_UI"),
     uiOutput("spectrum_view_UI"),
-    uiOutput("sample_specs_info_UI")
+    uiOutput("spectrum_results_UI")
   ))
 body <-
   dashboardBody(
@@ -43,23 +43,26 @@ body <-
       )
     )
 ui <- dashboardPage(header, sidebar, body, title = "Alloy-EML-Analysis")
-# ctrl --------
 server <- function(input, output, session) {
+  # notes, tasks, msgs ------
   {
     output$notifications <- renderMenu({dropdownMenu(type = "notifications", .list = notifications())})
     output$tasks <- renderMenu({dropdownMenu(type = "tasks", .list = tasks())})
     output$messages <- renderMenu({dropdownMenu(type = "messages", .list = msgs())})
 
     notifications <- reactiveVal(list())
-    tasks <- reactiveVal({
-      list(select_alloy = taskItem(text = "Select alloy in sub-menu: 'Set up sample specs'", value = 0, color = "red"))
-      })
+    tasks <- reactiveVal({})
     msgs <- reactiveVal(list())
 
     observeEvent(tevi_model(), {
         task_list <- tasks()
-        task_list[["select_alloy"]] <-  taskItem(text = "Select alloy in sub-menu: 'Set up sample specs'", value = 0, color = "red")
+        task_list[["select_alloy"]] <-  taskItem(text = "Set sample-specs", value = 0, color = "red")
         tasks(task_list)
+        showModal(modalDialog(
+          title = "Uploaded Tevi-Data",
+          "Make sure you set the sample-specifications to match the loaded tevi-data",
+          easyClose = TRUE
+        ))
       })# update tasks
     observeEvent(sample_specs(),{
       {
@@ -72,7 +75,9 @@ server <- function(input, output, session) {
       tasks(task_list)
       } # sample_specs
     })# update notes
-  } # notes, tasks and massages
+  } # end notes, tasks and massages
+
+  # dynamic sidebar content--------------
   {
     selected_sidebar_tab <- reactive(input$sidebarMenu_ID) #returns the selected sidebar-tab
 
@@ -84,8 +89,11 @@ server <- function(input, output, session) {
     resample_UI <- reactiveVal()
     output$spectrum_view_UI <- renderUI(spectrum_view_UI())
     spectrum_view_UI <- reactiveVal()
+    output$spectrum_results_UI <- renderUI(spectrum_results_UI())
+    spectrum_results_UI <- reactiveVal()
   } # dynamic sidebar content
 
+  # global data ------
   model <- reactive({
     if(model_choice() == "sim_data"){
       return(sim_data_model())
@@ -93,13 +101,15 @@ server <- function(input, output, session) {
     tevi_model()
   }) #toggle between simulated and tevi-data
 
-  sample_specs <- callModule(sample_specs_ctrl, "sample_specs", sample_spec_info_UI, selected_sidebar_tab,
-                             tasks, notifications)
+  # module-calls --------------
   tevi_model <-  callModule(importTeviData, "tdi")
+  sample_specs <- callModule(sample_specs_ctrl, "sample_specs")
+
   c(sim_data_model, model_choice) %<-% callModule(simulate_data_ctrl, "simulate_data", resample_UI, selected_sidebar_tab)
+
   signal_selections <- callModule(signalAnalysis, "sa",
                                   model, sample_specs, selected_sidebar_tab,
-                                  signal_selection_UI,  signal_view_UI, spectrum_view_UI,
+                                  signal_selection_UI,  signal_view_UI, spectrum_view_UI, spectrum_results_UI,
                                   tasks, notifications)
 
   callModule(gen_report_ctrl, "gen_report", sample_specs, selected_sidebar_tab, tasks, notifications)
