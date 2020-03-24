@@ -30,7 +30,14 @@ simulate_data_ctrl <- function(input, output, session, resample_UI, selected_sid
   },
   {
     if (input$data_choice == "sim_data") {
-      resample_UI(actionButton(session$ns("resample"), "resample sim-data"))
+      resample_UI(
+        div(
+          if(selected_sidebar_tab() == "simulate_data_tab"){
+          showModal(modalDialog(
+            title = "Analysing simulated data",
+            "You can repeat the simulation by pressing the repeat data-simulation'-button in the sidebar"))},
+          actionButton(session$ns("resample"), "repeat data-simulation"))
+      )
     } else{
       resample_UI(NULL)
     }
