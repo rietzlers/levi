@@ -29,12 +29,10 @@ resultsUI <- function(id){
   )
 }
 
-
-results_ctrl <-
-  function(input, output, session,
-           tevi_model, sample_specs, data_selection, time_range, signal_name,
-           type, bp, dom_freq, f0, d, spans, taper,
-           selected_tab, spectrum_results_UI){
+results_ctrl <- function(input, output, session,
+                         tevi_model, sample_specs, data_selection, time_range, signal_name,
+                         type, bp, dom_freq, f0, d, spans, taper,
+                         selected_tab, spectrum_results_UI){
     # data ----------
     results_data_template <-
       bind_cols(
