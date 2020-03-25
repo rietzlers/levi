@@ -33,11 +33,11 @@ resultsUI <- function(id){
 results_ctrl <-
   function(input, output, session,
            tevi_model, sample_specs, data_selection, time_range, signal_name,
-           type, bp, dom_freq, f0, d, spans, taper, add_result){
+           type, bp, dom_freq, f0, d, spans, taper,
+           selected_tab, spectrum_results_UI){
     # data ----------
-
     spec_analysis_results <- reactiveVal()
-    observeEvent(add_result(), {
+    observeEvent(input$add_result, {
       if (is.null(spec_analysis_results())) {
         spec_analysis_results(
           tibble(
@@ -71,6 +71,17 @@ results_ctrl <-
                 data = tevi_model()$tevi_data_name
               )
             ))
+      }
+    })
+    # UI -----------
+    observeEvent(selected_tab(),{
+      if (selected_tab() == "signalAnalysis"){
+        spectrum_results_UI(
+          box(width = 12, title = "Spec/FFT-Results", collapsible = TRUE, collapsed = TRUE,
+              actionButton(session$ns("add_result"), label = "add result", icon = icon("save"))
+          ))
+      }else{
+        spectrum_results_UI(NULL)
       }
     })
     # output-ctrls -----------

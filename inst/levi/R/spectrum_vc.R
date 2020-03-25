@@ -24,7 +24,7 @@ spectrumUI <- function(id) {
 
 # controller ------------
 spectrum_ctrl <- function(input, output, session, tevi_model, data_selection, signal_name,
-                          selected_tab, spectrum_view_UI, spectrum_results_UI, tasks, notifications){
+                          selected_tab, spectrum_view_UI, tasks, notifications){
 
   # data ----
   est_spec <- reactive({
@@ -108,13 +108,8 @@ spectrum_ctrl <- function(input, output, session, tevi_model, data_selection, si
         numericInput(session$ns("taper"), label = "taper", value = 0.1, step = .1, min = 0, max = 1),
         bsTooltip(session$ns("taper"), "apply cosine-taper to % of window", "top")
       ))
-    spectrum_results_UI(
-      box(width = 12, title = "Spec/FFT-Results", collapsible = TRUE, collapsed = TRUE,
-        actionButton(session$ns("save_result"), label = "add result", icon = icon("save"))
-      ))
     }else{
       spectrum_view_UI(NULL)
-      spectrum_results_UI(NULL)
     }
   })
 
@@ -151,8 +146,7 @@ spectrum_ctrl <- function(input, output, session, tevi_model, data_selection, si
     f0 = f0,
     d = d,
     spans = reactive(input$spans),
-    taper = reactive(input$taper),
-    add_result = reactive(input$save_result)
+    taper = reactive(input$taper)
   )
 
 }

@@ -72,13 +72,14 @@ signalAnalysis <- function(input, output, session,
         )} # call ts_plot with reactives
       })
 
-  c(type, bp, dom_freq, f0, d, spans, taper, add_result) %<-%
+  c(type, bp, dom_freq, f0, d, spans, taper) %<-%
     callModule(spectrum_ctrl, "spectrum_analysis", tevi_model, data_selection, signal_name,
-               selected_tab, spectrum_view_UI, spectrum_results_UI, tasks, notifications)
+               selected_tab, spectrum_view_UI, tasks, notifications)
 
   callModule(results_ctrl, "results",
              tevi_model, sample_specs, data_selection, time_range, signal_name,
-             type, bp, dom_freq, f0, d, spans, taper, add_result)
+             type, bp, dom_freq, f0, d, spans, taper,
+             selected_tab, spectrum_results_UI)
 
   # return-values ----------
   reactive({
