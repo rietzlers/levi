@@ -14,16 +14,6 @@ spectrumUI <- function(id) {
             plotlyOutput(ns("bp_spectrum"), height = 250)
         )
     ),
-    # fluidRow(
-    #   column(width = 3, selectInput(ns("scale"), label = "", selected = "log10", choices = c("raw", "log10"))),
-    #   column(width = 3, selectInput(ns("type"), label = "", selected = "spectrum", choices = c("spectrum", "fft"))),
-    #   column(width = 3,
-    #          textInput(ns("spans"), label = "span", value = "c(3,3)"),
-    #          bsTooltip(ns("spans"), "specify daniell-smoother: NULL for no smoothing", "top", options = list(container = "body"))),
-    #   column(width = 3,
-    #          numericInput(ns("taper"), label = "taper", value = 0.1, step = .1, min = 0, max = 1),
-    #          bsTooltip(ns("taper"), "apply cosine-taper to % of window", "top"))
-    # ),
     fluidRow(
       column(3, textOutput(ns("dom_freq"))),
       column(3, textOutput(ns("f0"))),
