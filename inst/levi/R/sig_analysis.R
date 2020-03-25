@@ -2,12 +2,12 @@
 signalAnalysisUI <- function(id, width = 12) {
   ns <- NS(id)
   tagList(
-    plotOutput(ns("complete_signal"), height = 200,
+    plotOutput(ns("complete_signal"), height = 150,
                    brush = brushOpts(id = ns("signal_brush"), fill = "#ccc", direction = "x", resetOnNew = FALSE)),
+    box(width= width, title = "Signal in selected range; raw and BP-filtered(blue)", collapsible = TRUE, collapsed = TRUE,
+        plotOutput(ns("signal_in_selected_range"),  height = 150)),
     box(width = width, spectrumUI(ns("spectrum_analysis"))),
-    box(width = width, resultsUI(ns("results"))),
-    box(width= width, title = "Signal in selected range; raw and BP-filtered(blue)", collapsible = TRUE, {
-      plotOutput(ns("signal_in_selected_range"),  height = 150)}),
+    box(width = width, resultsUI(ns("results")))
   )
 }
 
