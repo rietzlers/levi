@@ -72,6 +72,7 @@ spectrum_ctrl <- function(input, output, session, tevi_model, data_selection, si
   })
 
   dom_freq <- reactive({
+    f_dom <- NULL
     c(f_dom, ...)  %<-%
       (est_spec() %>%
          dplyr::filter(type == input$type, f %>% between(bp()[1], bp()[2])) %>%
@@ -109,7 +110,7 @@ spectrum_ctrl <- function(input, output, session, tevi_model, data_selection, si
       ))
     spectrum_results_UI(
       box(width = 12, title = "Spec/FFT-Results", collapsible = TRUE, collapsed = TRUE,
-        actionButton(session$ns("save_result"), label = "save results", icon = icon("save"))
+        actionButton(session$ns("save_result"), label = "add result", icon = icon("save"))
       ))
     }else{
       spectrum_view_UI(NULL)
