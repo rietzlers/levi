@@ -28,6 +28,6 @@ source("R/simulate_data_vc.R")
 
 # load data ---------------------------------------------------------------
 
-#counties <- readRDS("./data/counties.rds")
+
 
 
