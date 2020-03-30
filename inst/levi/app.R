@@ -1,22 +1,25 @@
-library(reactlog)
-options(shiny.reactlog = TRUE)
+# library(reactlog)
+# options(shiny.reactlog = TRUE)
 
 source(file.path("R/load_dependencies.R"), local = TRUE, encoding = "UTF-8")
-# view --------
-header <-
+
+ui <- function(request){
+  dashboardPage(title = "Alloy-EML-Analysis",
+  header =
   dashboardHeader(
     title = "levi",
     dropdownMenuOutput("notifications"),
     dropdownMenuOutput("tasks"),
     dropdownMenuOutput("messages")
-  )
-sidebar <-
+  ),
+sidebar =
   dashboardSidebar(sidebarMenu(id = "sidebarMenu_ID",
     menuItem("Dashboard", icon = icon("dashboard"),
+             bookmarkButton(label = "Save Session"),
              menuSubItem("Import Signals from Tevi (.csv)", tabName = "importTeviData", icon = icon("upload")),
              menuSubItem("Set up sample specs", tabName = "setup_sample_specs", icon = icon("database")),
              menuSubItem("Simulate Data", tabName = "simulate_data_tab", icon = icon("microscope")),
-             menuSubItem("Generate Report", tabName = "gen_report", icon = icon("download"))),
+             menuSubItem("Report-notes", tabName = "gen_report", icon = icon("download"))),
     menuItem("Signal Analysis", tabName = "signalAnalysis", icon = icon("signal")),
     menuItem("seewave", icon = icon("chart-bar"),
              menuSubItem("Spectrum and Oscillogram", tabName = "spec_osc"),
@@ -27,8 +30,8 @@ sidebar <-
     uiOutput("signal_selection_UI"),
     uiOutput("spectrum_view_UI"),
     uiOutput("spectrum_results_UI")
-  ))
-body <-
+  )),
+body =
   dashboardBody(
     tabItems(
       tabItem(tabName = "importTeviData", importTeviDataUI("tdi")),
@@ -42,7 +45,9 @@ body <-
       tabItem(tabName = "gen_report", gen_report_view("gen_report"))
       )
     )
-ui <- dashboardPage(header, sidebar, body, title = "Alloy-EML-Analysis")
+)
+}
+
 server <- function(input, output, session) {
   # notes, tasks, msgs ------
   {
@@ -122,4 +127,4 @@ server <- function(input, output, session) {
   } # seewave-plots
   }
 
-shinyApp(ui, server)
+shinyApp(ui, server, enableBookmarking = "server")
