@@ -34,9 +34,9 @@ body =
         tabName = "dashboard",
         bookmarkButton(label = "Save Session", width = "100%"),
         tabsetPanel(
+          tabPanel("Report-Notes", report_notes_UI("report_notes"), icon = icon("clipboard")),
           tabPanel("Experiment- and Alloy-Specification", icon = icon("wpexplorer"),
-                   sample_specs_view("sample_specs"),
-                   gen_report_view("gen_report"),
+                   sample_specs_view("sample_specs")
                    ),
           tabPanel("Upload .csv-data from Tevi", load_tevi_data_UI("load_tevi_data"), icon = icon("upload"))
         )),
@@ -120,7 +120,7 @@ server <- function(input, output, session) {
                                   signal_selection_UI,  signal_view_UI, spectrum_view_UI, spectrum_results_UI,
                                   tasks, notifications)
 
-  callModule(gen_report_ctrl, "gen_report", sample_specs, selected_sidebar_tab, tasks, notifications)
+  callModule(report_notes_ctrl, "report_notes", sample_specs, selected_sidebar_tab, tasks, notifications)
 
   {
     callModule(seewave_ctrl, "spec_osc", model, signal_selections, selected_sidebar_tab)

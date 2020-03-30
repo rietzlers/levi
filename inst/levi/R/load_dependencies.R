@@ -23,7 +23,7 @@ source("R/load_tevi_data_vc.R")
 source("R/spectrum_vc.R")
 source("R/results_vc.R")
 source("R/seewaveplots_vc.R")
-source("R/gen_report_vc.R")
+source("R/report_notes_vc.R")
 source("R/simulate_data_vc.R")
 
 # load data ---------------------------------------------------------------

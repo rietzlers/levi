@@ -1,4 +1,4 @@
-gen_report_view <- function(id){
+report_notes_UI <- function(id){
   ns <- NS(id)
   tagList(
     textAreaInput(ns("notes"),
@@ -9,7 +9,7 @@ gen_report_view <- function(id){
   )
 }
 
-gen_report_ctrl <- function(input, output, session, alloy, selected_tab, tasks, notifications){
+report_notes_ctrl <- function(input, output, session, alloy, selected_tab, tasks, notifications){
 
 
   output$gen_report <- downloadHandler(
