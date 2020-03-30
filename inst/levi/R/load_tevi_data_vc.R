@@ -102,14 +102,15 @@ load_tevi_data_ctrl <- function(input, output, session) {
     hps[[str_glue("hp{input$hp_nr}")]]
   })
   # return-values ----------
-  reactive(
+  reactive({
+    validate(need(tevi_data(), message = "No Tevi-data available! Make sure you have uploaded a .csv-Tevi-file."))
     list(
       tevi_data = tevi_data(),
       tevi_data_name = tevi_data_name(),
       exp_time_range = exp_time_range(),
       HPs = HPs(),
       frame_rate = frame_rate()
-    )
+    )}
   )
 }
 
