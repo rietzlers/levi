@@ -1,3 +1,6 @@
+
+sample_specs_table <-  read_excel(file.path("./www/sample_specs", "Samples-Database.xlsx"))
+
 sample_specs_view <- function(id){
   ns <- NS(id)
   tagList(
@@ -10,11 +13,17 @@ sample_specs_view <- function(id){
 sample_specs_ctrl <- function(input, output, session){
 
   # module-data -------------
-  sample_specs_table <-  read_excel(file.path("./www/sample_specs", "Samples-Database.xlsx"))
+  sample_specs <- reactiveVal()
+  observeEvent(input$sample_specs_DT_rows_selected,{
+    sample_specs(sample_specs_table[input$sample_specs_DT_rows_selected, ])
+  })
 
-  sample_specs <- reactive({
-    validate(need(input$sample_specs_DT_rows_selected, message = "Select Alloy-Spec in tab 'Set up sample specs'"))
-    sample_specs_table[input$sample_specs_DT_rows_selected, ]
+  # bookmark-observers ----------
+  onBookmark(function(state){
+    state$values$sample_specs <- sample_specs()
+  })
+  onRestore(function(state){
+    sample_specs(state$values$sample_specs)
   })
 
   output$sample_specs_DT <- DT::renderDataTable({
