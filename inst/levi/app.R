@@ -66,11 +66,6 @@ server <- function(input, output, session) {
         task_list <- tasks()
         task_list[["select_alloy"]] <-  taskItem(text = "Set sample-specs", value = 0, color = "red")
         tasks(task_list)
-        showModal(modalDialog(
-          title = "Uploaded Tevi-Data",
-          "Make sure you set the sample-specifications to match the loaded tevi-data",
-          easyClose = TRUE
-        ))
       })# update tasks
     observeEvent(sample_specs(),{
       {
