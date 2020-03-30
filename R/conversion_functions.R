@@ -35,7 +35,7 @@ add_temperature <- function(signal_data, time_range){
   # temperatur sollte im interessierenden bereich ! monoton fallend sein (bis auf heizpulse)!
   # stark verrauschte signale sollten geglättet werden.
 
-  available_times <- range(signal_data %>% pull(t))
+  available_times <- range(signal_data$t)
 
   if(missing(time_range)){
     time_range <- available_times
@@ -48,7 +48,6 @@ add_temperature <- function(signal_data, time_range){
   if(signal_data %>% has_name("smoothed_temp")){
     signal_data <- signal_data %>% select(-smoothed_temp)
   }
-
 
   time_temp_data <-
     signal_data %>%
