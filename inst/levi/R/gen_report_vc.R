@@ -1,13 +1,16 @@
 gen_report_view <- function(id){
   ns <- NS(id)
   tagList(
-    textAreaInput(ns("notes"), label = "Report Notes", cols = 120, rows = 30),
-      downloadButton(ns("gen_report"), "Generate report"),
-      bsTooltip(ns("gen_report"), "choose an alloy in Set-up sample specs submenu to generate a test-report", "right", options = list(container = "body"))
+    textAreaInput(ns("notes"),
+                  label = HTML("Report Notes ( <a href='https://www.markdownguide.org/cheat-sheet'>Markdown Cheat-Sheet</a>)"), width = "100%", rows = 10,
+                  placeholder = "Notes on analysis."),
+    downloadButton(ns("gen_report"), "Download Notes as html-file"),
+    bsTooltip(ns("gen_report"), "download report-notes as html-file", "right", options = list(container = "body"))
   )
 }
 
 gen_report_ctrl <- function(input, output, session, alloy, selected_tab, tasks, notifications){
+
 
   output$gen_report <- downloadHandler(
 
