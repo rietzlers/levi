@@ -22,14 +22,30 @@ import_tevi_data <- function(file_path) {
  # delete first row with units
   df <- df_raw[-1, ]
 
-  # add exp-time: time=0 is start of measurement
-  df <-  df %>% arrange(seconds) %>% mutate(t = seconds - seconds[1])
-
   # standardize var-names (remove different prefix for ax-/radial-data)
   names(df) <- map_chr(names(df), ~ str_remove(.x, "^a_|^r_"))
 
+  # check if df contains all obligatory variables
+  # add exp-time: time=0 is start of measurement
+  if(!(df %>% rlang::has_name("seconds"))){
+    stop("Uploaded data has no column with name 'seconds'.
+         This variable is needed to construct the experimental-time-variable 't'")
+  }
+  df <-  df %>% arrange(seconds) %>% mutate(t = seconds - seconds[1])
+
+  # sometimes the pyro-temp and htr_i-variables have slightly different names
+  df <- df %>% rename(pyro_temp = contains("pyro"))
+  if(!(df %>%  rlang::has_name("pyro_temp"))){
+    stop("Could not detect the variable containing the pyro-temp measurements.
+         Make sure that the .csv-file contains a variable containing the word 'pyro'")}
   df %>% add_temperature()
 
+  df <- df %>% rename(htr_i = contains("htr_i"))
+  if(!(df %>% rlang::has_name("htr_i"))){
+    stop("Could not detect the variable that contains the Heating-Current.")
+  }
+
+  df
 }
 
 
