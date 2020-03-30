@@ -38,7 +38,7 @@ import_tevi_data <- function(file_path) {
   if(!(df %>%  rlang::has_name("pyro_temp"))){
     stop("Could not detect the variable containing the pyro-temp measurements.
          Make sure that the .csv-file contains a variable containing the word 'pyro'")}
-  df %>% add_temperature()
+  df <- df %>% add_temperature()
 
   df <- df %>% rename(htr_i = contains("htr_i"))
   if(!(df %>% rlang::has_name("htr_i"))){
