@@ -33,50 +33,62 @@ results_ctrl <- function(input, output, session,
                          tevi_model, sample_specs, data_selection, time_range, signal_name,
                          type, bp, dom_freq, f0, d, spans, taper,
                          selected_tab, spectrum_results_UI){
-    # data ----------
-    results_data_template <-
+  # data ----------
+  results_data_template <- {
       bind_cols(
-        c("t", "wl", "dom_freq", "f0", "d", "taper") %>% purrr::map_dfc(setNames, object = list(numeric())),
-        c("signal", "data", "type", "spans") %>% purrr::map_dfc(setNames, object = list(character())),
-        c("ephemeral") %>% purrr::map_dfc(setNames, object = list(logical()))
-      )
-    spec_analysis_results <- reactiveVal(results_data_template)
-    ephemeral_result <- reactive({
-      tibble(
-        type = type(),
-        t = mean(time_range()),
-        wl = (time_range()[2] - time_range()[1]),
-        dom_freq = dom_freq(),
-        f0 = f0(),
-        d = d(),
-        spans = spans(),
-        taper = taper(),
-        signal = signal_name(),
-        data = tevi_model()$tevi_data_name,
-        ephemeral = TRUE
-      )
-    })
-    add_result <- function(result){
-      spec_analysis_results(
-        spec_analysis_results() %>%
-          dplyr::union(result %>% mutate(ephemeral = FALSE))
-        )
+      c("t", "wl", "dom_freq", "f0", "d", "taper") %>% purrr::map_dfc(setNames, object = list(numeric())),
+      c("signal", "data", "type", "spans") %>% purrr::map_dfc(setNames, object = list(character())),
+      c("ephemeral") %>% purrr::map_dfc(setNames, object = list(logical()))
+    )}
+  spec_analysis_results <- reactiveVal(results_data_template)
+  ephemeral_result <- reactive({
+    tibble(
+      type = type(),
+      t = mean(time_range()),
+      wl = (time_range()[2] - time_range()[1]),
+      dom_freq = dom_freq(),
+      f0 = f0(),
+      d = d(),
+      spans = spans(),
+      taper = taper(),
+      signal = signal_name(),
+      data = tevi_model()$tevi_data_name,
+      ephemeral = TRUE
+    )
+  })
+  add_result <- function(result) {
+    spec_analysis_results(spec_analysis_results() %>%
+                            dplyr::union(result %>% mutate(ephemeral = FALSE)))
+  }
+
+
+  # observers ---------
+  observeEvent({
+    input$add_result
+  }, {
+    add_result(ephemeral_result())
+  })
+  observeEvent(selected_tab(),{
+    if (selected_tab() == "signalAnalysis"){
+      spectrum_results_UI(
+        box(width = 12, title = "Spec/FFT-Results", collapsible = TRUE, collapsed = TRUE,
+            actionButton(session$ns("add_result"), label = "add result", icon = icon("save"))
+        ))
+    }else{
+      spectrum_results_UI(NULL)
     }
-    observeEvent({input$add_result}, {add_result(ephemeral_result())})
+  })
 
-    # UI-ctrls -----------
-    observeEvent(selected_tab(),{
-      if (selected_tab() == "signalAnalysis"){
-        spectrum_results_UI(
-          box(width = 12, title = "Spec/FFT-Results", collapsible = TRUE, collapsed = TRUE,
-              actionButton(session$ns("add_result"), label = "add result", icon = icon("save"))
-          ))
-      }else{
-        spectrum_results_UI(NULL)
-      }
-    })
+  onBookmark(function(state){
+    state$values$spec_analysis_results <- spec_analysis_results()
+  })
 
-    output$surface_tension_plot <- renderPlotly({
+  onRestore(function(state){
+    spec_analysis_results(state$values$spec_analysis_results)
+  })
+
+  # plot-outputs  -----------
+  output$surface_tension_plot <- renderPlotly({
       spec_analysis_results <-
         spec_analysis_results() %>% dplyr::union(ephemeral_result())
 
@@ -121,7 +133,7 @@ results_ctrl <- function(input, output, session,
         theme(legend.position="none")
     })
 
-    # results-table ---------
+    # results-table-output ---------
     output$spec_analsis_results_DT <- DT::renderDataTable({
       validate(need(spec_analysis_results(), label = "spec_analysis_results"))
       spec_analysis_results() %>%
@@ -138,5 +150,6 @@ results_ctrl <- function(input, output, session,
       autoWidth = TRUE
     ))
   # return-values ----------
+
 }
 
