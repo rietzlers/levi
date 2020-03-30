@@ -14,13 +14,9 @@ ui <- function(request){
   ),
 sidebar =
   dashboardSidebar(sidebarMenu(id = "sidebarMenu_ID",
-    menuItem("Dashboard", icon = icon("dashboard"),
-             bookmarkButton(label = "Save Session"),
-             menuSubItem("Import Signals from Tevi (.csv)", tabName = "importTeviData", icon = icon("upload")),
-             menuSubItem("Set up sample specs", tabName = "setup_sample_specs", icon = icon("database")),
-             menuSubItem("Simulate Data", tabName = "simulate_data_tab", icon = icon("microscope")),
-             menuSubItem("Report-notes", tabName = "gen_report", icon = icon("download"))),
+    menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")),
     menuItem("Signal Analysis", tabName = "signalAnalysis", icon = icon("signal")),
+    menuItem("Simulate Data", tabName = "simulate_data_tab", icon = icon("microscope")),
     menuItem("seewave", icon = icon("chart-bar"),
              menuSubItem("Spectrum and Oscillogram", tabName = "spec_osc"),
              menuSubItem("Spec+Dom-Freq", tabName = "spec_dom_freq"),
@@ -34,15 +30,22 @@ sidebar =
 body =
   dashboardBody(
     tabItems(
-      tabItem(tabName = "importTeviData", importTeviDataUI("tdi")),
-      tabItem(tabName = "setup_sample_specs", sample_specs_view("sample_specs")),
+      tabItem(
+        tabName = "dashboard",
+        bookmarkButton(label = "Save Session", width = "100%"),
+        tabsetPanel(
+          tabPanel("Experiment- and Alloy-Specification", icon = icon("wpexplorer"),
+                   sample_specs_view("sample_specs"),
+                   gen_report_view("gen_report"),
+                   ),
+          tabPanel("Upload .csv-data from Tevi", load_tevi_data_UI("load_tevi_data"), icon = icon("upload"))
+        )),
       tabItem(tabName = "simulate_data_tab", simulate_data_view("simulate_data")),
       tabItem(tabName = "signalAnalysis", signalAnalysisUI("sa")),
       tabItem(tabName = "spec_osc", seewave_view("spec_osc")),
       tabItem(tabName = "spec_dom_freq", seewave_view("spec_dom_freq")),
       tabItem(tabName = "inst_freqs", seewave_view("inst_freqs")),
-      tabItem(tabName = "sig_envelope", seewave_view("sig_envelope")),
-      tabItem(tabName = "gen_report", gen_report_view("gen_report"))
+      tabItem(tabName = "sig_envelope", seewave_view("sig_envelope"))
       )
     )
 )
@@ -107,7 +110,7 @@ server <- function(input, output, session) {
   }) #toggle between simulated and tevi-data
 
   # module-calls --------------
-  tevi_model <-  callModule(importTeviData, "tdi")
+  tevi_model <-  callModule(load_tevi_data_ctrl, "load_tevi_data")
   sample_specs <- callModule(sample_specs_ctrl, "sample_specs")
 
   c(sim_data_model, model_choice) %<-% callModule(simulate_data_ctrl, "simulate_data", resample_UI, selected_sidebar_tab)

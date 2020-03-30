@@ -1,5 +1,5 @@
 
-importTeviDataUI <- function(id) {
+load_tevi_data_UI <- function(id) {
   ns <- NS(id)
   tagList(
     box(width = 12,
@@ -25,7 +25,7 @@ importTeviDataUI <- function(id) {
   )
 }
 
-importTeviData <- function(input, output, session) {
+load_tevi_data_ctrl <- function(input, output, session) {
   # local data --------
   imported_tevi_data <- reactive({
     validate(need(input$file, "tevi_data"))
