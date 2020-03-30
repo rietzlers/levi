@@ -27,34 +27,48 @@ load_tevi_data_UI <- function(id) {
 
 load_tevi_data_ctrl <- function(input, output, session) {
   # local data --------
-  imported_tevi_data <- reactive({
-    validate(need(input$file, "tevi_data"))
-    import_tevi_data(input$file$datapath)
+  tevi_data_RV <- reactiveVal()
+  tevi_data <- reactive({
+    validate(need(tevi_data_RV(), message = "No Tevi-data available! Make sure you have uploaded a .csv-Tevi-file."))
+    tevi_data_RV()
   })
+  observeEvent(input$file, {
+    tevi_data <- import_tevi_data(input$file$datapath)
+
+    # estimate sample/frame-rate from mean dt
+    c(est_sample_freq) %<-%
+      (tevi_data %>% summarize(est_sample_freq = round(1 / mean(diff(t), na.rm = TRUE))))
+    updateNumericInput(session, "frame_rate", value = est_sample_freq)
+    showNotification(
+      str_glue("Estimated frame-rate from data is: {est_sample_freq} Hz."),
+      duration = NULL, type = "message")
+    showNotification(
+      "Make sure you set the sample-specifications to match the loaded tevi-data",
+      duration = NULL, type = "message")
+    tevi_data_RV(tevi_data)
+    session$resetBrush(session$ns("temp_plot_brush"))
+  }, ignoreInit = TRUE) # load-tevi-data on input-file-change
+
+  observeEvent(exp_time_range(),{
+      tevi_data_RV(tevi_data() %>% add_temperature(time_range = exp_time_range()))
+    }, ignoreInit = TRUE)# add temp-var to tevi_data
+
   tevi_data_name <- reactive({
-    validate(need(input$file, "tevi_data"))
+    validate(need(input$file, message = "select file in file-upload-dialog"))
     input$file$name
   })
-  tevi_data <- reactive({
-    imported_tevi_data() %>%
-      add_temperature(time_range = exp_time_range())
-  })
+
   hps <- reactiveValues()
   exp_time_range <- reactive({
      get_brush_range(input$temp_plot_brush,
                      "brush temp-plot to set experimental time-range",
-                     default_values = range(imported_tevi_data()$t))
+                     default_values = range(tevi_data()$t))
   })
   observeEvent(input$save_hp,{
     hp_nr <- input$hp_nr
     hps[[str_glue("hp{hp_nr}")]] <- get_brush_range(input$heat_pulses_plot_brush, str_glue("brush heat-puls-plot to set hp {hp_nr}"))
   })
-  observeEvent(imported_tevi_data(), {
-      # estimate sample/frame-rate from mean dt
-      c(est_sample_freq) %<-%
-        (imported_tevi_data() %>% summarize(est_sample_freq = round(1 / mean(diff(t), na.rm = TRUE))))
-      updateNumericInput(session, "frame_rate", value = est_sample_freq)
-    })
+
   frame_rate = reactive({
     validate(need(input$frame_rate, label = "frame_rate"))
     input$frame_rate
@@ -103,7 +117,6 @@ load_tevi_data_ctrl <- function(input, output, session) {
   })
   # return-values ----------
   reactive({
-    validate(need(tevi_data(), message = "No Tevi-data available! Make sure you have uploaded a .csv-Tevi-file."))
     list(
       tevi_data = tevi_data(),
       tevi_data_name = tevi_data_name(),
