@@ -104,8 +104,12 @@ server <- function(input, output, session) {
   # render-output ------
   output$sample_and_exp_info <- renderUI({
     c(alloy_name, m, radius, Temp_liquid) %<-% sample_specs()
-    str_glue("Alloy: {alloy_name}; Mass of sample: {m} g; Diameter of Sample: {radius*2} mm; Liquidus-Temp: {Temp_liquid} K")
-  })
+    HTML(
+      str_glue("<b>Selected Alloy:</b> {alloy_name}
+               </br><b>Sample-Specifications:</b> Mass of sample: {m} g; Diameter of Sample: {radius*2} mm; Liquidus-Temp: {Temp_liquid} K,
+               </br> <b>Frame-Rate of camera:</b> {tevi_model()$frame_rate} Hz")
+    )
+    })
   # module-calls --------------
   tevi_model <-  callModule(load_tevi_data_ctrl, "load_tevi_data")
   sample_specs <- callModule(sample_specs_ctrl, "sample_specs")
