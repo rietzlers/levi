@@ -29,8 +29,7 @@ resultsUI <- function(id){
 
 results_ctrl <- function(input, output, session,
                          tevi_model, sample_specs, data_selection, time_range, signal_name,
-                         type, bp, dom_freq, f0, d, spans, taper,
-                         selected_tab, spectrum_results_UI){
+                         type, bp, dom_freq, f0, d, spans, taper){
   # data ----------
   results_data_template <- {
       bind_cols(
@@ -58,28 +57,15 @@ results_ctrl <- function(input, output, session,
     spec_analysis_results(spec_analysis_results() %>%
                             dplyr::union(result %>% mutate(ephemeral = FALSE)))
   }
-
-
   # observers ---------
   observeEvent(input$add_result, {
     add_result(ephemeral_result())
   }) # add temp result to result-data
-  observeEvent(selected_tab(),{
-    if (selected_tab() == "signalAnalysis"){
-      spectrum_results_UI(
-        box(width = 12, title = "Spec/FFT-Results", collapsible = TRUE, collapsed = TRUE,
-            actionButton(session$ns("add_result"), label = "add result", icon = icon("save"))
-        ))
-    }else{
-      spectrum_results_UI(NULL)
-    }
-  })
 
   # bookmark-callbacks ---------------
   onBookmark(function(state){
     state$values$spec_analysis_results <- spec_analysis_results()
   })
-
   onRestore(function(state){
     spec_analysis_results(state$values$spec_analysis_results)
   })

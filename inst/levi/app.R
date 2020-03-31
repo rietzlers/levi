@@ -22,18 +22,18 @@ sidebar =
              menuSubItem("Spec+Dom-Freq", tabName = "spec_dom_freq"),
              menuSubItem("Instantanous Frequency", tabName = "inst_freqs"),
              menuSubItem("Smoothed Signal Envelope", tabName = "sig_envelope")),
-    uiOutput("resample_UI"),
-    uiOutput("spectrum_results_UI")
+    uiOutput("resample_UI")
   )),
 body =
   dashboardBody(
     tabItems(
       tabItem(
         tabName = "dashboard",
-        bookmarkButton(label = "Save current results",
-                       title=
-                       HTML("Paste the URL into your browsers location-bar and then bookmark it with your browser. (Make sure to give the bookmark a mneomic name.) You can send this URL to a collaborator to share your current analysis-results. (Your collaborator needs access to the same shiny-server!)"),
-                       width = "100%"),
+        bookmarkButton(
+          label = "Save current results",
+          title= HTML("Paste the URL into your browsers location-bar and then bookmark it with your browser. (Make sure to give the bookmark a mneomic name.) You can send this URL to a collaborator to share your current analysis-results. (Your collaborator needs access to the same shiny-server!)"),
+          width = "100%"
+          ),
         uiOutput("sample_and_exp_info"),
         tabsetPanel(
           tabPanel("Report-Notes", report_notes_UI("report_notes"), icon = icon("clipboard")),
@@ -78,15 +78,8 @@ server <- function(input, output, session) {
   # dynamic sidebar content--------------
   {
     selected_sidebar_tab <- reactive(input$sidebarMenu_ID) #returns the selected sidebar-tab
-
-    output$signal_selection_UI <- renderUI({signal_selection_UI()})
-    signal_selection_UI <- reactiveVal()
     output$resample_UI <- renderUI(resample_UI())
     resample_UI <- reactiveVal()
-    output$spectrum_view_UI <- renderUI(spectrum_view_UI())
-    spectrum_view_UI <- reactiveVal()
-    output$spectrum_results_UI <- renderUI(spectrum_results_UI())
-    spectrum_results_UI <- reactiveVal()
   } # dynamic sidebar content
 
   # global data ------
@@ -114,10 +107,7 @@ server <- function(input, output, session) {
 
   c(sim_data_model, model_choice) %<-% callModule(simulate_data_ctrl, "simulate_data", resample_UI, selected_sidebar_tab)
 
-  analysis_parameters <- callModule(signalAnalysis, "sa",
-                                  model, sample_specs, selected_sidebar_tab,
-                                  signal_selection_UI,  signal_view_UI, spectrum_view_UI, spectrum_results_UI,
-                                  tasks, notifications)
+  analysis_parameters <- callModule(signalAnalysis, "sa", model, sample_specs,tasks, notifications)
 
   callModule(report_notes_ctrl, "report_notes", sample_specs)
 
