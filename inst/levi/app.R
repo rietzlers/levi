@@ -32,6 +32,7 @@ body =
     tabItems(
       tabItem(
         tabName = "dashboard",
+        uiOutput("sample_and_exp_info"),
         bookmarkButton(label = "Save Session", width = "100%"),
         tabsetPanel(
           tabPanel("Report-Notes", report_notes_UI("report_notes"), icon = icon("clipboard")),
@@ -102,6 +103,11 @@ server <- function(input, output, session) {
     tevi_model()
   }) #toggle between simulated and tevi-data
 
+  # render-output ------
+  output$sample_and_exp_info <- renderUI({
+    c(alloy_name, m, radius, Temp_liquid) %<-% sample_specs()
+    str_glue("Alloy: {alloy_name}; Mass of sample: {m} g; Diameter of Sample: {radius*2} mm; Liquidus-Temp: {Temp_liquid} K")
+  })
   # module-calls --------------
   tevi_model <-  callModule(load_tevi_data_ctrl, "load_tevi_data")
   sample_specs <- callModule(sample_specs_ctrl, "sample_specs")
