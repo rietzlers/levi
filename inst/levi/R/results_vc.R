@@ -2,31 +2,29 @@
 resultsUI <- function(id){
   ns <- NS(id)
   tagList(
-    fluidRow(
-      column(width = 6,
-        div(
-          plotlyOutput(ns("surface_tension_plot")),
-          fluidRow(
-            column(width = 6, selectInput(ns("st_xvar"), label = "", selected = "t", choices = c("t", "smoothed_temp"))),
-            column(width = 6, selectInput(ns("st_yvar"), label = "", selected = "f", choices = c("f", "st")))
+    tabsetPanel(
+      tabPanel("Result-Plots",
+        fluidRow(
+          column(width = 6,plotlyOutput(ns("surface_tension_plot"))),
+          column(width = 6, plotlyOutput(ns("viscosity_plot")))
           )
-        )
       ),
-      column(width = 6,
-        div(
-          plotlyOutput(ns("viscosity_plot")),
-          fluidRow(
-            column(width = 6, selectInput(ns("visc_xvar"), label = "",selected = "t", choices = c("t", "smoothed_temp"))),
-            column(width = 6, selectInput(ns("visc_yvar"), label = "", selected = "d", choices = c("d", "viscosity")))
-          )
-        )
+      tabPanel("Controls",
+               fluidRow(
+                 column(width = 6, selectInput(ns("st_xvar"), label = "st-time axis", selected = "t", choices = c("t", "smoothed_temp"))),
+                 column(width = 6, selectInput(ns("st_yvar"), label = "st ordinate", selected = "f", choices = c("f", "st")))
+               ),
+               fluidRow(
+                 column(width = 6, selectInput(ns("visc_xvar"), label = "viscosity-time axis",selected = "t", choices = c("t", "smoothed_temp"))),
+                 column(width = 6, selectInput(ns("visc_yvar"), label = "viscosity ordinate", selected = "d", choices = c("d", "viscosity")))
+               )
+      )
       ),
       box(width = 12,
           title = "Spectrum-Analysis-Results-Data", collapsible = TRUE, collapsed = TRUE, {
           DT::dataTableOutput(ns("spec_analsis_results_DT"))
       })
     )
-  )
 }
 
 results_ctrl <- function(input, output, session,
@@ -63,11 +61,9 @@ results_ctrl <- function(input, output, session,
 
 
   # observers ---------
-  observeEvent({
-    input$add_result
-  }, {
+  observeEvent(input$add_result, {
     add_result(ephemeral_result())
-  })
+  }) # add temp result to result-data
   observeEvent(selected_tab(),{
     if (selected_tab() == "signalAnalysis"){
       spectrum_results_UI(
@@ -79,6 +75,7 @@ results_ctrl <- function(input, output, session,
     }
   })
 
+  # bookmark-callbacks ---------------
   onBookmark(function(state){
     state$values$spec_analysis_results <- spec_analysis_results()
   })
