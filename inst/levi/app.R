@@ -86,8 +86,6 @@ server <- function(input, output, session) {
 
     output$signal_selection_UI <- renderUI({signal_selection_UI()})
     signal_selection_UI <- reactiveVal()
-    output$sample_specs_info_UI <- renderUI({sample_spec_info_UI()})
-    sample_spec_info_UI <- reactiveVal()
     output$resample_UI <- renderUI(resample_UI())
     resample_UI <- reactiveVal()
     output$spectrum_view_UI <- renderUI(spectrum_view_UI())
