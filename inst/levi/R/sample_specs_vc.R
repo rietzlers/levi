@@ -30,13 +30,16 @@ sample_specs_ctrl <- function(input, output, session){
     validate(need(sample_specs_table, label = "sample-specs data"))
     sample_specs_table
     },
+    rownames = FALSE,
     selection = 'single',
-    server = TRUE, filter = 'top', extensions = c('Buttons'),
+    server = TRUE, filter = 'top',
+    extensions = c('Buttons', 'Responsive', 'FixedColumns'),
     options = list(
       dom = 'Bftlip',
       buttons = c('csv', 'excel', 'pdf'),
       pageLength = 25,
-      autoWidth = TRUE
+      autoWidth = TRUE,
+      fixedColumns = list(leftColumns = 2)
     ))
 
   # return-Values ------

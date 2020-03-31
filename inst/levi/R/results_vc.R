@@ -141,13 +141,15 @@ results_ctrl <- function(input, output, session,
         arrange(type, t) %>%
         select(-ephemeral)
     },
+    rownames = FALSE,
     server = TRUE, filter = 'top',
-    extensions = c('Buttons', 'Responsive'),
+    extensions = c('Buttons', 'Responsive', 'FixedColumns'),
     options = list(
       dom = 'Bftlip',
-      buttons = c('csv', 'excel', 'pdf'),
+      buttons = c('csv', 'excel', 'pdf', I('colvis')),
       pageLength = 5,
-      autoWidth = TRUE
+      autoWidth = TRUE,
+      fixedColumns = list(leftColumns = 1)
     ))
   # return-values ----------
 
