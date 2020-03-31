@@ -8,21 +8,18 @@ signalAnalysisUI <- function(id, width = 12) {
                  selectInput(ns("selected_signal"), label = "Signal", choices = NULL),
                  uiOutput(ns("window_range_info"))),
           column(width = 11,
-                 plotOutput(ns("complete_signal"), height = 150,
+                 plotOutput(ns("complete_signal_oscillogram"), height = 150,
                             brush = brushOpts(id = ns("signal_brush"), fill = "#ccc", direction = "x", resetOnNew = FALSE)))
           ),
         box(width= width, title = "Signal in selected range; raw and BP-filtered(blue)", collapsible = TRUE, collapsed = TRUE,
-          plotOutput(ns("signal_in_selected_range"),  height = 150))
+          plotOutput(ns("tapered_signal_oscillogram"),  height = 150))
     ),
     box(width = width,  title = "Spectrogram", collapsible = TRUE, collapsed = FALSE, spectrumUI(ns("spectrum_analysis"))),
     box(width = width, resultsUI(ns("results")))
   )
 }
 
-signalAnalysis <- function(input, output, session,
-                           tevi_model, sample_specs, selected_tab,
-                           signal_selection_UI, signal_view_UI, spectrum_view_UI, spectrum_results_UI,
-                           tasks, notifications){
+signalAnalysis <- function(input, output, session, tevi_model, sample_specs, tasks, notifications){
   # local-data ----
   data_selection <- reactive({
       selected_data <-brushedPoints(tevi_model()$tevi_data, input$signal_brush)
@@ -41,7 +38,7 @@ signalAnalysis <- function(input, output, session,
     }) #update signal-selection
 
   # oscillogram-outputs -------------
-  output$complete_signal <- renderPlot({
+  output$complete_signal_oscillogram <- renderPlot({
     validate(need(input$selected_signal, label = "signal"))
     sig_plot <-
       tevi_model()$tevi_data %>%
@@ -55,7 +52,7 @@ signalAnalysis <- function(input, output, session,
     }
     sig_plot
   })
-  output$signal_in_selected_range <- renderPlot({
+  output$tapered_signal_oscillogram <- renderPlot({
       ts_plot <- function(ds, signal_name, time_range, bp, frame_rate){
         ds %>%
           ggplot(aes(x = t)) +
@@ -74,6 +71,7 @@ signalAnalysis <- function(input, output, session,
         frame_rate = tevi_model()$frame_rate
         )} # call ts_plot with reactives
       })
+
   output$window_range_info <- renderUI({
     t <- window_range() %>% mean() %>% round(2)
     wl <- round(window_range()[2] - window_range()[1], 2)
@@ -86,8 +84,7 @@ signalAnalysis <- function(input, output, session,
 
   callModule(results_ctrl, "results",
              tevi_model, sample_specs, data_selection, window_range, signal_name,
-             type, bp, dom_freq, f0, d, spans, taper,
-             selected_tab, spectrum_results_UI)
+             type, bp, dom_freq, f0, d, spans, taper)
 
   # return-values ----------
   reactive({
