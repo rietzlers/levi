@@ -33,7 +33,12 @@ body =
       tabItem(
         tabName = "dashboard",
         uiOutput("sample_and_exp_info"),
-        bookmarkButton(label = "Save Session", width = "100%"),
+        bookmarkButton(label = "Save current results",
+                       title= "Paste the URL into your browsers location-bar and then bookmark it with your browser.
+                       Make sure to give the bookmark a mneomic name.
+                       You can send this URL to a collaborator to share your current analysis-results.
+                       (Your collaborator needs access to the same shiny-server!)",
+                       width = "100%"),
         tabsetPanel(
           tabPanel("Report-Notes", report_notes_UI("report_notes"), icon = icon("clipboard")),
           tabPanel("Experiment- and Alloy-Specification", icon = icon("wpexplorer"),
