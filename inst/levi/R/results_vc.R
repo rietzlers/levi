@@ -10,6 +10,7 @@ resultsUI <- function(id){
           )
       ),
       tabPanel("Controls",
+               actionButton(ns("add_result"), label = "Add current result to result-data", icon = icon("save")),
                fluidRow(
                  column(width = 6, selectInput(ns("st_xvar"), label = "st-time axis", selected = "t", choices = c("t", "smoothed_temp"))),
                  column(width = 6, selectInput(ns("st_yvar"), label = "st ordinate", selected = "f", choices = c("f", "st")))
@@ -100,8 +101,7 @@ results_ctrl <- function(input, output, session,
 
       sf_plot
     })
-
-    output$viscosity_plot <- renderPlotly({
+  output$viscosity_plot <- renderPlotly({
       spec_analysis_results <-
         spec_analysis_results() %>% dplyr::union(ephemeral_result())
       validate(need(spec_analysis_results, label = "spec_analysis_results"))
@@ -116,8 +116,8 @@ results_ctrl <- function(input, output, session,
         theme(legend.position="none")
     })
 
-    # results-table-output ---------
-    output$spec_analsis_results_DT <- DT::renderDataTable({
+  # results-table-output ---------
+  output$spec_analsis_results_DT <- DT::renderDataTable({
       validate(need(spec_analysis_results(), label = "spec_analysis_results"))
       spec_analysis_results() %>%
         mutate(t = round(t, 2), wl = round(wl, 2)) %>%
