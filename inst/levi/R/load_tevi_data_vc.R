@@ -40,14 +40,14 @@ load_tevi_data_ctrl <- function(input, output, session) {
       (tevi_data %>% summarize(est_sample_freq = round(1 / mean(diff(t), na.rm = TRUE))))
     updateNumericInput(session, "frame_rate", value = est_sample_freq)
     showNotification(
-      str_glue("Estimated frame-rate from data is: {est_sample_freq} Hz."),
-      duration = 10, type = "message")
+      str_glue("Estimated frame-rate for data from file '{tevi_data_name()}' is: {est_sample_freq} Hz."),
+      duration = 3, type = "message")
     showNotification(
       "Make sure you set the sample-specifications to match the loaded tevi-data",
-      duration = 10, type = "message")
+      duration = 3, type = "message")
     tevi_data_RV(tevi_data)
     session$resetBrush(session$ns("temp_plot_brush"))
-  }, ignoreInit = TRUE) # load-tevi-data on input-file-change
+  }) # load-tevi-data on input-file-change
 
   observeEvent(exp_time_range(),{
       tevi_data_RV(tevi_data() %>% add_temperature(time_range = exp_time_range()))
