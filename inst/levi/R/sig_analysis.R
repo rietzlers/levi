@@ -4,8 +4,10 @@ signalAnalysisUI <- function(id, width = 12) {
   tagList(
     box(width = width, title = "Oscillogram", collapsible = TRUE, collapsed = FALSE,
         fluidRow(
-          column(width =  2, selectInput(ns("selected_signal"), label = "Signal", choices = NULL)),
-          column(width = 10,
+          column(width =  1,
+                 selectInput(ns("selected_signal"), label = "Signal", choices = NULL),
+                 uiOutput(ns("window_range_info"))),
+          column(width = 11,
                  plotOutput(ns("complete_signal"), height = 150,
                             brush = brushOpts(id = ns("signal_brush"), fill = "#ccc", direction = "x", resetOnNew = FALSE)))
           ),
@@ -38,7 +40,7 @@ signalAnalysis <- function(input, output, session,
                       selected = "radius_y")
     }) #update signal-selection
 
-  # outputs -------------
+  # oscillogram-outputs -------------
   output$complete_signal <- renderPlot({
     validate(need(input$selected_signal, label = "signal"))
     sig_plot <-
@@ -72,7 +74,11 @@ signalAnalysis <- function(input, output, session,
         frame_rate = tevi_model()$frame_rate
         )} # call ts_plot with reactives
       })
-
+  output$window_range_info <- renderUI({
+    t <- window_range() %>% mean() %>% round(2)
+    wl <- round(window_range()[2] - window_range()[1], 2)
+    HTML(str_glue("t = {t} s </br> Window-length: {wl} s"))
+  })
   # module-calls --------
   c(type, bp, dom_freq, f0, d, spans, taper) %<-%
     callModule(spectrum_ctrl, "spectrum_analysis", tevi_model, data_selection, signal_name,
@@ -87,7 +93,7 @@ signalAnalysis <- function(input, output, session,
   reactive({
     list(
       selected_signal = signal_name(),
-      time_range = time_range(),
+      window_range = window_range(),
       bp = bp()
     )
   })
