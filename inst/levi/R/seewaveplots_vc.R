@@ -5,13 +5,13 @@ seewave_view <- function(id){
   )
 }
 
-seewave_ctrl <- function(input, output, session, tevi_model, signal_selections, selectedSidebarMenu){
+seewave_ctrl <- function(input, output, session, tevi_model, analysis_parameters, selectedSidebarMenu){
 
   output$seewave_plot <- renderPlot({
-    sig_name <- signal_selections()$selected_signal
-    time_range <- signal_selections()$time_range
+    sig_name <- analysis_parameters()$selected_signal
+    time_range <- analysis_parameters()$window_range
     sr <- tevi_model()$frame_rate
-    bp <- signal_selections()$bp
+    bp <- analysis_parameters()$bp
     bp[1] <- max(0, bp[1])
     bp[2] <- min(sr, bp[2])
 

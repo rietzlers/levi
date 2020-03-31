@@ -116,7 +116,7 @@ server <- function(input, output, session) {
 
   c(sim_data_model, model_choice) %<-% callModule(simulate_data_ctrl, "simulate_data", resample_UI, selected_sidebar_tab)
 
-  signal_selections <- callModule(signalAnalysis, "sa",
+  analysis_parameters <- callModule(signalAnalysis, "sa",
                                   model, sample_specs, selected_sidebar_tab,
                                   signal_selection_UI,  signal_view_UI, spectrum_view_UI, spectrum_results_UI,
                                   tasks, notifications)
@@ -124,10 +124,10 @@ server <- function(input, output, session) {
   callModule(report_notes_ctrl, "report_notes", sample_specs)
 
   {
-    callModule(seewave_ctrl, "spec_osc", model, signal_selections, selected_sidebar_tab)
-    callModule(seewave_ctrl, "spec_dom_freq", model, signal_selections, selected_sidebar_tab)
-    callModule(seewave_ctrl, "inst_freqs", model, signal_selections, selected_sidebar_tab)
-    callModule(seewave_ctrl, "sig_envelope", model, signal_selections, selected_sidebar_tab)
+    callModule(seewave_ctrl, "spec_osc", model, analysis_parameters, selected_sidebar_tab)
+    callModule(seewave_ctrl, "spec_dom_freq", model, analysis_parameters, selected_sidebar_tab)
+    callModule(seewave_ctrl, "inst_freqs", model, analysis_parameters, selected_sidebar_tab)
+    callModule(seewave_ctrl, "sig_envelope", model, analysis_parameters, selected_sidebar_tab)
   } # seewave-plots
   }
 
