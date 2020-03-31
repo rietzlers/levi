@@ -2,10 +2,16 @@
 signalAnalysisUI <- function(id, width = 12) {
   ns <- NS(id)
   tagList(
-    plotOutput(ns("complete_signal"), height = 150,
-                   brush = brushOpts(id = ns("signal_brush"), fill = "#ccc", direction = "x", resetOnNew = FALSE)),
-    box(width= width, title = "Signal in selected range; raw and BP-filtered(blue)", collapsible = TRUE, collapsed = TRUE,
-        plotOutput(ns("signal_in_selected_range"),  height = 150)),
+    box(width = width, title = "Oscillogram", collapsible = TRUE, collapsed = FALSE,
+        fluidRow(
+          column(width =  2, selectInput(ns("selected_signal"), label = "Signal", choices = NULL)),
+          column(width = 10,
+                 plotOutput(ns("complete_signal"), height = 150,
+                            brush = brushOpts(id = ns("signal_brush"), fill = "#ccc", direction = "x", resetOnNew = FALSE)))
+          ),
+        box(width= width, title = "Signal in selected range; raw and BP-filtered(blue)", collapsible = TRUE, collapsed = TRUE,
+          plotOutput(ns("signal_in_selected_range"),  height = 150))
+    ),
     box(width = width, spectrumUI(ns("spectrum_analysis"))),
     box(width = width, resultsUI(ns("results")))
   )
@@ -15,29 +21,24 @@ signalAnalysis <- function(input, output, session,
                            tevi_model, sample_specs, selected_tab,
                            signal_selection_UI, signal_view_UI, spectrum_view_UI, spectrum_results_UI,
                            tasks, notifications){
-  # data ----
+  # local-data ----
   data_selection <- reactive({
       selected_data <-brushedPoints(tevi_model()$tevi_data, input$signal_brush)
       validate(need(nrow(selected_data) > 0,
                     "choose time-window by brushing (left-click and pull) over signal-plot"))
       selected_data
     })
-  observeEvent({selected_tab()},{
-                 if (!(selected_tab() %in% c("data_setup", "importTeviData", "setup_sample_specs"))) {
-                   signal_selection_UI(div(
-                       selectInput(session$ns("selected_signal"),
-                                   label = "Select Signal to analyse",
-                                   choices = names(tevi_model()$tevi_data),
-                                   selected = "radius_y")))
-                 } else{
-                   signal_selection_UI(NULL)
-                 }
-               }) #update signal-selection
-
-  time_range <- reactive({get_brush_range(input$signal_brush, "set time range in Signal Analysis")})
+  window_range <- reactive({get_brush_range(input$signal_brush, "set time range in Signal Analysis")})
   signal_name  = reactive({input$selected_signal})
 
-  # UIs -------------
+  # observers -----------
+  observeEvent(tevi_model(),{
+    updateSelectInput(session, "selected_signal", label = "Signal",
+                      choices = names(tevi_model()$tevi_data),
+                      selected = "radius_y")
+    }) #update signal-selection
+
+  # outputs -------------
   output$complete_signal <- renderPlot({
     validate(need(input$selected_signal, label = "signal"))
     sig_plot <-
@@ -72,12 +73,13 @@ signalAnalysis <- function(input, output, session,
         )} # call ts_plot with reactives
       })
 
+  # module-calls --------
   c(type, bp, dom_freq, f0, d, spans, taper) %<-%
     callModule(spectrum_ctrl, "spectrum_analysis", tevi_model, data_selection, signal_name,
                selected_tab, spectrum_view_UI, tasks, notifications)
 
   callModule(results_ctrl, "results",
-             tevi_model, sample_specs, data_selection, time_range, signal_name,
+             tevi_model, sample_specs, data_selection, window_range, signal_name,
              type, bp, dom_freq, f0, d, spans, taper,
              selected_tab, spectrum_results_UI)
 
