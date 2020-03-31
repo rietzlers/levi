@@ -41,10 +41,10 @@ load_tevi_data_ctrl <- function(input, output, session) {
     updateNumericInput(session, "frame_rate", value = est_sample_freq)
     showNotification(
       str_glue("Estimated frame-rate from data is: {est_sample_freq} Hz."),
-      duration = NULL, type = "message")
+      duration = 10, type = "message")
     showNotification(
       "Make sure you set the sample-specifications to match the loaded tevi-data",
-      duration = NULL, type = "message")
+      duration = 10, type = "message")
     tevi_data_RV(tevi_data)
     session$resetBrush(session$ns("temp_plot_brush"))
   }, ignoreInit = TRUE) # load-tevi-data on input-file-change
