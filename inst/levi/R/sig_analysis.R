@@ -14,7 +14,7 @@ signalAnalysisUI <- function(id, width = 12) {
         box(width= width, title = "Signal in selected range; raw and BP-filtered(blue)", collapsible = TRUE, collapsed = TRUE,
           plotOutput(ns("signal_in_selected_range"),  height = 150))
     ),
-    box(width = width, spectrumUI(ns("spectrum_analysis"))),
+    box(width = width,  title = "Spectrogram", collapsible = TRUE, collapsed = FALSE, spectrumUI(ns("spectrum_analysis"))),
     box(width = width, resultsUI(ns("results")))
   )
 }
