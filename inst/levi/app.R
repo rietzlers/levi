@@ -23,8 +23,6 @@ sidebar =
              menuSubItem("Instantanous Frequency", tabName = "inst_freqs"),
              menuSubItem("Smoothed Signal Envelope", tabName = "sig_envelope")),
     uiOutput("resample_UI"),
-    uiOutput("signal_selection_UI"),
-    uiOutput("spectrum_view_UI"),
     uiOutput("spectrum_results_UI")
   )),
 body =
