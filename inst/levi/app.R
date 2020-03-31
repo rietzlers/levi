@@ -68,20 +68,13 @@ server <- function(input, output, session) {
     tasks <- reactiveVal({})
     msgs <- reactiveVal(list())
 
-    observeEvent(tevi_model(), {
-        task_list <- tasks()
-        task_list[["select_alloy"]] <-  taskItem(text = "Set sample-specs", value = 0, color = "red")
-        tasks(task_list)
-      })# update tasks
+    observeEvent(tevi_model(), {})# update tasks
     observeEvent(sample_specs(),{
       {
       c(alloy_name, d, m, Temp_liquid) %<-% sample_specs()
       notifications_list <- notifications()
       notifications_list[["alloy_info"]] <- notificationItem(text = str_glue("{alloy_name}, m = {m} g, d = {d} mm"),  status = "info", icon = icon("info-circle"))
       notifications(notifications_list)
-      task_list <- tasks()
-      task_list[["select_alloy"]] <-  NULL
-      tasks(task_list)
       } # sample_specs
     })# update notes
   } # end notes, tasks and massages
@@ -124,7 +117,7 @@ server <- function(input, output, session) {
                                   signal_selection_UI,  signal_view_UI, spectrum_view_UI, spectrum_results_UI,
                                   tasks, notifications)
 
-  callModule(report_notes_ctrl, "report_notes", sample_specs, selected_sidebar_tab, tasks, notifications)
+  callModule(report_notes_ctrl, "report_notes", sample_specs)
 
   {
     callModule(seewave_ctrl, "spec_osc", model, signal_selections, selected_sidebar_tab)
