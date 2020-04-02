@@ -24,7 +24,7 @@ estimate_signal_spectrum(
 \item{taper}{specifies the proportion of data to taper}
 }
 \value{
-
+tibble with vars: f, fc_amp, type(spectrum/fft), spec
 }
 \description{
 Estimate Spectrum from Signal

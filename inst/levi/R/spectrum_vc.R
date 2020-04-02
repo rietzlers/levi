@@ -97,7 +97,7 @@ spectrum_ctrl <- function(input, output, session, tevi_model, data_selection, si
 
   # outputs  -----------
   output$complete_spectrum <- renderPlot({
-      spec_plot(
+      gen_spec_plot(
         est_spec(),
         lfit = NULL,
           # levi::fit_lorentz(
@@ -135,36 +135,6 @@ spectrum_ctrl <- function(input, output, session, tevi_model, data_selection, si
 }
 
 # helper-functions ----------
-spec_plot <-
-  function(est_spec, lfit, scale = "log10", bp, type_choosen = "fft", sample_rate){
-  periodogram <-
-    est_spec %>%
-    filter(f %>% between(bp[1], bp[2])) %>%
-    ggplot(aes(x = f)) +
-    geom_line(data = ~ dplyr::filter(.x, type == "spectrum"), aes(y = fc_amp)) +
-    geom_point(data = ~ dplyr::filter(.x, type == "spectrum"), aes(y = fc_amp), shape = "x", size = 0.8) +
-    geom_point(data = ~ dplyr::filter(.x, type == "fft", f > 0), aes(y = fc_amp), color = "blue", shape = "+", size = 1.5) +
-    labs(x = "Frequency [Hz]")
 
-  if(!is.null(lfit)){
-    fitted_data <-
-      tibble(f = seq(bp[1], bp[2], by = 1/100)) %>%
-      lorentz_amps(lfit)
-
-    periodogram <-
-      periodogram +
-      geom_line(data = fitted_data, aes(x = f, y = lf_amp), alpha = 0.5, color = "red")
-  } # add lorentz-curve
-  if(scale == "raw"){
-    return(periodogram + labs(y = scale))
-    }
-  if(scale == "log10"){
-    return(
-      periodogram +
-        labs(y = scale) +
-        scale_y_continuous(trans = scale)
-    )
-  }
-}
 
 

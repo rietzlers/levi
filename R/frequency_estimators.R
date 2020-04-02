@@ -71,7 +71,7 @@ bp_filter <- function(sig_data, signal_name, bp, sr){
 #' @param spans vector of odd integers giving the widths of modified Daniell smoothers to be used to smooth the periodogram.
 #' @param taper specifies the proportion of data to taper
 #'
-#' @return
+#' @return tibble with vars: f, fc_amp, type(spectrum/fft), spec
 #'
 #' @export
 estimate_signal_spectrum <- function(signal_data, signal_name, frame_rate,  spans = c(3, 3), taper = 0.1) {
@@ -82,8 +82,12 @@ estimate_signal_spectrum <- function(signal_data, signal_name, frame_rate,  span
              demean = TRUE,
              detrend = FALSE, plot = FALSE)
 
-  estimates <-
-    tibble(f = est_spec$freq, type = "spectrum", spec = est_spec$spec, fc_amp = sqrt(spec)) %>%
+  tibble(
+    f = est_spec$freq,
+    type = "spectrum",
+    spec = est_spec$spec,
+    fc_amp = sqrt(spec)
+    ) %>%
     dplyr::union(
       levi::fftc(signal_data, signal_name, sr = frame_rate) %>%
         mutate(type = "fft") %>%
@@ -238,3 +242,77 @@ regular_ts <- function(data, signal, sr) {
   }
   return(TRUE)
 }
+
+# plots ------
+
+#' generate spectrogram-plot
+#'
+#' @param est_spec tibble: estimated spectrum
+#' @param lfit lfit-model
+#' @param scale string: raw/log10
+#' @param bp numeric vector: bandpass-limits
+#' @param type_choosen fft/spectrum
+#' @param sample_rate sample-rate
+#'
+#' @return
+#'
+#' @export
+gen_spec_plot <-
+  function(est_spec, lfit, scale = "log10", bp, type_choosen = "fft", sample_rate, plot_type = "ggplot"){
+    periodogram <-
+      est_spec %>%
+      filter(f %>% between(bp[1], bp[2])) %>%
+      ggplot(aes(x = f)) +
+      geom_line(data = ~ dplyr::filter(.x, type == "spectrum"), aes(y = fc_amp)) +
+      geom_point(data = ~ dplyr::filter(.x, type == "spectrum"), aes(y = fc_amp), shape = "x", size = 0.8) +
+      geom_point(data = ~ dplyr::filter(.x, type == "fft", f > 0), aes(y = fc_amp), color = "blue", shape = "+", size = 1.5) +
+      labs(x = "Frequency [Hz]")
+
+    if(!is.null(lfit)){
+      fitted_data <-
+        tibble(f = seq(bp[1], bp[2], by = 1/100)) %>%
+        lorentz_amps(lfit)
+
+      periodogram <-
+        periodogram +
+        geom_line(data = fitted_data, aes(x = f, y = lf_amp), alpha = 0.5, color = "red")
+    } # add lorentz-curve
+    if(scale == "raw"){
+      return(periodogram + labs(y = scale))
+    }
+    if(scale == "log10"){
+      return(
+        periodogram +
+          labs(y = scale) +
+          scale_y_continuous(trans = scale)
+      )
+    }
+
+    spec_plotly <-
+      est_spec %>%
+      plotly() %>%
+      add_fun(function(p){
+        p %>%
+          filter(type == "fft") %>%
+          add_trace(
+            type = "scatter", mode = "marker",
+            x = ~f, y = ~fc_amp,
+            hoverinfo = "none"
+          )
+      }) %>%
+      add_fun(function(p){
+        p %>%
+          filter(type == "spectrum") %>%
+          add_trace(
+            type = "scatter", mode = "marker + text",
+            x = ~f, y = ~fc_amp,
+            hoverinfo = "none"
+          )
+      })
+
+    if(plot_type == "ggplot"){
+      return(periodogram)
+    }else
+      return(spec_plotly)
+
+  }
