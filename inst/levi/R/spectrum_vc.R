@@ -111,16 +111,17 @@ spectrum_ctrl <- function(input, output, session, tevi_model, data_selection, si
         )
     })
   output$bp_spectrum <- renderPlotly({
-      spec_plot(
+      gen_spec_plot(
         est_spec(),
         lfit = lfit(),
         scale = input$scale,
         bp = bp(),
         sample_rate = tevi_model()$frame_rate,
-        type_choosen =  input$type
-      ) %>%
-        ggplotly()
+        type_choosen =  input$type,
+        plot_type = "plot_ly"
+      )
     })
+
   # return-values -----------
   list(
     type = reactive(input$type),
@@ -134,7 +135,7 @@ spectrum_ctrl <- function(input, output, session, tevi_model, data_selection, si
 
 }
 
-# helper-functions ----------
+
 
 
 

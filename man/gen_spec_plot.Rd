@@ -26,9 +26,11 @@ gen_spec_plot(
 \item{type_choosen}{fft/spectrum}
 
 \item{sample_rate}{sample-rate}
+
+\item{plot_type}{ggplot/plot_ly}
 }
 \value{
-
+plot-object
 }
 \description{
 generate spectrogram-plot

@@ -253,12 +253,14 @@ regular_ts <- function(data, signal, sr) {
 #' @param bp numeric vector: bandpass-limits
 #' @param type_choosen fft/spectrum
 #' @param sample_rate sample-rate
+#' @param plot_type ggplot/plot_ly
 #'
-#' @return
+#' @return plot-object
 #'
 #' @export
 gen_spec_plot <-
   function(est_spec, lfit, scale = "log10", bp, type_choosen = "fft", sample_rate, plot_type = "ggplot"){
+
     periodogram <-
       est_spec %>%
       filter(f %>% between(bp[1], bp[2])) %>%
@@ -278,37 +280,57 @@ gen_spec_plot <-
         geom_line(data = fitted_data, aes(x = f, y = lf_amp), alpha = 0.5, color = "red")
     } # add lorentz-curve
     if(scale == "raw"){
-      return(periodogram + labs(y = scale))
+      periodogram <- periodogram + labs(y = scale)
     }
     if(scale == "log10"){
-      return(
-        periodogram +
+        periodogram <-
+          periodogram +
           labs(y = scale) +
           scale_y_continuous(trans = scale)
-      )
     }
 
     spec_plotly <-
       est_spec %>%
-      plotly() %>%
+      filter(f > 0) %>%
+      plot_ly() %>%
       add_fun(function(p){
         p %>%
           filter(type == "fft") %>%
           add_trace(
-            type = "scatter", mode = "marker",
+            type = "scatter", mode = "markers",
             x = ~f, y = ~fc_amp,
-            hoverinfo = "none"
+            name = "FFT",
+            hovertemplate = "Freq.: %{x:.1f} Hz"
+          ) %>%
+          slice(which.max(fc_amp)) %>%
+          add_annotations(
+            x = ~f, y = ~fc_amp, text = ~paste("Dom. Freq.:", round(f,1), "Hz")
           )
       }) %>%
       add_fun(function(p){
         p %>%
           filter(type == "spectrum") %>%
           add_trace(
-            type = "scatter", mode = "marker + text",
+            type = "scatter", mode = "markers",
             x = ~f, y = ~fc_amp,
-            hoverinfo = "none"
+            name = "Spectrogram",
+            hovertemplate = "Freq.: %{x:.1f} Hz"
           )
-      })
+      }) %>%
+      layout(
+        legend = list(
+          x = 0.9, y = 0.9,
+          title = list(text = "<b>Calculation-Method</b>")
+          ),
+        xaxis = list(
+          title = "Freq [Hz]",
+          range = bp
+        ),
+        yaxis = list(
+          title = "Amplitude of Fourier-Coefficients",
+          type = if_else(scale == "log10", "log", "linear")
+        )
+      )
 
     if(plot_type == "ggplot"){
       return(periodogram)
