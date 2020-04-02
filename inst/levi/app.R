@@ -36,11 +36,11 @@ body =
           ),
         uiOutput("sample_and_exp_info"),
         tabsetPanel(
-          tabPanel("Report-Notes", report_notes_UI("report_notes"), icon = icon("clipboard")),
           tabPanel("Experiment- and Alloy-Specification", icon = icon("wpexplorer"),
                    sample_specs_view("sample_specs")
                    ),
-          tabPanel("Upload .csv-data from Tevi", load_tevi_data_UI("load_tevi_data"), icon = icon("upload"))
+          tabPanel("Upload .csv-data from Tevi", load_tevi_data_UI("load_tevi_data"), icon = icon("upload")),
+          tabPanel("Report-Notes", report_notes_UI("report_notes"), icon = icon("clipboard"))
         )),
       tabItem(tabName = "simulate_data_tab", simulate_data_view("simulate_data")),
       tabItem(tabName = "signalAnalysis", signalAnalysisUI("sa")),
