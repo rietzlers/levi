@@ -207,6 +207,8 @@ lorentz_amps <- function(freqs, lf_model){
 #' @param sample_rate sample-rate
 #'
 #' @return tibble with variables f and fc_amp
+#' (fc_amp is the signal-amplitude of the dominant frequency!
+#' Not the amplitude of the Fourie-Coefficient!)
 #' @export
 get_dom_freq <- function(fc_data, sample_rate = 400){
   fc_data %>%

@@ -13,6 +13,8 @@ get_dom_freq(fc_data, sample_rate = 400)
 }
 \value{
 tibble with variables f and fc_amp
+(fc_amp is the signal-amplitude of the dominant frequency!
+Not the amplitude of the Fourie-Coefficient!)
 }
 \description{
 Ermittelt die dominante Frequenz (die Frequenz mit maximaler Amplitude)
