@@ -297,20 +297,22 @@ gen_spec_plot <-
         p %>%
           filter(type == "fft") %>%
           add_trace(
-            type = "scatter", mode = "markers",
+            type = "scatter", mode = "markers+text",
             x = ~f, y = ~fc_amp, color = I("blue"),
+            text = ~if_else(near(fc_amp, fc_amp_max/2), str_glue("<span style='color:blue; font-weight:bold;'>{round(f_dom,1)} Hz</span>"), ""),
+            textposition = "middle left",
             name = str_glue("fft; f <sub>dom</sub>: {round(f_dom, 2)} Hz"),
             hovertemplate = "Freq.: %{x:.1f} Hz"
-          ) %>%
-          slice(which.max(fc_amp)) %>%
-          mutate(fc_amp = if_else(scale == "log10", log10(fc_amp), fc_amp)) %>%
-          add_annotations(
-            x = ~f, y = ~fc_amp,
-            axref = "x", ax = ~(f + 1), xanchor = "left",
-            ayref = "y", ay = ~fc_amp,
-            standoff = 5,
-            text = ~paste(round(f,1), "Hz (fft)")
           )
+          # slice(which.max(fc_amp)) %>%
+          # mutate(fc_amp = if_else(scale == "log10", log10(fc_amp), fc_amp)) %>%
+          # add_annotations(
+          #   x = ~f, y = ~fc_amp,
+          #   axref = "x", ax = ~(f + 1), xanchor = "left",
+          #   ayref = "y", ay = ~fc_amp,
+          #   standoff = 5,
+          #   text = ~paste(round(f,1), "Hz (fft)")
+          # )
       }) %>%
       add_fun(function(p){
         p_data <- p %>% plotly_data() %>% filter(type == "spectrum")
@@ -318,21 +320,22 @@ gen_spec_plot <-
         p %>%
           filter(type == "spectrum") %>%
           add_trace(
-            type = "scatter", mode = "markers",
+            type = "scatter", mode = "markers+text",
             x = ~f, y = ~fc_amp, color = I("black"),
-            #text = ~if_else(near(fc_amp, fc_amp_max/2), str_glue("<b>{round(f_dom,1)} Hz</b>"), ""),
+            text = ~if_else(near(fc_amp, fc_amp_max/2), str_glue("<b>{round(f_dom,1)} Hz</b>"), ""),
+            textposition = "middle right",
             name = str_glue("spectrum; f <sub>dom</sub>: {round(f_dom, 2)} Hz"),
             hovertemplate = "Freq.: %{x:.1f} Hz"
-          )%>%
-          slice(which.max(fc_amp)) %>%
-          mutate(fc_amp = if_else(scale == "log10", log10(fc_amp), fc_amp)) %>%
-          add_annotations(
-            x = ~f, y = ~fc_amp, color = I("black"),
-            axref = "x", ax = ~(f - 1), xanchor = "right",
-            ayref = "y", ay = ~fc_amp,
-            standoff = 5,
-            text = ~paste(round(f,1), "Hz (spectrum)")
           )
+          # slice(which.max(fc_amp)) %>%
+          # mutate(fc_amp = if_else(scale == "log10", log10(fc_amp), fc_amp)) %>%
+          # add_annotations(
+          #   x = ~f, y = ~fc_amp, color = I("black"),
+          #   axref = "x", ax = ~(f - 1), xanchor = "right",
+          #   ayref = "y", ay = ~fc_amp,
+          #   standoff = 5,
+          #   text = ~paste(round(f,1), "Hz (spectrum)")
+          # )
       }) %>%
       layout(
         legend = list(
