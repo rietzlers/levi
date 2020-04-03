@@ -100,10 +100,6 @@ spectrum_ctrl <- function(input, output, session, tevi_model, data_selection, si
       gen_spec_plot(
         est_spec(),
         lfit = NULL,
-          # levi::fit_lorentz(
-          # dplyr::filter(est_spec(), type == input$type),
-          # bp = c(0, tevi_model()$frame_rate/2),
-          # sr = tevi_model()$frame_rate),
         scale = input$scale,
         bp = c(0, tevi_model()$frame_rate/2),
         sample_rate = tevi_model()$frame_rate,
