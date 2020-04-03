@@ -45,7 +45,7 @@ spectrum_ctrl <- function(input, output, session, tevi_model, data_selection, si
     lfit <-
       levi::fit_lorentz(
       dplyr::filter(est_spec(), type == input$type),
-      bp = bp(),
+      bp = bp(), # lorentz-kurve wird IMMER an die BP-gefilterte Kurve angepasst!
       sr = tevi_model()$frame_rate)
     notifications_list <- notifications()
     if(is.null(lfit)){
