@@ -270,6 +270,10 @@ gen_spec_plot <-
       geom_line(data = ~ dplyr::filter(.x, type == "spectrum"), aes(y = fc_amp)) +
       geom_point(data = ~ dplyr::filter(.x, type == "spectrum"), aes(y = fc_amp), shape = "x", size = 0.8) +
       geom_point(data = ~ dplyr::filter(.x, type == "fft", f > 0), aes(y = fc_amp), color = "blue", shape = "+", size = 1.5) +
+      scale_y_continuous(
+        name = if_else(scale == "log10", "log10(Fourier-Coef-Amp)", "Fourier-Coef-Amp"),
+        trans = if_else(scale == "log10", "log10", "identity")
+      ) +
       labs(x = "Frequency [Hz]")
 
     if(!is.null(lfit)){
@@ -280,48 +284,59 @@ gen_spec_plot <-
       periodogram <-
         periodogram +
         geom_line(data = fitted_data, aes(x = f, y = lf_amp), alpha = 0.5, color = "red")
-    } # add lorentz-curve
-    if(scale == "raw"){
-      periodogram <- periodogram + labs(y = scale)
     }
-    if(scale == "log10"){
-        periodogram <-
-          periodogram +
-          labs(y = scale) +
-          scale_y_continuous(trans = scale)
-    }
+
 
     spec_plotly <-
       est_spec %>%
       filter(f > 0) %>%
       plot_ly() %>%
       add_fun(function(p){
+        p_data <- p %>% plotly_data() %>% filter(type == "fft")
+        c(f_dom, fc_amp_max) %<-% (p_data %>% get_dom_freq(sample_rate))
         p %>%
           filter(type == "fft") %>%
           add_trace(
             type = "scatter", mode = "markers",
-            x = ~f, y = ~fc_amp,
-            name = "FFT",
+            x = ~f, y = ~fc_amp, color = I("blue"),
+            name = str_glue("fft; f <sub>dom</sub>: {round(f_dom, 2)} Hz"),
             hovertemplate = "Freq.: %{x:.1f} Hz"
           ) %>%
           slice(which.max(fc_amp)) %>%
+          mutate(fc_amp = if_else(scale == "log10", log10(fc_amp), fc_amp)) %>%
           add_annotations(
-            x = ~f, y = ~fc_amp, text = ~paste("Dom. Freq.:", round(f,1), "Hz")
+            x = ~f, y = ~fc_amp,
+            axref = "x", ax = ~(f + 1), xanchor = "left",
+            ayref = "y", ay = ~fc_amp,
+            standoff = 5,
+            text = ~paste(round(f,1), "Hz (fft)")
           )
       }) %>%
       add_fun(function(p){
+        p_data <- p %>% plotly_data() %>% filter(type == "spectrum")
+        c(f_dom, fc_amp_max) %<-% (p_data %>% get_dom_freq(sample_rate))
         p %>%
           filter(type == "spectrum") %>%
           add_trace(
             type = "scatter", mode = "markers",
-            x = ~f, y = ~fc_amp,
-            name = "Spectrogram",
+            x = ~f, y = ~fc_amp, color = I("black"),
+            #text = ~if_else(near(fc_amp, fc_amp_max/2), str_glue("<b>{round(f_dom,1)} Hz</b>"), ""),
+            name = str_glue("spectrum; f <sub>dom</sub>: {round(f_dom, 2)} Hz"),
             hovertemplate = "Freq.: %{x:.1f} Hz"
+          )%>%
+          slice(which.max(fc_amp)) %>%
+          mutate(fc_amp = if_else(scale == "log10", log10(fc_amp), fc_amp)) %>%
+          add_annotations(
+            x = ~f, y = ~fc_amp, color = I("black"),
+            axref = "x", ax = ~(f - 1), xanchor = "right",
+            ayref = "y", ay = ~fc_amp,
+            standoff = 5,
+            text = ~paste(round(f,1), "Hz (spectrum)")
           )
       }) %>%
       layout(
         legend = list(
-          x = 0.9, y = 0.9,
+          x = 0.8, y = 0.9,
           title = list(text = "<b>Calculation-Method</b>")
           ),
         xaxis = list(
@@ -329,14 +344,42 @@ gen_spec_plot <-
           range = bp
         ),
         yaxis = list(
-          title = "Amplitude of Fourier-Coefficients",
+          title = if_else(scale == "log10", "log10(Fourier-Coef-Amp)", "Fourier-Coef-Amp"),
           type = if_else(scale == "log10", "log", "linear")
         )
       )
 
+    if(!is.null(lfit)){
+      spec_plotly <-
+        spec_plotly %>%
+        add_trace(
+          type = "scatter", mode = "line",
+          data = tibble(f = seq(bp[1], bp[2], by = 1/100)) %>% lorentz_amps(lfit),
+          x = ~f, y = ~lf_amp, color = I("red"),
+          name = str_glue("Lortentz-fit; f <sub>0</sub>: {round((lfit %>% lorentz_parameters())[['f0']], 2)} Hz"),
+          hovertemplate = "Freq.: %{x:.1f} Hz"
+        )
+    }else{
+      spec_plotly <-
+        spec_plotly %>%
+        add_trace(
+          type = "scatter", mode = "line",
+          x = 0, y = 1,color = I("red"),
+          visible = "legendonly",
+          name = "lorentz-fit did not converge"
+        )
+    }
+
+
     if(plot_type == "ggplot"){
       return(periodogram)
-    }else
-      return(spec_plotly)
-
+    }else{
+      return(
+        spec_plotly %>%
+          config(
+            displaylogo = FALSE,
+            modeBarButtonsToRemove = c("zoomIn2d", "zoomOut2d", "lasso2d", "pan2d", "hoverClosestCartesian", "hoverCompareCartesian")
+            )
+        )
+      }
   }
