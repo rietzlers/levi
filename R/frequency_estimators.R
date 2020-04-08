@@ -263,7 +263,6 @@ regular_ts <- function(data, signal, sr) {
 gen_spec_plot <-
   function(est_spec, lfit_models, scale = "log10", bp, type_choosen = "fft", sample_rate, plot_type = "ggplot"){
 
-    browser()
     periodogram <-
       est_spec %>%
       filter(f %>% between(bp[1], bp[2])) %>%
@@ -277,6 +276,10 @@ gen_spec_plot <-
       ) +
       labs(x = "Frequency [Hz]")
 
+    if(plot_type == "ggplot"){
+      return(periodogram)
+    }
+
     spec_plotly <-
       est_spec %>%
       filter(f > 0) %>%
@@ -289,9 +292,9 @@ gen_spec_plot <-
           add_trace(
             type = "scatter", mode = "markers",
             x = ~f, y = ~fc_amp, color = I("blue"),
-            text = ~if_else(near(fc_amp, fc_amp_max/2), str_glue("<span style='color:blue; font-weight:bold;'>{round(f_dom,1)} Hz</span>"), ""),
+            text = ~if_else(near(fc_amp, fc_amp_max/2), str_glue("<span style='color:blue; font-weight:bold;'>{round(f_dom, 1)} Hz</span>"), ""),
             textposition = "middle left",
-            name = str_glue("fft; f <sub>dom</sub>: {round(f_dom, 2)} Hz"),
+            name = str_glue("fft; f <sub>dom</sub>: {round(f_dom, 1)} Hz"),
             hovertemplate = "Freq.: %{x:.1f} Hz"
           ) %>%
           slice(which.max(fc_amp)) %>%
@@ -313,9 +316,9 @@ gen_spec_plot <-
           add_trace(
             type = "scatter", mode = "markers",
             x = ~f, y = ~fc_amp, color = I("black"),
-            text = ~if_else(near(fc_amp, fc_amp_max/2), str_glue("<b>{round(f_dom,1)} Hz</b>"), ""),
+            text = ~if_else(near(fc_amp, fc_amp_max/2), str_glue("<b>{round(f_dom, 1)} Hz</b>"), ""),
             textposition = "middle right",
-            name = str_glue("spectrum; f <sub>dom</sub>: {round(f_dom, 2)} Hz"),
+            name = str_glue("spectrum; f <sub>dom</sub>: {round(f_dom, 1)} Hz"),
             hovertemplate = "Freq.: %{x:.1f} Hz"
           ) %>%
           slice(which.max(fc_amp)) %>%
@@ -344,14 +347,15 @@ gen_spec_plot <-
         )
       )
 
-    if(!is.null(lfit_models)){
+    if(!is.null(  lfit_models$to_fft_data)){
+      lfit <-   lfit_models$to_fft_data
       spec_plotly <-
         spec_plotly %>%
         add_trace(
           type = "scatter", mode = "line",
-          data = tibble(f = seq(bp[1], bp[2], by = 1/100)) %>% lorentz_amps(lfit_models),
-          x = ~f, y = ~lf_amp, color = I("red"),
-          name = str_glue("Lortentz-fit; f <sub>0</sub>: {round((lfit %>% lorentz_parameters())[['f0']], 2)} Hz"),
+          data = tibble(f = seq(bp[1], bp[2], by = 1/100)) %>% lorentz_amps(lfit),
+          x = ~f, y = ~lf_amp, color = I("blue"),
+          name = str_glue("Lortentz-fit (fft); f <sub>0</sub>: {round((lfit %>% lorentz_parameters())[['f0']], 1)} Hz"),
           hovertemplate = "Freq.: %{x:.1f} Hz"
         )
     }else{
@@ -359,22 +363,41 @@ gen_spec_plot <-
         spec_plotly %>%
         add_trace(
           type = "scatter", mode = "line",
-          x = 0, y = 1,color = I("red"),
+          x = 0, y = 1,color = I("blue"),
           visible = "legendonly",
-          name = "lorentz-fit did not converge"
+          name = "lorentz-fit (fft) did not converge"
+        )
+    }
+
+    if(!is.null(  lfit_models$to_spectrum_data)){
+      lfit <-   lfit_models$to_spectrum_data
+      spec_plotly <-
+        spec_plotly %>%
+        add_trace(
+          type = "scatter", mode = "line",
+          data = tibble(f = seq(bp[1], bp[2], by = 1/100)) %>% lorentz_amps(lfit),
+          x = ~f, y = ~lf_amp, color = I("black"),
+          name = str_glue("Lortentz-fit (spectrum); f <sub>0</sub>: {round((lfit %>% lorentz_parameters())[['f0']], 1)} Hz"),
+          hovertemplate = "Freq.: %{x:.1f} Hz"
+        )
+    }else{
+      spec_plotly <-
+        spec_plotly %>%
+        add_trace(
+          type = "scatter", mode = "line",
+          x = 0, y = 1,color = I("blue"),
+          visible = "legendonly",
+          name = "lorentz-fit (spectrum) did not converge"
         )
     }
 
 
-    if(plot_type == "ggplot"){
-      return(periodogram)
-    }else{
-      return(
-        spec_plotly %>%
+    return(
+      spec_plotly %>%
           config(
             displaylogo = FALSE,
             modeBarButtonsToRemove = c("zoomIn2d", "zoomOut2d", "lasso2d", "pan2d", "hoverClosestCartesian", "hoverCompareCartesian")
             )
-        )
-      }
+    )
+
   }
