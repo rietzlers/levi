@@ -261,8 +261,9 @@ regular_ts <- function(data, signal, sr) {
 #'
 #' @export
 gen_spec_plot <-
-  function(est_spec, lfit, scale = "log10", bp, type_choosen = "fft", sample_rate, plot_type = "ggplot"){
+  function(est_spec, lfit_models, scale = "log10", bp, type_choosen = "fft", sample_rate, plot_type = "ggplot"){
 
+    browser()
     periodogram <-
       est_spec %>%
       filter(f %>% between(bp[1], bp[2])) %>%
@@ -352,12 +353,12 @@ gen_spec_plot <-
         )
       )
 
-    if(!is.null(lfit)){
+    if(!is.null(lfit_models)){
       spec_plotly <-
         spec_plotly %>%
         add_trace(
           type = "scatter", mode = "line",
-          data = tibble(f = seq(bp[1], bp[2], by = 1/100)) %>% lorentz_amps(lfit),
+          data = tibble(f = seq(bp[1], bp[2], by = 1/100)) %>% lorentz_amps(lfit_models),
           x = ~f, y = ~lf_amp, color = I("red"),
           name = str_glue("Lortentz-fit; f <sub>0</sub>: {round((lfit %>% lorentz_parameters())[['f0']], 2)} Hz"),
           hovertemplate = "Freq.: %{x:.1f} Hz"
