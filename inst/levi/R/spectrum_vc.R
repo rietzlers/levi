@@ -31,24 +31,7 @@ spectrumUI <- function(id) {
 spectrum_ctrl <- function(input, output, session, tevi_model, data_selection, signal_name,
                           selected_tab, spectrum_view_UI, tasks, notifications){
 
-  # data ----
-  est_spec <- reactive({
-    levi::estimate_signal_spectrum(
-      data_selection(),
-      signal_name(),
-      tevi_model()$frame_rate,
-      spans = spans(),
-      taper = taper()
-    )
-  })
-  lfit <- reactive({
-    lfit <-
-      levi::fit_lorentz(
-      dplyr::filter(est_spec(), type == input$calc_method),
-      bp = bp(), # lorentz-kurve wird IMMER an die BP-gefilterte Kurve angepasst!
-      sr = tevi_model()$frame_rate)
-    lfit
-  })
+  # data: parameters ----
   bp <- reactive(({
     input$brush %>%
       levi::get_brush_range( "set band-pass by brushing spectrum-plot") %>%
@@ -68,11 +51,30 @@ spectrum_ctrl <- function(input, output, session, tevi_model, data_selection, si
     validate(need(input$taper, label = "taper"))
     input$taper
   })
+  # data: estimates
+  spectrum_estimate <- reactive({
+    levi::estimate_signal_spectrum(
+      data_selection(),
+      signal_name(),
+      tevi_model()$frame_rate,
+      spans = spans(),
+      taper = taper()
+    )
+  })
+  lfit <- reactive({
+    lfit <-
+      levi::fit_lorentz(
+      dplyr::filter(spectrum_estimate(), type == input$calc_method),
+      bp = bp(), # lorentz-kurve wird IMMER an die BP-gefilterte Kurve angepasst!
+      sr = tevi_model()$frame_rate)
+    lfit
+  })
+
 
   dom_freq <- reactive({
     f_dom <- NULL
     c(f_dom, ...)  %<-%
-      (est_spec() %>%
+      (spectrum_estimate() %>%
          dplyr::filter(type == input$calc_method, f %>% between(bp()[1], bp()[2])) %>%
          levi::get_dom_freq(sample_rate = tevi_model()$frame_rate) %>%
         round(2))
@@ -91,7 +93,7 @@ spectrum_ctrl <- function(input, output, session, tevi_model, data_selection, si
   # outputs  -----------
   output$complete_spectrum <- renderPlot({
       gen_spec_plot(
-        est_spec(),
+        spectrum_estimate(),
         lfit = NULL,
         scale = input$scale,
         bp = c(0, tevi_model()$frame_rate/2),
@@ -101,7 +103,7 @@ spectrum_ctrl <- function(input, output, session, tevi_model, data_selection, si
     })
   output$bp_spectrum <- renderPlotly({
       gen_spec_plot(
-        est_spec(),
+        spectrum_estimate(),
         lfit = lfit(),
         scale = input$scale,
         bp = bp(),
