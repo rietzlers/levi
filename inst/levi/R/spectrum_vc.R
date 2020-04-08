@@ -17,8 +17,8 @@ spectrumUI <- function(id) {
       tabPanel("Controls",
                selectInput(ns("scale"), label = "Set scaling of spectrogram ordinate", selected = "log10", choices = c("raw", "log10")),
                bsTooltip(ns("scale"), "scaling of spectrogram-ordinate", "top"),
-               selectInput(ns("type"), label = "Choose type of data to fit lorentz to", selected = "spectrum", choices = c("spectrum", "fft")),
-               bsTooltip(ns("type"), "use FFT/spectrogram to calculate periodogram", "top"),
+               selectInput(ns("calc_method"), label = "Choose method to calculate Foruier-Coefficients", selected = "spectrum", choices = c("spectrum", "fft")),
+               bsTooltip(ns("calc_method"), "use FFT/spectrogram to calculate periodogram", "top"),
                textInput(ns("spans"), label = "span", value = "c(3,3)"),
                bsTooltip(ns("spans"), "specify daniell-smoother: NULL for no smoothing", "top", options = list(container = "body")),
                numericInput(ns("taper"), label = "taper", value = 0.1, step = .1, min = 0, max = 1),
@@ -44,16 +44,9 @@ spectrum_ctrl <- function(input, output, session, tevi_model, data_selection, si
   lfit <- reactive({
     lfit <-
       levi::fit_lorentz(
-      dplyr::filter(est_spec(), type == input$type),
+      dplyr::filter(est_spec(), type == input$calc_method),
       bp = bp(), # lorentz-kurve wird IMMER an die BP-gefilterte Kurve angepasst!
       sr = tevi_model()$frame_rate)
-    notifications_list <- notifications()
-    if(is.null(lfit)){
-      notifications_list[["lfit"]] <- notificationItem("lorentz-fit did not succed", icon = icon("frown"), status = "warning")
-    }else{
-      notifications_list[["lfit"]] <- NULL
-    }
-    notifications(notifications_list)
     lfit
   })
   bp <- reactive(({
@@ -80,7 +73,7 @@ spectrum_ctrl <- function(input, output, session, tevi_model, data_selection, si
     f_dom <- NULL
     c(f_dom, ...)  %<-%
       (est_spec() %>%
-         dplyr::filter(type == input$type, f %>% between(bp()[1], bp()[2])) %>%
+         dplyr::filter(type == input$calc_method, f %>% between(bp()[1], bp()[2])) %>%
          levi::get_dom_freq(sample_rate = tevi_model()$frame_rate) %>%
         round(2))
     validate(need(f_dom, "f_dom"))
@@ -103,7 +96,7 @@ spectrum_ctrl <- function(input, output, session, tevi_model, data_selection, si
         scale = input$scale,
         bp = c(0, tevi_model()$frame_rate/2),
         sample_rate = tevi_model()$frame_rate,
-        type_choosen= input$type
+        type_choosen= input$calc_method
         )
     })
   output$bp_spectrum <- renderPlotly({
@@ -113,14 +106,14 @@ spectrum_ctrl <- function(input, output, session, tevi_model, data_selection, si
         scale = input$scale,
         bp = bp(),
         sample_rate = tevi_model()$frame_rate,
-        type_choosen =  input$type,
+        type_choosen =  input$calc_method,
         plot_type = "plot_ly"
       )
     })
 
   # return-values -----------
   list(
-    type = reactive(input$type),
+    type = reactive(input$calc_method),
     bp = bp,
     dom_freq = dom_freq,
     f0 = f0,
