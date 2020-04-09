@@ -5,7 +5,9 @@ resultsUI <- function(id){
     tabsetPanel(
       tabPanel("Result-Plots",
         fluidRow(
-          column(width = 6,plotlyOutput(ns("surface_tension_plot"))),
+          column(width = 6,
+                 plotlyOutput(ns("surface_tension_plot")),
+                 verbatimTextOutput(ns("click_on_st"))),
           column(width = 6, plotlyOutput(ns("viscosity_plot")))
           )
       ),
@@ -32,13 +34,13 @@ results_ctrl <- function(input, output, session,
                          tevi_model, sample_specs, data_selection, time_range, signal_name,
                          type, bp, dom_freq, f0, d, spans, taper){
   # data ----------
-  results_data_template <- {
-      bind_cols(
+  spec_analysis_results <- reactiveVal(
+    bind_cols(
       c("t", "wl", "dom_freq", "f0", "d", "taper") %>% purrr::map_dfc(setNames, object = list(numeric())),
       c("signal", "data", "type", "spans") %>% purrr::map_dfc(setNames, object = list(character())),
       c("ephemeral") %>% purrr::map_dfc(setNames, object = list(logical()))
-    )}
-  spec_analysis_results <- reactiveVal(results_data_template)
+    )
+  )
   ephemeral_result <- reactive({
     tibble(
       type = type(),
@@ -54,13 +56,13 @@ results_ctrl <- function(input, output, session,
       ephemeral = TRUE
     )
   })
-  add_result <- function(result) {
-    spec_analysis_results(spec_analysis_results() %>%
-                            dplyr::union(result %>% mutate(ephemeral = FALSE)))
-  }
+
   # observers ---------
   observeEvent(input$add_result, {
-    add_result(ephemeral_result())
+    spec_analysis_results(
+      spec_analysis_results() %>%
+        dplyr::union(ephemeral_result() %>% mutate(ephemeral = FALSE))
+      )
   }) # add temp result to result-data
 
   # bookmark-callbacks ---------------
@@ -100,12 +102,46 @@ results_ctrl <- function(input, output, session,
         ylim(ylim)
 
       sf_plot
+
+      spec_analysis_results %>%
+        plot_ly(source = session$ns("st_results")) %>%
+        add_trace(
+          type = "scatter", mode = "markers",
+          x = ~t, y = ~dom_freq, color = ~type,
+          name = "Freq. with max. Amplitude"
+        )%>%
+        add_trace(
+          type = "scatter", mode = "markers",
+          x = ~t, y = ~f0, color = ~type,
+          name = "f0: estimate from lorentz-fit"
+        ) %>%
+        layout(
+          legend = list(
+            x = 0.8, y = 0.9
+          ),
+          xaxis = list(
+            title = "time [s]"
+          ),
+          yaxis = list(
+            title = "Freq [Hz]",
+            range = bp()
+          )
+        ) %>%
+        event_register("plotly_click")
+
     })
+
+  output$click_on_st <- renderPrint({
+    d <- event_data("plotly_click", source = session$ns("st_results"))
+    if (is.null(d)) "Click events appear here (double-click to clear)" else d
+  })
+
   output$viscosity_plot <- renderPlotly({
       spec_analysis_results <-
         spec_analysis_results() %>% dplyr::union(ephemeral_result())
       validate(need(spec_analysis_results, label = "spec_analysis_results"))
-      spec_analysis_results %>%
+
+      (spec_analysis_results %>%
         mutate(
           smoothed_temp = convert_to_temp(t, tevi_model()$tevi_data),
           viscosity = to_viscosity(d, sample_specs()$mass, sample_specs()$radius),
@@ -113,8 +149,10 @@ results_ctrl <- function(input, output, session,
         ggplot(aes(x = .data[[input$visc_xvar]], color = ephemeral)) +
         geom_point(aes(y = .data[[input$visc_yvar]]),  size = 2) +
         labs(x = "time/temp", y = "Damping/Viscosity") +
-        theme(legend.position="none")
-    })
+        theme(legend.position="none")) %>%
+        ggplotly() %>%
+        event_register("plotly_click")
+      })
 
   # results-table-output ---------
   output$spec_analsis_results_DT <- DT::renderDataTable({
