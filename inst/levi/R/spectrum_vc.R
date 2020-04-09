@@ -51,7 +51,7 @@ spectrum_ctrl <- function(input, output, session, tevi_model, data_selection, si
     validate(need(input$taper, label = "taper"))
     input$taper
   })
-  # data: estimates
+  # data: estimates------------
   spectrum_estimate <- reactive({
     levi::estimate_signal_spectrum(
       data_selection(),
@@ -61,16 +61,29 @@ spectrum_ctrl <- function(input, output, session, tevi_model, data_selection, si
       taper = taper()
     )
   })
-  lfit <- reactive({
-    lfit <-
+  lfit_models <- reactive({
+    lorentz_fit_to_fft <-
       levi::fit_lorentz(
-      dplyr::filter(spectrum_estimate(), type == input$calc_method),
+      dplyr::filter(spectrum_estimate(), type == "fft"),
       bp = bp(), # lorentz-kurve wird IMMER an die BP-gefilterte Kurve angepasst!
       sr = tevi_model()$frame_rate)
-    lfit
+    lorentz_fit_to_spectrum <-
+      levi::fit_lorentz(
+        dplyr::filter(spectrum_estimate(), type == "spectrum"),
+        bp = bp(), # lorentz-kurve wird IMMER an die BP-gefilterte Kurve angepasst!
+        sr = tevi_model()$frame_rate)
+    fitted_models = list(
+      to_fft_data = lorentz_fit_to_fft,
+      to_spectrum_data = lorentz_fit_to_spectrum
+    )
+  })
+  dom_freq_estimates <- reactive({
+
   })
 
+  damping_estimate <- reactive({
 
+  })
   dom_freq <- reactive({
     f_dom <- NULL
     c(f_dom, ...)  %<-%
@@ -81,35 +94,38 @@ spectrum_ctrl <- function(input, output, session, tevi_model, data_selection, si
     validate(need(f_dom, "f_dom"))
     f_dom
   })
+
   f0 <- reactive({
-    validate(need(lfit(), message = "lorentz-fit did not succed"))
-    lorentz_parameters(lfit())[2]
+    validate(need(lfit_models()$to_fft_data, message = "lorentz-fit did not succed"))
+    lorentz_parameters(lfit_models()$to_fft_data)[2]
   })
   d <- reactive({
-    validate(need(lfit(), message = "lorentz-fit did not succed"))
-    lorentz_parameters(lfit())[3]
+    validate(need(lfit_models()$to_fft_data, message = "lorentz-fit did not succed"))
+    lorentz_parameters(lfit_models()$to_fft_data)[3]
   })
 
   # outputs  -----------
   output$complete_spectrum <- renderPlot({
-      gen_spec_plot(
-        spectrum_estimate(),
-        lfit = NULL,
-        scale = input$scale,
-        bp = c(0, tevi_model()$frame_rate/2),
-        sample_rate = tevi_model()$frame_rate,
-        type_choosen= input$calc_method
-        )
+    spectrum_estimate() %>%
+      filter(f %>% between(0, tevi_model()$frame_rate/2)) %>%
+      ggplot(aes(x = f)) +
+      geom_line(data = ~ dplyr::filter(.x, type == "spectrum"), aes(y = fc_amp)) +
+      geom_point(data = ~ dplyr::filter(.x, type == "spectrum"), aes(y = fc_amp), shape = "x", size = 0.8) +
+      geom_point(data = ~ dplyr::filter(.x, type == "fft", f > 0), aes(y = fc_amp), color = "blue", shape = "+", size = 1.5) +
+      scale_y_continuous(
+        name = if_else(input$scale == "log10", "log10(Fourier-Coef-Amp)", "Fourier-Coef-Amp"),
+        trans = if_else(input$scale == "log10", "log10", "identity")
+      ) +
+      labs(x = "Frequency [Hz]")
     })
+
   output$bp_spectrum <- renderPlotly({
       gen_spec_plot(
         spectrum_estimate(),
-        lfit = lfit(),
+        lfit_models = lfit_models(),
         scale = input$scale,
         bp = bp(),
-        sample_rate = tevi_model()$frame_rate,
-        type_choosen =  input$calc_method,
-        plot_type = "plot_ly"
+        sample_rate = tevi_model()$frame_rate
       )
     })
 
