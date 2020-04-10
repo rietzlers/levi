@@ -120,7 +120,8 @@ spectrum_ctrl <- function(input, output, session, tevi_model, data_selection, si
         lp_limit = bp()[2],
         win_start = window_range()[1],
         win_end = window_range()[2],
-        t = mean(window_range(), na.rm = TRUE)
+        t = mean(window_range(), na.rm = TRUE),
+        signal = signal_name()
       )
 
   })
@@ -142,7 +143,6 @@ spectrum_ctrl <- function(input, output, session, tevi_model, data_selection, si
     })
 
   output$bp_spectrum <- renderPlotly({
-    parameter_estimates()
       gen_spec_plot(
         spectrum_estimate(),
         lfit_models = lfit_models(),
@@ -153,9 +153,7 @@ spectrum_ctrl <- function(input, output, session, tevi_model, data_selection, si
     })
 
   # return-values -----------
-  list(
-    parameter_estimates
-  )
+  parameter_estimates
 
 }
 
