@@ -17,10 +17,10 @@ gen_spec_plot <-
       filter(f > 0) %>%
       plot_ly() %>%
       add_fun(function(p){
-        p_data <- p %>% plotly_data() %>% filter(type == "fft")
+        p_data <- p %>% plotly_data() %>% filter(calc_method == "fft")
         c(f_dom, fc_amp_max) %<-% (p_data %>% get_dom_freq(sample_rate))
         p %>%
-          filter(type == "fft") %>%
+          filter(calc_method == "fft") %>%
           add_trace(
             type = "scatter", mode = "markers",
             x = ~f, y = ~fc_amp, color = I("blue"),
@@ -41,10 +41,10 @@ gen_spec_plot <-
           )
       }) %>%
       add_fun(function(p){
-        p_data <- p %>% plotly_data() %>% filter(type == "spectrum")
+        p_data <- p %>% plotly_data() %>% filter(calc_method == "spectrum")
         c(f_dom, fc_amp_max) %<-% (p_data %>% get_dom_freq(sample_rate))
         p %>%
-          filter(type == "spectrum") %>%
+          filter(calc_method == "spectrum") %>%
           add_trace(
             type = "scatter", mode = "markers",
             x = ~f, y = ~fc_amp, color = I("black"),

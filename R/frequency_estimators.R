@@ -71,7 +71,7 @@ bp_filter <- function(sig_data, signal_name, bp, sr){
 #' @param spans vector of odd integers giving the widths of modified Daniell smoothers to be used to smooth the periodogram.
 #' @param taper specifies the proportion of data to taper
 #'
-#' @return tibble with vars: f, fc_amp, type(spectrum/fft), spec
+#' @return tibble with vars: f, fc_amp, calc_method(spectrum/fft), spec
 #'
 #' @export
 estimate_signal_spectrum <- function(signal_data, signal_name, frame_rate,  spans = c(3, 3), taper = 0.1) {
@@ -84,14 +84,14 @@ estimate_signal_spectrum <- function(signal_data, signal_name, frame_rate,  span
 
   tibble(
     f = est_spec$freq,
-    type = "spectrum",
+    calc_method = "spectrum",
     spec = est_spec$spec,
     fc_amp = sqrt(spec)
     ) %>%
     dplyr::union(
       levi::fftc(signal_data, signal_name, sr = frame_rate) %>%
-        mutate(type = "fft") %>%
-        select(f, type, spec, fc_amp) %>%
+        mutate(calc_method = "fft") %>%
+        select(f, calc_method, spec, fc_amp) %>%
         dplyr::filter(f < frame_rate/2)
       )
 }
