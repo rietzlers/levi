@@ -72,6 +72,7 @@ oscillogram_ctrl <- function(input, output, session, tevi_model){
 
   list(
     data_selection,
-    signal_name
+    signal_name,
+    window_range
   )
 }
