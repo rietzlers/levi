@@ -26,8 +26,7 @@ spectrumUI <- function(id) {
 }
 
 # controller ------------
-spectrum_ctrl <- function(input, output, session, tevi_model, data_selection, signal_name,
-                          selected_tab, spectrum_view_UI, tasks, notifications){
+spectrum_ctrl <- function(input, output, session, tevi_model, data_selection, signal_name){
 
   # data: parameters ----
   bp <- reactive(({
@@ -115,29 +114,14 @@ spectrum_ctrl <- function(input, output, session, tevi_model, data_selection, si
 
     f_raw_estimates %>%
       dplyr::union(f_lfit_estimates) %>%
-      left_join(damping_estimates)
+      left_join(damping_estimates, by = c("calc_method")) %>%
+      mutate(
+        hp_limit = bp()[1],
+        lp_limit = bp()[2]
+      )
 
   })
 
-  dom_freq <- reactive({
-    f_dom <- NULL
-    c(f_dom, ...)  %<-%
-      (spectrum_estimate() %>%
-         dplyr::filter(f %>% between(bp()[1], bp()[2])) %>%
-         levi::get_dom_freq(sample_rate = tevi_model()$frame_rate) %>%
-        round(2))
-    validate(need(f_dom, "f_dom"))
-    f_dom
-  })
-
-  f0 <- reactive({
-    validate(need(lfit_models()$to_fft_data, message = "lorentz-fit did not succed"))
-    lorentz_parameters(lfit_models()$to_fft_data)[2]
-  })
-  d <- reactive({
-    validate(need(lfit_models()$to_fft_data, message = "lorentz-fit did not succed"))
-    lorentz_parameters(lfit_models()$to_fft_data)[3]
-  })
 
   # outputs  -----------
   output$complete_spectrum <- renderPlot({
