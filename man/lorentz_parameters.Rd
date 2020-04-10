@@ -2,7 +2,8 @@
 % Please edit documentation in R/frequency_estimators.R
 \name{lorentz_parameters}
 \alias{lorentz_parameters}
-\title{Extract the fitted parameters from fitted lorentz-model}
+\title{Extract the fitted parameters from fitted lorentz-model;
+returns NULL-values if lf_model = NULL, i.e. fit did not converge}
 \usage{
 lorentz_parameters(lf_model)
 }
@@ -10,8 +11,9 @@ lorentz_parameters(lf_model)
 \item{lf_model}{a nls-object as returned from fit_lorentz}
 }
 \value{
-named vector
+named vector: c("A", "f0", "d")
 }
 \description{
-Extract the fitted parameters from fitted lorentz-model
+Extract the fitted parameters from fitted lorentz-model;
+returns NULL-values if lf_model = NULL, i.e. fit did not converge
 }

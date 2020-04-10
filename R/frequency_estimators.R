@@ -165,14 +165,19 @@ fit_lorentz <- function(fc_data, c0, bp, sr, nr_tries = 10){
   return(NULL)
 }
 
-#' Extract the fitted parameters from fitted lorentz-model
+#' Extract the fitted parameters from fitted lorentz-model;
+#' returns NULL-values if lf_model = NULL, i.e. fit did not converge
 #'
 #' @param lf_model a nls-object as returned from fit_lorentz
 #'
-#' @return named vector
+#' @return named vector: c("A", "f0", "d")
 #' @export
 lorentz_parameters <- function(lf_model){
-  abs(round(coef(lf_model), 2))
+  if(!is.null(lf_model)){
+    return(abs(round(coef(lf_model), 2)))
+  }else{
+    return(c("A" = NA_real_, "f0" = NA_real_, "d" = NA_real_))
+  }
 }
 
 
