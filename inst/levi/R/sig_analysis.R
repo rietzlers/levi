@@ -16,9 +16,7 @@ signalAnalysis <- function(input, output, session, tevi_model, sample_specs, tas
 
   parameter_estimates <- callModule(spectrum_ctrl, "spectrum_analysis", tevi_model, data_selection, signal_name, window_range)
 
-  # callModule(results_ctrl, "results",
-  #            tevi_model, sample_specs, data_selection, window_range, signal_name,
-  #            parameter_estimates)
+  callModule(results_ctrl, "results", tevi_model, sample_specs, parameter_estimates)
 
   # return-values ----------
   reactive({
