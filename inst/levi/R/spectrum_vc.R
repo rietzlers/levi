@@ -26,7 +26,7 @@ spectrumUI <- function(id) {
 }
 
 # controller ------------
-spectrum_ctrl <- function(input, output, session, tevi_model, data_selection, signal_name){
+spectrum_ctrl <- function(input, output, session, tevi_model, data_selection, signal_name, window_range){
 
   # data: parameters ----
   bp <- reactive(({
@@ -117,7 +117,10 @@ spectrum_ctrl <- function(input, output, session, tevi_model, data_selection, si
       left_join(damping_estimates, by = c("calc_method")) %>%
       mutate(
         hp_limit = bp()[1],
-        lp_limit = bp()[2]
+        lp_limit = bp()[2],
+        win_start = window_range()[1],
+        win_end = window_range()[2],
+        t = mean(window_range(), na.rm = TRUE)
       )
 
   })
