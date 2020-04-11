@@ -5,15 +5,14 @@ resultsUI <- function(id){
     tabsetPanel(
       tabPanel("Result-Plots",
         fluidRow(
-          column(width = 6,plotlyOutput(ns("surface_tension_plot"))),
-          column(width = 6, plotlyOutput(ns("viscosity_plot")))
+          column(width = 12, plotlyOutput(ns("surface_tension_plot")))
           )
       ),
       tabPanel("Controls",
                actionButton(ns("add_result"), label = "Add current result to result-data", icon = icon("save")),
                fluidRow(
-                 column(width = 12, selectInput(ns("st_xvar"), label = "st-time axis", selected = "t", choices = c("t", "smoothed_temp"))),
-                 column(width = 12, selectInput(ns("st_yvar"), label = "st ordinate", selected = "f", choices = c("f", "st")))
+                 column(width = 6, selectInput(ns("st_xvar"), label = "st-time axis", selected = "t", choices = c("t", "smoothed_temp"))),
+                 column(width = 6, selectInput(ns("st_yvar"), label = "st ordinate", selected = "f", choices = c("f", "st")))
                )
       )
       ),
@@ -75,7 +74,8 @@ results_ctrl <- function(input, output, session, tevi_model, sample_specs, live_
             x = 0.8, y = 0.9
           ),
           xaxis = list(
-            title = "time [s]"
+            title = "time [s]",
+            range = range(tevi_model()$tevi_data[["t"]])
           ),
           yaxis = list(
             title = "Freq [Hz]",
