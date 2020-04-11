@@ -1,5 +1,5 @@
 
-resultsUI <- function(id){
+surface_tension_results_UI <- function(id){
   ns <- NS(id)
   tagList(
     tabsetPanel(
@@ -23,7 +23,7 @@ resultsUI <- function(id){
     )
 }
 
-results_ctrl <- function(input, output, session, tevi_model, sample_specs, live_parameter_estimates){
+surface_tension_results_ctrl <- function(input, output, session, tevi_model, sample_specs, live_parameter_estimates){
 
   # data ----------
   spec_analysis_results <- reactiveVal(
@@ -56,7 +56,7 @@ results_ctrl <- function(input, output, session, tevi_model, sample_specs, live_
       validate(need(spec_analysis_results(), label = "spec_analysis_results"))
 
       spec_analysis_results() %>%
-        plot_ly(source = session$ns("st_results")) %>%
+        plot_ly(source = session$ns("surface_tension_results")) %>%
         add_trace(name = "Freq-Estimates", type = "scatter", mode = "markers",
           x = ~t, y = ~dom_freq_estimate, color = ~calc_method,
           hovertemplate = "%{y:.1f} Hz"

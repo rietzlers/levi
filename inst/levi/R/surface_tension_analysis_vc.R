@@ -1,14 +1,14 @@
 
-signalAnalysisUI <- function(id, width = 12) {
+surface_tension_analysis_UI <- function(id, width = 12) {
   ns <- NS(id)
   tagList(
     oscillogramUI(ns("oscillogram")),
     box(width = width,  title = "Spectrogram", collapsible = TRUE, collapsed = FALSE, spectrumUI(ns("spectrum_analysis"))),
-    box(width = width, resultsUI(ns("results")))
+    box(width = width, surface_tension_results_UI(ns("results")))
   )
 }
 
-signalAnalysis <- function(input, output, session, tevi_model, sample_specs, tasks, notifications){
+surface_tension_analysis_ctrl <- function(input, output, session, tevi_model, sample_specs, tasks, notifications){
 
 
   # module-calls --------
@@ -16,15 +16,6 @@ signalAnalysis <- function(input, output, session, tevi_model, sample_specs, tas
 
   parameter_estimates <- callModule(spectrum_ctrl, "spectrum_analysis", tevi_model, data_selection, signal_name, window_range)
 
-  callModule(results_ctrl, "results", tevi_model, sample_specs, parameter_estimates)
-
-  # return-values ----------
-  reactive({
-    list(
-      selected_signal = signal_name(),
-      window_range = window_range(),
-      bp = bp()
-    )
-  })
+  callModule(surface_tension_results_ctrl, "results", tevi_model, sample_specs, parameter_estimates)
 }
 

@@ -15,13 +15,13 @@ ui <- function(request){
 sidebar =
   dashboardSidebar(sidebarMenu(id = "sidebarMenu_ID",
     menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")),
-    menuItem("Signal Analysis", tabName = "signalAnalysis", icon = icon("signal")),
-    menuItem("Simulate Data", tabName = "simulate_data_tab", icon = icon("microscope")),
-    menuItem("seewave", icon = icon("chart-bar"),
+    menuItem("Signal-Analysis", icon = icon("signal"),
              menuSubItem("Spectrum and Oscillogram", tabName = "spec_osc"),
              menuSubItem("Spec+Dom-Freq", tabName = "spec_dom_freq"),
              menuSubItem("Instantanous Frequency", tabName = "inst_freqs"),
              menuSubItem("Smoothed Signal Envelope", tabName = "sig_envelope")),
+    menuItem("Surface-Tension", tabName = "surface_tension", icon = icon("microscope")),
+    menuItem("Simulate Data", tabName = "simulate_data_tab", icon = icon("microscope")),
     uiOutput("resample_UI")
   )),
 body =
@@ -43,7 +43,7 @@ body =
           tabPanel("Report-Notes", report_notes_UI("report_notes"), icon = icon("clipboard"))
         )),
       tabItem(tabName = "simulate_data_tab", simulate_data_view("simulate_data")),
-      tabItem(tabName = "signalAnalysis", signalAnalysisUI("sa")),
+      tabItem(tabName = "surface_tension", surface_tension_analysis_UI("st_analysis")),
       tabItem(tabName = "spec_osc", seewave_view("spec_osc")),
       tabItem(tabName = "spec_dom_freq", seewave_view("spec_dom_freq")),
       tabItem(tabName = "inst_freqs", seewave_view("inst_freqs")),
@@ -107,7 +107,7 @@ server <- function(input, output, session) {
 
   c(sim_data_model, model_choice) %<-% callModule(simulate_data_ctrl, "simulate_data", resample_UI, selected_sidebar_tab)
 
-  analysis_parameters <- callModule(signalAnalysis, "sa", model, sample_specs, tasks, notifications)
+  callModule(surface_tension_analysis_ctrl, "st_analysis", model, sample_specs, tasks, notifications)
 
   callModule(report_notes_ctrl, "report_notes", sample_specs)
 
