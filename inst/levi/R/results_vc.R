@@ -5,9 +5,7 @@ resultsUI <- function(id){
     tabsetPanel(
       tabPanel("Result-Plots",
         fluidRow(
-          column(width = 6,
-                 plotlyOutput(ns("surface_tension_plot")),
-                 verbatimTextOutput(ns("click_on_st"))),
+          column(width = 6,plotlyOutput(ns("surface_tension_plot"))),
           column(width = 6, plotlyOutput(ns("viscosity_plot")))
           )
       ),
@@ -60,16 +58,17 @@ results_ctrl <- function(input, output, session, tevi_model, sample_specs, live_
 
       spec_analysis_results() %>%
         plot_ly(source = session$ns("st_results")) %>%
-        add_trace(
-          type = "scatter", mode = "markers",
+        add_trace(name = "Freq-Estimates", type = "scatter", mode = "markers",
           x = ~t, y = ~dom_freq_estimate, color = ~calc_method,
-          name = "Freq. with max. Amplitude"
+          hovertemplate = "%{y:.1f} Hz"
         )%>%
         add_trace(data = live_parameter_estimates(),
-                  type = "scatter", mode = "markers",
+                  name = "Freq", type = "scatter", mode = "markers",
                   x = ~t, y = ~dom_freq_estimate, color = ~calc_method,
                   marker = list(symbol = "square-cross-open", size = 10),
-                  name = "Freq. with max. Amplitude"
+                  hovertemplate = "%{y:.1f} Hz",
+                  showlegend = FALSE
+
         ) %>%
         layout(
           legend = list(
@@ -82,15 +81,10 @@ results_ctrl <- function(input, output, session, tevi_model, sample_specs, live_
             title = "Freq [Hz]",
             range = c(10, 70)
           )
-        ) %>%
-        event_register("plotly_click")
+        )
 
     })
 
-  output$click_on_st <- renderPrint({
-    d <- event_data("plotly_click", source = session$ns("st_results"))
-    if (is.null(d)) "Click events appear here (double-click to clear)" else d
-  })
 
   # results-table-output ---------
   output$spec_analsis_results_DT <- DT::renderDataTable({
