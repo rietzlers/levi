@@ -5,7 +5,6 @@ oscillogramUI <- function(id){
     fluidRow(
       column(width =  1,
              selectInput(ns("selected_signal"), label = "Signal", choices = NULL),
-             verbatimTextOutput(ns("window_info")),
              numericInput(ns("window_start"), label = "ws", value = 0 )),
       column(width = 11, plotlyOutput(ns("oscillogram")))
     )
@@ -37,9 +36,6 @@ oscillogram_ctrl <- function(input, output, session, tevi_model){
     window(c(0,1) + input$window_start)
   })
 
-  output$window_info <- renderPrint({
-    window() %>% round(1)
-  })
 
   window_range <- reactive({
     xrange <- event_data("plotly_relayout")$xaxis.range
@@ -67,12 +63,11 @@ oscillogram_ctrl <- function(input, output, session, tevi_model){
         y = ~get(input$selected_signal)
         ) %>%
       layout(
-        title = "signal",
         yaxis = list(title = input$selected_signal),
         xaxis = list(title = "time [s]",
                      range = window())
       ) %>%
-      rangeslider() %>%
+      rangeslider(thickness = .4) %>%
       event_register("plotly_relayout")
   })
 
