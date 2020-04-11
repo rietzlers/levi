@@ -25,7 +25,7 @@ source("R/results_vc.R")
 source("R/seewaveplots_vc.R")
 source("R/report_notes_vc.R")
 source("R/simulate_data_vc.R")
-source("R/oscillogram_vc.R")
+source("R/oscillogramly_vc.R")
 # load data ---------------------------------------------------------------
 
 
