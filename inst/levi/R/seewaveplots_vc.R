@@ -1,17 +1,31 @@
 seewave_view <- function(id){
   ns <- NS(id)
   tagList(
+    selectInput(ns("selected_signal"), label = "Signal", choices = NULL),
+    fluidRow(
+      column(width = 3, numericInput(ns("bp_min"), label = "BP-Min", value = 0, min = 0, step = 5)),
+      column(width = 3, numericInput(ns("bp_max"), label = "BP-Max", value = 100, min = 0, max = 100, step = 5)),
+      column(width = 3, numericInput(ns("ws"), label = "window-start", value = 0, min = 0, step = 1)),
+      column(width = 3, numericInput(ns("we"), label = "window-end", value = 10, min = 0, step = 1))
+    ),
     plotOutput(ns("seewave_plot"), height = "800px")
   )
 }
 
-seewave_ctrl <- function(input, output, session, tevi_model, analysis_parameters, selectedSidebarMenu){
+seewave_ctrl <- function(input, output, session, tevi_model, selected_sidebar_tab){
+
+  # observers -----------
+  observeEvent(tevi_model(),{
+    updateSelectInput(session, "selected_signal", label = "Signal",
+                      choices = names(tevi_model()$tevi_data),
+                      selected = "radius_y")
+  }) #update signal-selection
 
   output$seewave_plot <- renderPlot({
-    sig_name <- analysis_parameters()$selected_signal
-    time_range <- analysis_parameters()$window_range
+    sig_name <- input$selected_signal
+    time_range <- c(input$ws, input$we)
     sr <- tevi_model()$frame_rate
-    bp <- analysis_parameters()$bp
+    bp <- c(input$bp_min, input$bp_max)
     bp[1] <- max(0, bp[1])
     bp[2] <- min(sr, bp[2])
 
@@ -27,7 +41,7 @@ seewave_ctrl <- function(input, output, session, tevi_model, analysis_parameters
     wl <- 2^8
     #to do: select window-length conditional on Observation-length
 
-    if(selectedSidebarMenu() == "spec_osc"){
+    if(selected_sidebar_tab() == "spec_osc"){
       validate(need(N > 2^8, message = str_glue("selected time range is to short (it is only {round(T, 2)}s long)")))
       return(
         seewave::spectro(
@@ -36,7 +50,7 @@ seewave_ctrl <- function(input, output, session, tevi_model, analysis_parameters
       )
      )
     }
-    if(selectedSidebarMenu() == "spec_dom_freq"){
+    if(selected_sidebar_tab() == "spec_dom_freq"){
       validate(need(N > 2^8, message = str_glue("selected time range is to short (it is only {round(T, 2)} s long)")))
       dom_freqs <- seewave::dfreq(signal, f = sr, wl = wl, ovlp = 50, bandpass = bp, threshold = 10, plot = FALSE)
         return(
@@ -46,13 +60,13 @@ seewave_ctrl <- function(input, output, session, tevi_model, analysis_parameters
           }
         )
     }
-    if(selectedSidebarMenu() == "inst_freqs"){
+    if(selected_sidebar_tab() == "inst_freqs"){
       return(
         seewave::ifreq(signal, f = sr, threshold = 10,  ylim = bp/1000,
                        main="Instantaneous frequency with Hilbert transform")
       )
     }
-    if(selectedSidebarMenu() == "sig_envelope"){
+    if(selected_sidebar_tab() == "sig_envelope"){
       return({
         seewave::oscillo(signal, f = sr, alab = sig_name)
         par(new = TRUE)
