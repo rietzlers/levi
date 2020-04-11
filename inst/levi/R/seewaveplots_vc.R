@@ -1,12 +1,12 @@
 seewave_view <- function(id){
   ns <- NS(id)
   tagList(
-    selectInput(ns("selected_signal"), label = "Signal", choices = NULL),
     fluidRow(
-      column(width = 3, numericInput(ns("bp_min"), label = "BP-Min", value = 0, min = 0, step = 5)),
-      column(width = 3, numericInput(ns("bp_max"), label = "BP-Max", value = 100, min = 0, max = 100, step = 5)),
-      column(width = 3, numericInput(ns("ws"), label = "window-start", value = 0, min = 0, step = 1)),
-      column(width = 3, numericInput(ns("we"), label = "window-end", value = 10, min = 0, step = 1))
+      column(width = 3, selectInput(ns("selected_signal"), label = "Signal", choices = NULL)),
+      column(width = 2, numericInput(ns("bp_min"), label = "BP-Min", value = 0, min = 0, step = 5)),
+      column(width = 2, numericInput(ns("bp_max"), label = "BP-Max", value = 100, min = 0, max = 200, step = 5)),
+      column(width = 2, numericInput(ns("ws"), label = "window-start", value = 0, min = 0, step = 1)),
+      column(width = 2, numericInput(ns("we"), label = "window-end", value = 10, min = 0, step = 1))
     ),
     plotOutput(ns("seewave_plot"), height = "800px")
   )
