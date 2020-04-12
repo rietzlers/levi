@@ -3,24 +3,23 @@
 # view -----------
 spectrumUI <- function(id) {
   ns <- NS(id)
-
   tagList(
-    tabsetPanel(
-      tabPanel("Spectrogram",
+    div(
         fluidRow(
-          column(width = 6,
+          column(width = 1,
+                 selectInput(ns("scale"), label = "Set scaling of spectrogram ordinate", selected = "log10", choices = c("raw", "log10")),
+                 bsTooltip(ns("scale"), "scaling of spectrogram-ordinate", "top"),
+                 textInput(ns("spans"), label = "span", value = "c(3,3)"),
+                 bsTooltip(ns("spans"), "specify daniell-smoother: NULL for no smoothing", "top", options = list(container = "body")),
+                 numericInput(ns("taper"), label = "taper", value = 0.1, step = .1, min = 0, max = 1),
+                 bsTooltip(ns("taper"), "apply cosine-taper to % of window", "top")),
+          column(width = 5,
                  plotOutput(ns("complete_spectrum"), height = 250,
                             brush = brushOpts(id = ns("brush"), fill = "#ccc", direction = "x", resetOnNew = FALSE))),
-          column(width = 6, plotlyOutput(ns("bp_spectrum"), height = 250))
-        )
-      ),
-      tabPanel("Controls",
-               selectInput(ns("scale"), label = "Set scaling of spectrogram ordinate", selected = "log10", choices = c("raw", "log10")),
-               bsTooltip(ns("scale"), "scaling of spectrogram-ordinate", "top"),
-               textInput(ns("spans"), label = "span", value = "c(3,3)"),
-               bsTooltip(ns("spans"), "specify daniell-smoother: NULL for no smoothing", "top", options = list(container = "body")),
-               numericInput(ns("taper"), label = "taper", value = 0.1, step = .1, min = 0, max = 1),
-               bsTooltip(ns("taper"), "apply cosine-taper to % of window", "top"))
+          column(width = 6,
+                 plotlyOutput(ns("bp_spectrum"), height = 250))
+        ),
+    style = "border-style = groove; border: 1px solid black; padding: 25px"
     )
   )
 }
@@ -136,8 +135,8 @@ spectrum_ctrl <- function(input, output, session, tevi_model, data_selection, si
       geom_point(data = ~ dplyr::filter(.x, calc_method == "spectrum"), aes(y = fc_amp), shape = "x", size = 0.8) +
       geom_point(data = ~ dplyr::filter(.x, calc_method == "fft", f > 0), aes(y = fc_amp), color = "blue", shape = "+", size = 1.5) +
       scale_y_continuous(
-        name = if_else(input$scale == "log10", "log10(Fourier-Coef-Amp)", "Fourier-Coef-Amp"),
-        trans = if_else(input$scale == "log10", "log10", "identity")
+        name = "log10(Fourier-Coef-Amp)", # if_else(input$scale == "log10", "log10(Fourier-Coef-Amp)", "Fourier-Coef-Amp"),
+        trans = "log10"#if_else(input$scale == "log10", "log10", "identity")
       ) +
       labs(x = "Frequency [Hz]")
     })
