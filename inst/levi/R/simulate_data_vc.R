@@ -11,53 +11,35 @@ simulate_data_view <- function(id){
     fluidRow(
       column(width = 2, HTML("choose data to analyse:")),
       column(width = 4, selectInput(ns("data_choice"), label = NULL, choices = c("Tevi-Data" = "tevi_data", "Simulated Data" = "sim_data"))),
+      column(width = 3, numericInput(ns("lp"), "Lower BP", min = 0, max = 400, value = 0)),
+      column(width = 3, numericInput(ns("hp"), "Upper BP", min = 0, max = 400, value = 400))
     ),
     plotOutput(ns("signal_plot"), height = "250px"),
-    plotOutput(ns("spec_osc")),
-    fluidRow(
-      column(width = 4, numericInput(ns("lp"), "Lower BP", min = 0, max = 400, value = 0)),
-      column(width = 4, numericInput(ns("hp"), "Upper BP", min = 0, max = 400, value = 400))
-    )
+    plotOutput(ns("spec_osc"))
   )
 }
 
 
-simulate_data_ctrl <- function(input, output, session, resample_UI, selected_sidebar_tab){
+simulate_data_ctrl <- function(input, output, session, resample_UI){
 
-  observeEvent({
-    selected_sidebar_tab()
-    input$data_choice
-  },
-  {
-    if (input$data_choice == "sim_data") {
-      resample_UI(
-        div(
-          if(selected_sidebar_tab() == "simulate_data_tab"){
-          showModal(modalDialog(
-            title = "Analysing simulated data",
-            "You can repeat the simulation by pressing the repeat data-simulation'-button in the sidebar",
-            easyClose = TRUE))},
-          actionButton(session$ns("resample"), "repeat data-simulation"))
-      )
-    } else{
-      resample_UI(NULL)
-    }
-  })
-  observeEvent(input$sr, updateNumericInput(session, "hp", value = input$sr/2, max = input$sr/2))
+  # local data ------
+  signal_function_string <- reactive(input$signal) %>% debounce(1000)
+  noise_sd <- reactive(input$noise) %>% debounce(500)
+  sample_rate <- reactive(input$sr) %>% debounce(500)
+  T <- reactive(input$T) %>% debounce(500)
+
   ex_data <- reactive({
     input$resample
     example_data <- NULL
     tryCatch(
-      error = function(e) {
-        e
-      },
+      error = function(e) {e},
       {
         example_data <-
           gen_example_data(
-            T = input$T,
-            sr = input$sr,
-            signal = input$signal,
-            noise_sd = input$noise
+            T = T(),
+            sr = sample_rate(),
+            signal = signal_function_string(),
+            noise_sd = noise_sd()
           ) %>%
           mutate(radius_y = s)
       }
@@ -68,9 +50,19 @@ simulate_data_ctrl <- function(input, output, session, resample_UI, selected_sid
     example_data
   })
 
+  # observers ---------
+  observeEvent({input$data_choice},{
+    if (input$data_choice == "sim_data") {
+      resample_UI(actionButton(session$ns("resample"), "repeat data-simulation"))
+    } else{
+      resample_UI(NULL)
+    }})
+  observeEvent(input$sr, updateNumericInput(session, "hp", value = input$sr/2, max = input$sr/2))
+
+  # output-ctrls -------------
   output$signal_plot <- renderPlot({
     input$resample
-    sr <- input$sr
+    sr <- sample_rate()
     ex_data <- ex_data()
 
     sig_plot <-
@@ -98,10 +90,16 @@ simulate_data_ctrl <- function(input, output, session, resample_UI, selected_sid
   })
 
   output$spec_osc <- renderPlot({
-    spectro(ex_data()$s, f=input$sr, wl = nextn(floor(input$sr), factors = c(2))/4, ovlp = 50, osc = TRUE,
-            flim = c(input$lp, input$hp - 1)/1000)
+    spectro(
+      ex_data()$s,
+      f = sample_rate(),
+      wl = nextn(floor(sample_rate()), factors = c(2))/4,
+      ovlp = 50,
+      osc = TRUE,
+      flim = c(input$lp, input$hp - 1)/1000)
   })
 
+  # return-values ----------
   return(
     list(
     reactive(
