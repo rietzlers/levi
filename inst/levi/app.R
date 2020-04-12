@@ -76,21 +76,21 @@ server <- function(input, output, session) {
     tevi_model()
   }) #toggle between simulated and tevi-data
 
-  # module-calls --------------
+  # dashboard --------------
   c(tevi_model, sample_specs) %<-% callModule(dashboard_ctrl, "main_dashboard")
-
-  c(sim_data_model, model_choice) %<-% callModule(simulate_data_ctrl, "simulate_data", resample_UI, selected_sidebar_tab)
-
-  callModule(surface_tension_analysis_ctrl, "st_analysis", model, sample_specs, tasks, notifications)
-
-  callModule(report_notes_ctrl, "report_notes", sample_specs)
-
+  # signal-analysis ----------
   {
     callModule(seewave_ctrl, "spec_osc", model, selected_sidebar_tab)
     callModule(seewave_ctrl, "spec_dom_freq", model, selected_sidebar_tab)
     callModule(seewave_ctrl, "inst_freqs", model, selected_sidebar_tab)
     callModule(seewave_ctrl, "sig_envelope", model, selected_sidebar_tab)
-  } # seewave-plots
+  }
+  # data-simulation -----
+  c(sim_data_model, model_choice) %<-% callModule(simulate_data_ctrl, "simulate_data", resample_UI, selected_sidebar_tab)
+  # surface-tension-analysis ----------
+  callModule(surface_tension_analysis_ctrl, "st_analysis", model, sample_specs, tasks, notifications)
+
+
   }
 
 shinyApp(ui, server, enableBookmarking = "server")

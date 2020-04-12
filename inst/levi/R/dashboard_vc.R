@@ -31,6 +31,7 @@ dashboard_ctrl <- function(input, output, session){
 
   tevi_model <-  callModule(load_tevi_data_ctrl, "load_tevi_data")
   sample_specs <- callModule(sample_specs_ctrl, "sample_specs")
+  callModule(report_notes_ctrl, "report_notes", sample_specs)
 
   list(
     tevi_model,
