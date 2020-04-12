@@ -6,14 +6,15 @@ surface_tension_results_UI <- function(id){
           column(width = 2,
                  actionButton(ns("add_result"), label = "Add current result to result-data", icon = icon("save")),
                  selectInput(ns("st_xvar"), label = "st-time axis", selected = "t", choices = c("t", "smoothed_temp")),
-                 selectInput(ns("st_yvar"), label = "st ordinate", selected = "f", choices = c("f", "st"))),
+                 selectInput(ns("st_yvar"), label = "st ordinate", selected = "f", choices = c("f", "st")),
+                 actionButton(ns("show_st_results"), label = "View Results-Table", icon = icon("database"))),
           column(width = 10,
                  plotlyOutput(ns("surface_tension_plot")))
           ),
-      box(width = 12,
-          title = "Spectrum-Analysis-Results-Data", collapsible = TRUE, collapsed = TRUE, {
-          DT::dataTableOutput(ns("spec_analsis_results_DT"))
-      })
+      bsModal("st_results_view", "Surface-Tension Results", ns("show_st_results"),
+              DT::dataTableOutput(ns("spec_analsis_results_DT")),
+              size = "large"
+      )
     )
 }
 
