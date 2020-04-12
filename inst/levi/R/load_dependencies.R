@@ -17,6 +17,7 @@ library(readxl)
 library(seewave)
 
 # source code which needs to run once -------------------------------------
+source("R/dashboard_vc.R")
 source("R/sample_specs_vc.R")
 source("R/surface_tension_analysis_vc.R")
 source("R/load_tevi_data_vc.R")
