@@ -2,20 +2,14 @@
 surface_tension_results_UI <- function(id){
   ns <- NS(id)
   tagList(
-    tabsetPanel(
-      tabPanel("Result-Plots",
         fluidRow(
-          column(width = 12, plotlyOutput(ns("surface_tension_plot")))
-          )
-      ),
-      tabPanel("Controls",
-               actionButton(ns("add_result"), label = "Add current result to result-data", icon = icon("save")),
-               fluidRow(
-                 column(width = 6, selectInput(ns("st_xvar"), label = "st-time axis", selected = "t", choices = c("t", "smoothed_temp"))),
-                 column(width = 6, selectInput(ns("st_yvar"), label = "st ordinate", selected = "f", choices = c("f", "st")))
-               )
-      )
-      ),
+          column(width = 2,
+                 actionButton(ns("add_result"), label = "Add current result to result-data", icon = icon("save")),
+                 selectInput(ns("st_xvar"), label = "st-time axis", selected = "t", choices = c("t", "smoothed_temp")),
+                 selectInput(ns("st_yvar"), label = "st ordinate", selected = "f", choices = c("f", "st"))),
+          column(width = 10,
+                 plotlyOutput(ns("surface_tension_plot")))
+          ),
       box(width = 12,
           title = "Spectrum-Analysis-Results-Data", collapsible = TRUE, collapsed = TRUE, {
           DT::dataTableOutput(ns("spec_analsis_results_DT"))
