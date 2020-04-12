@@ -75,9 +75,7 @@ server <- function(input, output, session) {
 
   # global data ------
   model <- reactive({
-    if(model_choice() == "sim_data"){
-      return(sim_data_model())
-    }
+    if(model_choice() == "sim_data") return(sim_data_model())
     tevi_model()
   }) #toggle between simulated and tevi-data
 
@@ -91,7 +89,7 @@ server <- function(input, output, session) {
     callModule(seewave_ctrl, "sig_envelope", model, selected_sidebar_tab)
   }
   # data-simulation -----
-  c(sim_data_model, model_choice) %<-% callModule(simulate_data_ctrl, "simulate_data", resample_UI, selected_sidebar_tab)
+  c(sim_data_model, model_choice) %<-% callModule(simulate_data_ctrl, "simulate_data", resample_UI)
   # surface-tension-analysis ----------
   callModule(surface_tension_analysis_ctrl, "st_analysis", model, sample_specs, tasks, notifications)
 
