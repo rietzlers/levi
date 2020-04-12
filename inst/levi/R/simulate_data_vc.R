@@ -3,8 +3,8 @@ simulate_data_view <- function(id){
   tagList(
     fluidRow(
       #column(width = 1, actionButton(ns("resample"), "resample")),
-      column(width = 5, textInput(ns("signal"), "Signal", width = "100%", value = "100 * exp(-.5 * t) * (sin(2 * pi * (30 - (0.5)*t) * t))")),
-      column(width = 2, numericInput(ns("noise"), "Noise-SD:", value = 30, min = 0, max = 100, step = 1)),
+      column(width = 5, textInput(ns("signal"), "Specify the deterministic part of the signal", width = "100%", value = "100 * exp(-.5 * t) * (sin(2 * pi * (30 - (0.5)*t) * t))")),
+      column(width = 2, numericInput(ns("noise"), "Add white noise with SD:", value = 30, min = 0, max = 100, step = 1)),
       column(width = 2, numericInput(ns("sr"), "Sample-Rate", value = 400, min = 0, max = 400)),
       column(width = 2, numericInput(ns("T"), "Observation-Time", value = 5, min = 0, max = 10))
     ),
