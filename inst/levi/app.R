@@ -22,7 +22,12 @@ sidebar =
              menuSubItem("Smoothed Signal Envelope", tabName = "sig_envelope")),
     menuItem("Surface-Tension", tabName = "surface_tension", icon = icon("microscope")),
     menuItem("Simulate Data", tabName = "simulate_data_tab", icon = icon("microscope")),
-    uiOutput("resample_UI")
+    uiOutput("resample_UI"),
+    bookmarkButton(
+      label = "Save current results",
+      title= HTML("Paste the URL into your browsers location-bar and then bookmark it with your browser. (Make sure to give the bookmark a mneomic name.) You can send this URL to a collaborator to share your current analysis-results. (Your collaborator needs access to the same shiny-server!)"),
+      width = "80%"
+    )
   )),
 body =
   dashboardBody(

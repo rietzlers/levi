@@ -2,11 +2,6 @@
 dashboard_UI <- function(id) {
   ns <- NS(id)
   tagList(
-    bookmarkButton(
-      label = "Save current results",
-      title= HTML("Paste the URL into your browsers location-bar and then bookmark it with your browser. (Make sure to give the bookmark a mneomic name.) You can send this URL to a collaborator to share your current analysis-results. (Your collaborator needs access to the same shiny-server!)"),
-      width = "100%"
-    ),
     uiOutput(ns("sample_and_exp_info")),
     tabsetPanel(
       tabPanel("Experiment- and Alloy-Specification", sample_specs_view(ns("sample_specs")), icon = icon("wpexplorer")),
