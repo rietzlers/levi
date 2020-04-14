@@ -75,36 +75,41 @@ surface_tension_results_ctrl <- function(input, output, session, tevi_model, sam
       y_var <- "dom_freq_estimate"
       y_axis_title <- "Dom. Freq. of Signal [Hz]"
       y_range <- c(10, 70)
+      y_unit <- "Hz"
     }else{
       y_var <- "st"
       y_range <- to_surface_tension(c(10, 70), sample_specs()$mass)
       y_axis_title <- "Surface-Tension of Alloy [Nm]"
+      y_unit <- "Nm"
     }
 
-    browser()
+    calc_method_trace <- function(p, cm, trace,  estimates = NULL, sl = TRUE){
+      if(missing(trace)){
+        trace = cm
+      }
+      p %>% filter(calc_method == cm) %>%
+        add_trace(
+          data = estimates,
+          name = trace,
+          type = "scatter",
+          mode = "markers",
+          x = ~ get(x_var),
+          y = ~ get(y_var),
+          hovertemplate = paste("%{y:.2f}", y_unit),
+          showlegend = sl
+        )
+    }
+
       spec_analysis_results() %>%
         plot_ly(source = "st_plot") %>%
-        add_trace(
-          name = "Freq-Estimates",
-          type = "scatter",
-          mode = "markers",
-          x = ~ get(x_var),
-          y = ~ get(y_var),
-          color = ~ calc_method,
-          hovertemplate = "%{y:.1f} Hz"
-        ) %>%
-        add_trace(
-          data = live_parameter_estimates(),
-          name = "Freq",
-          type = "scatter",
-          mode = "markers",
-          x = ~ get(x_var),
-          y = ~ get(y_var),
-          color = ~ calc_method,
-          marker = list(symbol = "square-cross-open", size = 10),
-          hovertemplate = "%{y:.1f} Hz",
-          showlegend = FALSE
-        ) %>%
+        add_fun(function(p){calc_method_trace(p, "fft")}) %>%
+        add_fun(function(p){calc_method_trace(p, "spectrum")}) %>%
+        add_fun(function(p){calc_method_trace(p, "fft_lorentz")}) %>%
+        add_fun(function(p){calc_method_trace(p, "spectrum_lorentz")}) %>%
+        add_fun(function(p){calc_method_trace(p, "fft", trace = " ", estimates = live_parameter_estimates(), sl = FALSE)}) %>%
+        add_fun(function(p){calc_method_trace(p, "spectrum",  trace = " ", estimates = live_parameter_estimates(), sl = FALSE)}) %>%
+        add_fun(function(p){calc_method_trace(p, "fft_lorentz",  trace = " ",  estimates = live_parameter_estimates(), sl = FALSE)}) %>%
+        add_fun(function(p){calc_method_trace(p, "spectrum_lorentz",  trace = " ",  estimates = live_parameter_estimates(), sl = FALSE)}) %>%
         layout(
           legend = list(x = 0.8, y = 0.9),
           xaxis = list(title = x_axis_title,
@@ -112,6 +117,7 @@ surface_tension_results_ctrl <- function(input, output, session, tevi_model, sam
           yaxis = list(title = y_axis_title,
                        range = y_range)
         )
+
     })
 
   # st-results-table ---------
