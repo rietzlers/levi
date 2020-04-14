@@ -81,7 +81,7 @@ surface_tension_results_ctrl <- function(input, output, session, tevi_model, sam
       y_unit <- "Nm"
     }
 
-    calc_method_trace <- function(p, cm, trace,  estimates = NULL, sl = TRUE, fit_lm = FALSE, farbe = "red"){
+    calc_method_trace <- function(p, cm, trace,  estimates = NULL, p_size = 6,  sl = TRUE, fit_lm = FALSE, farbe = "black"){
       if(missing(trace)){trace = cm}
       p <-
         p %>%
@@ -94,8 +94,9 @@ surface_tension_results_ctrl <- function(input, output, session, tevi_model, sam
           x = ~ get(x_var),
           y = ~ get(y_var),
           hovertemplate = paste("%{y:.2f}", y_unit),
+          size = I(p_size),
           showlegend = sl,
-          color = farbe
+          color = I(farbe)
         )
       if(fit_lm == TRUE){
         complete_obs <-
@@ -117,7 +118,7 @@ surface_tension_results_ctrl <- function(input, output, session, tevi_model, sam
             name = str_glue("{round(y0, 2)} + {round(m, 4)} x"),
             x = ~x, y = ~fitted_values,
             hoverinfo = "none",
-            color = farbe
+            color = I(farbe)
             )
       }
       p
@@ -129,10 +130,14 @@ surface_tension_results_ctrl <- function(input, output, session, tevi_model, sam
         add_fun(function(p){calc_method_trace(p, "spectrum", fit_lm = TRUE, farbe = "green")}) %>%
         add_fun(function(p){calc_method_trace(p, "fft_lorentz", fit_lm = TRUE, farbe ="yellow")}) %>%
         add_fun(function(p){calc_method_trace(p, "spectrum_lorentz", fit_lm = TRUE, farbe = "orange")}) %>%
-        add_fun(function(p){calc_method_trace(p, "fft", trace = "current estimate", estimates = live_parameter_estimates(), sl = FALSE)}) %>%
-        add_fun(function(p){calc_method_trace(p, "spectrum",  trace = "current estimate", estimates = live_parameter_estimates(), sl = FALSE)}) %>%
-        add_fun(function(p){calc_method_trace(p, "fft_lorentz",  trace = "current estimate",  estimates = live_parameter_estimates(), sl = FALSE)}) %>%
-        add_fun(function(p){calc_method_trace(p, "spectrum_lorentz",  trace = "current estimate",  estimates = live_parameter_estimates(), sl = FALSE)}) %>%
+        add_fun(function(p){calc_method_trace(p, "fft", trace = "current estimate", p_size = 20,
+                                              estimates = live_parameter_estimates(), sl = FALSE)}) %>%
+        add_fun(function(p){calc_method_trace(p, "spectrum",  trace = "current estimate", p_size = 20,
+                                              estimates = live_parameter_estimates(), sl = FALSE)}) %>%
+        add_fun(function(p){calc_method_trace(p, "fft_lorentz",  trace = "current estimate", p_size = 20,
+                                              estimates = live_parameter_estimates(), sl = FALSE)}) %>%
+        add_fun(function(p){calc_method_trace(p, "spectrum_lorentz",  trace = "current estimate", p_size = 20,
+                                              estimates = live_parameter_estimates(), sl = FALSE)}) %>%
         layout(
           legend = list(x = 0.8, y = 0.9),
           xaxis = list(title = x_axis_title,
