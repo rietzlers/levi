@@ -37,9 +37,10 @@ load_tevi_data_ctrl <- function(input, output, session) {
     input$file$name
   })
   exp_time_range <- reactive({
-    get_brush_range(input$temp_plot_brush,
-                    "brush temp-plot to set experimental time-range",
-                    default_values = range(tevi_data()$t))
+    get_brush_range(
+      input$temp_plot_brush,
+      "brush temp-plot in 'dashboard'-tab 'upload tevi-data' to set experimental time-range"
+      )
   })
   frame_rate = reactive({
     validate(need(input$frame_rate, label = "frame_rate"))
