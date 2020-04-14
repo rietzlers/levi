@@ -9,8 +9,7 @@ simulate_data_view <- function(id){
       column(width = 2, numericInput(ns("T"), "Observation-Time", value = 5, min = 0, max = 10))
     ),
     fluidRow(
-      column(width = 2, HTML("choose data to analyse:")),
-      column(width = 4, selectInput(ns("data_choice"), label = NULL, choices = c("Tevi-Data" = "tevi_data", "Simulated Data" = "sim_data"))),
+      column(width = 4, selectInput(ns("data_choice"), label = "Choose Analysis Data", choices = c("Tevi-Data" = "tevi_data", "Simulated Data" = "sim_data"))),
       column(width = 3, numericInput(ns("lp"), "Lower BP", min = 0, max = 400, value = 0)),
       column(width = 3, numericInput(ns("hp"), "Upper BP", min = 0, max = 400, value = 400))
     ),
