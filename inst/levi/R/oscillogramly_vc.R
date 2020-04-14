@@ -2,12 +2,14 @@
 oscillogramUI <- function(id){
   ns <- NS(id)
   tagList(
+    box(width = 12,
     fluidRow(
       column(width =  1,
              selectInput(ns("selected_signal"), label = "Signal", choices = NULL),
              numericInput(ns("window_start"), label = "Window-Start", value = 0, min = 0),
              numericInput(ns("window_length"), label = "Window-Length", value = 1, min = 0.1, step = 0.1)),
-      column(width = 11, plotlyOutput(ns("oscillogram")))
+      column(width = 11, plotlyOutput(ns("oscillogram"), height = "250px"))
+    )
     )
   )
 }
@@ -15,68 +17,70 @@ oscillogramUI <- function(id){
 oscillogram_ctrl <- function(input, output, session, tevi_model){
 
   # local-data ----
-  signal_name  = reactive({input$selected_signal})
-  data_selection <- reactive({
-    validate(need(window(), "window"))
-    tevi_model()$tevi_data %>%
-      filter(t %>% between(window()[1], window()[2]))
-  }) %>%
-    debounce(500)
-  window_range <- reactive({
-    xrange <- event_data("plotly_relayout")$xaxis.range
-    validate(need(xrange, message = "select window in oscillogram"))
-    xrange
-    }) %>%
-    debounce(1000)
-  window <- reactiveVal()
+  signal_name  = reactive({
+    validate(need(input$selected_signal, label = "signal to analyse"))
+    input$selected_signal
+    })
 
-  # observers -----------
+  xaxis_range <- reactive({
+    event_data("plotly_relayout", source = "osci-plot")$xaxis.range
+    }) %>% debounce(1000)
+
+  t_axis_range <- reactiveVal({})
+
+
+  # observe tevi-model-changes -----------
   observeEvent(tevi_model(),{
     updateSelectInput(session, "selected_signal", label = "Signal",
                       choices = names(tevi_model()$tevi_data),
                       selected = "radius_y")
-  }) #update signal-selection
-  observeEvent(tevi_model(), {
-               window(range(tevi_model()$tevi_data[["t"]], na.rm = TRUE))
-    }) # init window
-  observeEvent(window_range(),{
-    window(window_range())
-  }) # update window with range-slider
+    t_axis_range(range(tevi_model()$tevi_data[["t"]], nar.rm = TRUE))
+  })
+
+  # observe window-parameter-inputs -----
   observeEvent({input$window_start; input$window_length},{
-    window(c(0, input$window_length) + input$window_start)
-  }) # update window via input
+    t_axis_range(c(0, input$window_length) + input$window_start)
+  }) # update t_axis_range via input
+
+  observeEvent(xaxis_range(),{
+    t_axis_range(xaxis_range())
+  })
+
   # bookmark-observers ----------
   onBookmark(function(state){
-    state$values$window <- window()
+    state$values$t_axis_range <- t_axis_range()
   })
   onRestored(function(state){
-    window(state$values$window)
+    t_axis_range(state$values$t_axis_range)
   })
 
   output$oscillogram <- renderPlotly({
     tevi_model()$tevi_data %>%
-      plot_ly(x = ~t) %>%
+      plot_ly(x = ~t, source = "osci-plot") %>%
       add_lines(
-        y = ~get(input$selected_signal),
+        y = ~get(signal_name()),
         hoverinfo = "none"
         ) %>%
       layout(
         yaxis = list(title = input$selected_signal),
-        xaxis = list(title = "time [s]",
-                     range = window())
+        xaxis = list(
+          title = "time [s]",
+          range = t_axis_range(),
+          rangeslider = list(thickness = 0.15,
+                             yaxis = list(rangemode = "auto"))
+        )
       ) %>%
-      rangeslider(
-        thickness = .4,
-        rangemode = "auto"
-        ) %>%
+      config(displaylogo = FALSE) %>%
       event_register("plotly_relayout")
   })
 
   # return-values -----------
 
   list(
-    data_selection,
     signal_name,
-    window
+    reactive({
+      validate(need(t_axis_range(), message = "set time-window-range in oscillogram"))
+      t_axis_range()
+      })
   )
 }
