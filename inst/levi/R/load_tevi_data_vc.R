@@ -10,19 +10,21 @@ load_tevi_data_UI <- function(id) {
     ),
     box(width = 12,
         plotOutput(ns("plot_center_xy"), height = 200),
-        div(plotOutput(ns("temp_plot"), height = 300,
-                       brush = brushOpts(id = ns("temp_plot_brush"), delayType = "debounce", delay = 1000, fill = "#ccc", direction = "x", resetOnNew = FALSE)),
-            textOutput(ns("exp_time_range_info"))),
-        div(plotOutput(ns("heat_pulses_plot"), height = 100,
-                      brush = brushOpts(id = ns("heat_pulses_plot_brush"), fill = "#ccc", direction = "x", resetOnNew = FALSE)),
-            fluidRow(
-              column(width = 2, actionButton(ns("save_hp"), label = "save hp Nr.:")),
-              column(width = 3, numericInput(ns("hp_nr"), label = "", value = 1)),
-              column(width = 5, textOutput(ns("hp_range")))
-            )
-            )
+        plotOutput(
+          ns("temp_plot"), height = 300,
+          brush = brushOpts(id = ns("temp_plot_brush"), delayType = "debounce", delay = 1000, fill = "#ccc", direction = "x", resetOnNew = FALSE)
+          ),
+        plotOutput(
+          ns("heat_pulses_plot"), height = 100,
+          brush = brushOpts(id = ns("heat_pulses_plot_brush"), fill = "#ccc", direction = "x", resetOnNew = FALSE)
+          ),
+        fluidRow(
+          column(width = 2, actionButton(ns("save_hp"), label = "save hp Nr.:")),
+          column(width = 3, numericInput(ns("hp_nr"), label = "", value = 1)),
+          column(width = 5, textOutput(ns("hp_range")))
         )
-  )
+      )
+    )
 }
 
 load_tevi_data_ctrl <- function(input, output, session) {
@@ -36,12 +38,10 @@ load_tevi_data_ctrl <- function(input, output, session) {
     validate(need(input$file, message = "select file in file-upload-dialog"))
     input$file$name
   })
-  exp_time_range <- reactive({
-    get_brush_range(
-      input$temp_plot_brush,
-      "brush temp-plot in 'dashboard'-tab 'upload tevi-data' to set experimental time-range"
-      )
-  })
+  exp_time_range <- reactiveVal(NULL)
+  observeEvent(input$temp_plot_brush,{
+    exp_time_range(get_brush_range(input$temp_plot_brush))
+  }, ignoreInit = TRUE)
   frame_rate = reactive({
     validate(need(input$frame_rate, label = "frame_rate"))
     input$frame_rate
@@ -67,6 +67,7 @@ load_tevi_data_ctrl <- function(input, output, session) {
       duration = 10, type = "warning")
     tevi_data_RV(tevi_data)
     session$resetBrush(session$ns("temp_plot_brush"))
+    exp_time_range(NULL)
   }) # load-tevi-data on input-file-change
   observeEvent(exp_time_range(),{
       tevi_data_RV(tevi_data() %>% add_temperature(time_range = exp_time_range()))
@@ -76,7 +77,13 @@ load_tevi_data_ctrl <- function(input, output, session) {
     hps[[str_glue("hp{hp_nr}")]] <- get_brush_range(input$heat_pulses_plot_brush, str_glue("brush heat-puls-plot to set hp {hp_nr}"))
   }) # update heat-pulses
 
-
+  # bookmark-callbacks ---------------
+  onBookmark(function(state){
+    state$values$exp_time_range <- exp_time_range()
+  })
+  onRestore(function(state){
+    exp_time_range(state$values$exp_time_range)
+  })
   # output-ctrls -------------
   output$plot_center_xy <- renderPlot({
     center_xy_plot <-
@@ -90,7 +97,7 @@ load_tevi_data_ctrl <- function(input, output, session) {
         center_xy_plot +
         geom_vline(xintercept = HPs() %>% flatten_dbl(), linetype = "dashed", color = "red")
     }
-    if(is.null(need(exp_time_range, "exp_time_range"))){
+    if(is.null(need(exp_time_range(), "exp_time_range"))){
       center_xy_plot <-
         center_xy_plot +
         geom_vline(xintercept = exp_time_range(), linetype = "dashed", color = "blue")
@@ -103,10 +110,7 @@ load_tevi_data_ctrl <- function(input, output, session) {
         geom_line(aes(y = pyro_temp)) +
         geom_line(aes(y = smoothed_temp), color = "red")
   })
-  output$exp_time_range_info <- renderText({
-    ss <- exp_time_range() %>% round(2)
-    str_glue("Brush pyro-temp-plot to set the times for temperature-smoothing. Selected Range: [{ss[1]}, {ss[2]}]")
-    })
+
   output$heat_pulses_plot <- renderPlot({
     tevi_data() %>%
       ggplot(aes(x = t, y = htr_i)) +
@@ -117,6 +121,7 @@ load_tevi_data_ctrl <- function(input, output, session) {
   })
   # return-values ----------
   reactive({
+    validate(need(exp_time_range(), message = "brush temp-plot in 'dashboard'-tab 'upload tevi-data' to set experimental time-range"))
     list(
       tevi_data = tevi_data(),
       tevi_data_name = tevi_data_name(),
