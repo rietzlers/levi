@@ -58,7 +58,9 @@ ui <- function(request) {
     body =
       dashboardBody(
         tabItems(
-          tabItem(tabName = "dashboard", dashboard_UI("main_dashboard")),
+          tabItem(tabName = "dashboard",
+                  #tags$head(tags$script(src = "script.js")),
+                  dashboard_UI("main_dashboard")),
           tabItem(tabName = "simulate_data_UI", simulate_data_view("simulate_data")),
           tabItem(tabName = "surface_tension_analysis_UI", surface_tension_analysis_UI("st_analysis")),
           tabItem(tabName = "viscosity_analysis_UI", "to be done"),
@@ -81,13 +83,28 @@ server <- function(input, output, session) {
     notifications <- reactiveVal(list())
     tasks <- reactiveVal({})
     msgs <- reactiveVal(list())
-
-    observeEvent(tevi_model(), {})# update tasks
+    observeEvent(tevi_model(), {
+      notifications_list <- notifications()
+      notifications_list[["tevi_data"]] <-
+        notificationItem(
+          text = tevi_model()$tevi_data_name,
+          icon = icon("database")
+          )
+      notifications_list[["frame_rate"]] <-
+        notificationItem(
+          text = str_glue("Frame-Rate: {tevi_model()$frame_rate} Hz"),
+          icon = icon("creative-commons-sampling")
+          )
+      notifications(notifications_list)
+    })
     observeEvent(sample_specs(),{
       {
       c(alloy_name, d, m, Temp_liquid) %<-% sample_specs()
       notifications_list <- notifications()
-      notifications_list[["alloy_info"]] <- notificationItem(text = str_glue("{alloy_name}, m = {m} g, d = {d} mm"),  status = "info", icon = icon("info-circle"))
+      notifications_list[["alloy_info"]] <-
+        notificationItem(text = str_glue("{alloy_name}, m = {m} g, d = {d} mm"),
+                         status = "info",
+                         icon = icon("fingerprint"))
       notifications(notifications_list)
       } # sample_specs
     })# update notes
@@ -122,6 +139,8 @@ server <- function(input, output, session) {
     callModule(seewave_ctrl, "sig_envelope", model, selected_sidebar_tab)
   }
 
+  # stop app when browser-window is closed by user
+  # session$onSessionEnded(stopApp)
   }
 
 shinyApp(ui, server, enableBookmarking = "server")
