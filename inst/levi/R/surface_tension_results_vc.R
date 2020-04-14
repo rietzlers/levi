@@ -2,15 +2,19 @@
 surface_tension_results_UI <- function(id){
   ns <- NS(id)
   tagList(
+    box(width = 12,
         fluidRow(
           column(width = 2,
-                 actionButton(ns("add_result"), label = "Add current result to result-data", icon = icon("save")),
-                 selectInput(ns("st_xvar"), label = "st-time axis", selected = "t", choices = c("t", "smoothed_temp")),
-                 selectInput(ns("st_yvar"), label = "st ordinate", selected = "f", choices = c("f", "st")),
-                 actionButton(ns("show_st_results"), label = "View Results-Table", icon = icon("database"))),
-          column(width = 10,
-                 plotlyOutput(ns("surface_tension_plot")))
+                 box(width = 12,
+                 actionButton(ns("add_result"), label = "Save current values", icon = icon("save")),
+                 actionButton(ns("show_st_results"), label = "View Results-Table", icon = icon("database")),
+                 selectInput(ns("st_xvar"), label = "Display: ", selected = "t", choices = c("time [s]" = "t", "Temp. [° C]" = "smoothed_temp")),
+                 selectInput(ns("st_yvar"), label = NULL, selected = "f", choices = c("Freq. [Hz]" = "f","Surface-Tension [Nm]" = "st"))
+                 )
           ),
+          column(width = 10,
+                 plotlyOutput(ns("surface_tension_plot"), height = "350px"))
+          )),
       bsModal("st_results_view", "Surface-Tension Results", ns("show_st_results"),
               DT::dataTableOutput(ns("spec_analsis_results_DT")),
               size = "large"
@@ -18,24 +22,30 @@ surface_tension_results_UI <- function(id){
     )
 }
 
-surface_tension_results_ctrl <- function(input, output, session, tevi_model, sample_specs, live_parameter_estimates){
+surface_tension_results_ctrl <- function(input, output, session, tevi_model, sample_specs, parameter_estimates){
 
   # data ----------
-  spec_analysis_results <- reactiveVal(
-    bind_cols(
-      c("t", "dom_freq_estimate", "damping_estimate", "lp_limit", "hp_limit", "win_start", "win_end", "taper") %>% purrr::map_dfc(setNames, object = list(numeric())),
-      c("signal", "calc_method", "spans", "tevi_data_name") %>% purrr::map_dfc(setNames, object = list(character()))
-    ),
-    label = "spec_analysis_results"
-  )
-
-  # observers ---------
-  observeEvent(input$add_result, {
-    spec_analysis_results(
-      spec_analysis_results() %>%
-        dplyr::union(live_parameter_estimates() %>% mutate(tevi_data_name = tevi_model()$tevi_data_name))
+  live_parameter_estimates <- reactive({
+    parameter_estimates() %>%
+      mutate(
+        temp = convert_to_temp(t, tevi_model()$tevi_data),
+        st = to_surface_tension(dom_freq_estimate, sample_specs()$mass),
+        tevi_data_name = tevi_model()$tevi_data_name
       )
-  }) # add temp result to result-data
+  })
+
+  spec_analysis_results <- reactiveVal(NULL)
+  observeEvent(input$add_result, {
+    if(is.null(spec_analysis_results())){
+      spec_analysis_results(live_parameter_estimates())
+    }else{
+      spec_analysis_results(
+        dplyr::union(
+          spec_analysis_results(),
+          live_parameter_estimates()
+        )
+      )}
+  })
 
   # bookmark-callbacks ---------------
   onBookmark(function(state){
@@ -45,43 +55,66 @@ surface_tension_results_ctrl <- function(input, output, session, tevi_model, sam
     spec_analysis_results(state$values$spec_analysis_results)
   })
 
-  # plot-outputs  -----------
+
+  # st-result-plot  -----------
   output$surface_tension_plot <- renderPlotly({
 
-      validate(need(spec_analysis_results(), label = "spec_analysis_results"))
+    validate(need(spec_analysis_results(), message = "need spec-analysis-results"))
 
+    if(input$st_xvar == "t"){
+      x_var <- "t"
+      x_range <- range(tevi_model()$tevi_data[["t"]], na.rm = TRUE)
+      x_axis_title <- "time [s]"
+    }else{
+      x_var <- "temp"
+      x_range <- range(convert_to_temp(tevi_model()$tevi_data[["t"]], tevi_model()$tevi_data), na.rm = TRUE)
+      x_axis_title <- "Temp. [°C]"
+    }
+
+    if(input$st_yvar == "f"){
+      y_var <- "dom_freq_estimate"
+      y_axis_title <- "Dom. Freq. of Signal [Hz]"
+      y_range <- c(10, 70)
+    }else{
+      y_var <- "st"
+      y_range <- to_surface_tension(c(10, 70), sample_specs()$mass)
+      y_axis_title <- "Surface-Tension of Alloy [Nm]"
+    }
+
+    browser()
       spec_analysis_results() %>%
-        plot_ly(source = session$ns("surface_tension_results")) %>%
-        add_trace(name = "Freq-Estimates", type = "scatter", mode = "markers",
-          x = ~t, y = ~dom_freq_estimate, color = ~calc_method,
+        plot_ly(source = "st_plot") %>%
+        add_trace(
+          name = "Freq-Estimates",
+          type = "scatter",
+          mode = "markers",
+          x = ~ get(x_var),
+          y = ~ get(y_var),
+          color = ~ calc_method,
           hovertemplate = "%{y:.1f} Hz"
-        )%>%
-        add_trace(data = live_parameter_estimates(),
-                  name = "Freq", type = "scatter", mode = "markers",
-                  x = ~t, y = ~dom_freq_estimate, color = ~calc_method,
-                  marker = list(symbol = "square-cross-open", size = 10),
-                  hovertemplate = "%{y:.1f} Hz",
-                  showlegend = FALSE
-
+        ) %>%
+        add_trace(
+          data = live_parameter_estimates(),
+          name = "Freq",
+          type = "scatter",
+          mode = "markers",
+          x = ~ get(x_var),
+          y = ~ get(y_var),
+          color = ~ calc_method,
+          marker = list(symbol = "square-cross-open", size = 10),
+          hovertemplate = "%{y:.1f} Hz",
+          showlegend = FALSE
         ) %>%
         layout(
-          legend = list(
-            x = 0.8, y = 0.9
-          ),
-          xaxis = list(
-            title = "time [s]",
-            range = range(tevi_model()$tevi_data[["t"]])
-          ),
-          yaxis = list(
-            title = "Freq [Hz]",
-            range = c(10, 70)
-          )
+          legend = list(x = 0.8, y = 0.9),
+          xaxis = list(title = x_axis_title,
+                       range = x_range),
+          yaxis = list(title = y_axis_title,
+                       range = y_range)
         )
-
     })
 
-
-  # results-table-output ---------
+  # st-results-table ---------
   output$spec_analsis_results_DT <- DT::renderDataTable({
       validate(need(spec_analysis_results(), label = "spec_analysis_results"))
       spec_analysis_results() %>%
