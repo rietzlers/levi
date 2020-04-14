@@ -1,14 +1,11 @@
 # spectrum_vc.R ##
 
-# view -----------
 spectrumUI <- function(id) {
   ns <- NS(id)
   tagList(
-    div(
+    box(width = 12,
         fluidRow(
           column(width = 1,
-                 selectInput(ns("scale"), label = "Set scaling of spectrogram ordinate", selected = "log10", choices = c("raw", "log10")),
-                 bsTooltip(ns("scale"), "scaling of spectrogram-ordinate", "top"),
                  textInput(ns("spans"), label = "span", value = "c(3,3)"),
                  bsTooltip(ns("spans"), "specify daniell-smoother: NULL for no smoothing", "top", options = list(container = "body")),
                  numericInput(ns("taper"), label = "taper", value = 0.1, step = .1, min = 0, max = 1),
@@ -18,13 +15,13 @@ spectrumUI <- function(id) {
                             brush = brushOpts(id = ns("brush"), fill = "#ccc", direction = "x", resetOnNew = FALSE))),
           column(width = 6,
                  plotlyOutput(ns("bp_spectrum"), height = 250))
-        ),
-    style = "border-style = groove; border: 1px solid black; padding: 25px"
+         )
+    # style = "border-style = groove; border: 1px solid black; padding: 25px"
     )
   )
 }
 
-# controller ------------
+
 spectrum_ctrl <- function(input, output, session, tevi_model, data_selection, signal_name, window_range){
 
   # data: parameters ----
@@ -145,7 +142,7 @@ spectrum_ctrl <- function(input, output, session, tevi_model, data_selection, si
       gen_spec_plot(
         spectrum_estimate(),
         lfit_models = lfit_models(),
-        scale = input$scale,
+        scale = "raw",
         bp = bp(),
         sample_rate = tevi_model()$frame_rate
       )
