@@ -10,10 +10,7 @@ load_tevi_data_UI <- function(id) {
     ),
     box(width = 12,
         plotOutput(ns("plot_center_xy"), height = 200),
-        plotOutput(
-          ns("temp_plot"), height = 300,
-          brush = brushOpts(id = ns("temp_plot_brush"), delayType = "debounce", delay = 1000, fill = "#ccc", direction = "x", resetOnNew = FALSE)
-          ),
+        plotlyOutput(ns("temp_plot"), height = 300),
         plotOutput(
           ns("heat_pulses_plot"), height = 100,
           brush = brushOpts(id = ns("heat_pulses_plot_brush"), fill = "#ccc", direction = "x", resetOnNew = FALSE)
@@ -28,25 +25,33 @@ load_tevi_data_UI <- function(id) {
 }
 
 load_tevi_data_ctrl <- function(input, output, session) {
+  ns <- session$ns
+
   # local data --------
   tevi_data_RV <- reactiveVal()
+
   tevi_data <- reactive({
     validate(need(tevi_data_RV(), message = "No Tevi-data available! Make sure you have uploaded a .csv-Tevi-file."))
     tevi_data_RV()
   })
+
   tevi_data_name <- reactive({
     validate(need(input$file, message = "select file in file-upload-dialog"))
     input$file$name
   })
+
   exp_time_range <- reactiveVal(NULL)
-  observeEvent(input$temp_plot_brush,{
-    exp_time_range(get_brush_range(input$temp_plot_brush))
+  observeEvent(event_data("plotly_brushed", source = ns("temp_plot")),{
+    x_range <- event_data("plotly_brushed", source = ns("temp_plot"))$x
+    exp_time_range(x_range)
   }, ignoreInit = TRUE)
+
   frame_rate = reactive({
     validate(need(input$frame_rate, label = "frame_rate"))
     input$frame_rate
   })
   hps <- reactiveValues()
+
   HPs = reactive({
     validate(need(hps, label = "heat-puls-data"))
     reactiveValuesToList(hps)
@@ -81,7 +86,7 @@ load_tevi_data_ctrl <- function(input, output, session) {
   onBookmark(function(state){
     state$values$exp_time_range <- exp_time_range()
   })
-  onRestore(function(state){
+  onRestored(function(state){
     exp_time_range(state$values$exp_time_range)
   })
   # output-ctrls -------------
@@ -104,11 +109,26 @@ load_tevi_data_ctrl <- function(input, output, session) {
     }
     center_xy_plot
     })
-  output$temp_plot <- renderPlot({
+  output$temp_plot <- renderPlotly({
     tevi_data() %>%
-        ggplot(aes(x = t)) +
-        geom_line(aes(y = pyro_temp)) +
-        geom_line(aes(y = smoothed_temp), color = "red")
+      plot_ly(x  = ~t, source = ns("temp_plot")) %>%
+      add_lines(y = ~pyro_temp, name = "Measured", hovertemplate = "%{y:.0f} °C") %>%
+      add_lines(
+        name =
+        "Smoothed Temp.
+      (used for time - Temp conversion)",
+        y = ~smoothed_temp,
+        color = I("red"),
+        hovertemplate = "%{y:.0f} °C"
+        ) %>%
+      layout(
+        legend = list(x = 0.8, y = 0.8),
+        dragmode = "select",
+        selectdirection = "h",
+        xaxis = list(title = "time [s]"),
+        yaxis = list(title = "Pyro-Temp. [°C]")
+        ) %>%
+      event_register("plotly_brushed")
   })
 
   output$heat_pulses_plot <- renderPlot({
