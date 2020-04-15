@@ -28,7 +28,6 @@ oscillogram_ctrl <- function(input, output, session, tevi_model){
 
   t_axis_range <- reactiveVal({})
 
-
   # observe tevi-model-changes -----------
   observeEvent(tevi_model(),{
     updateSelectInput(session, "selected_signal", label = "Signal",
@@ -44,6 +43,8 @@ oscillogram_ctrl <- function(input, output, session, tevi_model){
 
   observeEvent(xaxis_range(),{
     t_axis_range(xaxis_range())
+    updateNumericInput(session, "window_start", value = xaxis_range()[1])
+    updateNumericInput(session, "window_length", value = diff(xaxis_range()))
   })
 
   # bookmark-observers ----------
@@ -65,9 +66,11 @@ oscillogram_ctrl <- function(input, output, session, tevi_model){
         yaxis = list(title = input$selected_signal),
         xaxis = list(
           title = "time [s]",
-          range = t_axis_range(),
-          rangeslider = list(thickness = 0.15,
-                             yaxis = list(rangemode = "auto"))
+          range = input$window_start + c(0, input$window_length),
+          rangeslider = list(
+            thickness = 0.15,
+            yaxis = list(rangemode = "auto")
+          )
         )
       ) %>%
       config(displaylogo = FALSE) %>%
