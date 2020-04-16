@@ -4,19 +4,23 @@ surface_tension_results_UI <- function(id){
   tagList(
     box(width = 12,
         fluidRow(
-          column(width = 2,
+          column(width = 1,
                  box(width = 12,
-                 actionButton(ns("add_result"), label = "Save current values", icon = icon("save")),
+                 actionButton(ns("add_result"), label = "Save current values", icon = icon("save"), width = "100%"),
+                 actionButton(ns("show_ctrls"), label = "Controls", icon = icon("wrench"),  width = "100%"),
                  selectInput(ns("st_xvar"), label = "Display: ", selected = "t", choices = c("time [s]" = "t", "Temp. [° C]" = "smoothed_temp")),
                  selectInput(ns("st_yvar"), label = NULL, selected = "f", choices = c("Freq. [Hz]" = "f","Surface-Tension [Nm]" = "st"))
                  )
           ),
-          column(width = 10,
+          column(width = 11,
                  plotlyOutput(ns("surface_tension_plot"), height = "350px"))
           )),
       box(width = 12, title = "Surface-Tension Results-Data", collapsible = TRUE, collapsed = TRUE,
           DT::dataTableOutput(ns("spec_analsis_results_DT"))
-          )
+          ),
+    bsModal(ns("additional_ctrls"), title = "Additional Controls for Surface-Tension-Results-Data", trigger = ns("show_ctrls"),
+
+            size = "large")
     )
 }
 
@@ -26,7 +30,7 @@ surface_tension_results_ctrl <- function(input, output, session, tevi_model, sam
   live_parameter_estimates <- reactive({
     parameter_estimates() %>%
       mutate(
-        temp = convert_to_temp(t, tevi_model()$tevi_data),
+        temp = convert_to_temp(t, tevi_model()$analysis_data),
         st = to_surface_tension(dom_freq_estimate, sample_specs()$mass),
         tevi_data_name = tevi_model()$tevi_data_name
       )
@@ -61,11 +65,11 @@ surface_tension_results_ctrl <- function(input, output, session, tevi_model, sam
 
     if(input$st_xvar == "t"){
       x_var <- "t"
-      x_range <- range(tevi_model()$tevi_data[["t"]], na.rm = TRUE)
+      x_range <- range(tevi_model()$analysis_data[["t"]], na.rm = TRUE)
       x_axis_title <- "time [s]"
     }else{
       x_var <- "temp"
-      x_range <- range(convert_to_temp(tevi_model()$tevi_data[["t"]], tevi_model()$tevi_data), na.rm = TRUE)
+      x_range <- range(convert_to_temp(tevi_model()$analysis_data[["t"]], tevi_model()$analysis_data), na.rm = TRUE)
       x_axis_title <- "Temp. [°C]"
     }
 
@@ -119,7 +123,7 @@ surface_tension_results_ctrl <- function(input, output, session, tevi_model, sam
             x = ~x, y = ~fitted_values,
             hoverinfo = "none",
             color = I(farbe)
-            )
+          )
       }
       p
     }
@@ -180,8 +184,9 @@ surface_tension_results_ctrl <- function(input, output, session, tevi_model, sam
         filter = 'top',
         extensions = c('Buttons', 'Responsive'),
         options = list(
+          #initComplete = JS('function(setting, json) { alert("done"); }'),
           dom = 'Bftli',
-          buttons = c('csv', 'excel', 'pdf', I('colvis')),
+          buttons = list(I('colvis'), list(extend = "collection", buttons = c('csv', 'excel', 'pdf'), text = "Download"), 'copy', 'print'),
           paging = FALSE,
           autoWidth = TRUE
         )

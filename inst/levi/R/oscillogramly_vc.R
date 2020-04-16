@@ -8,12 +8,13 @@ oscillogramUI <- function(id){
                  selectInput(ns("selected_signal"), label = "Signal", choices = NULL),
                  numericInput(ns("window_start"), label = "Window-Start", value = 0, min = 0, step = 0.5),
                  numericInput(ns("window_length"), label = "Window-Length", value = 1, min = 0.1, step = 0.1),
-                 actionButton(ns("show_more_osci_ctrls"), label = "Show more ctrls")),
-          column(width = 11, plotlyOutput(ns("oscillogram"), height = "250px"))
+                 actionButton(ns("show_ctrls"), label = "Controls", icon = icon("wrench"),  width = "100%")),
+          column(width = 11, plotlyOutput(ns("oscillogram"), height = "300px"))
         )
     ),
-    bsModal(ns("osci_ctrls"), title = "Additional Oscillogram Controls", trigger = ns("show_more_osci_ctrls"),
+    bsModal(ns("osci_ctrls"), title = "Additional Oscillogram Controls", trigger = ns("show_ctrls"),
             numericInput(ns("window_step_size"), label = "Set step-size [%]", value = 50, min = 0, max = 200, step = 10),
+            selectInput(ns("bp_choices"), label = "Show Signals", choices = c("Raw" = "raw", "BP-Filterd" = "bp_filtered", "Both" = "both")),
             size = "large")
   )
 }
@@ -36,10 +37,10 @@ oscillogram_ctrl <- function(input, output, session, tevi_model){
   observeEvent(tevi_model(),{
     updateSelectInput(
       session, "selected_signal", label = "Signal",
-      choices = names(tevi_model()$tevi_data),
+      choices = names(tevi_model()$analysis_data),
       selected = "radius_y"
     )
-    t_axis_range(range(tevi_model()$tevi_data[["t"]], nar.rm = TRUE))
+    t_axis_range(range(tevi_model()$analysis_data[["t"]], nar.rm = TRUE))
   })
 
   # observe window-parameter-inputs -----
@@ -66,7 +67,7 @@ oscillogram_ctrl <- function(input, output, session, tevi_model){
   })
 
   output$oscillogram <- renderPlotly({
-    tevi_model()$tevi_data %>%
+    tevi_model()$analysis_data %>%
       plot_ly(x = ~t, source = "osci-plot") %>%
       add_lines(
         y = ~get(signal_name()),
@@ -78,7 +79,7 @@ oscillogram_ctrl <- function(input, output, session, tevi_model){
           title = "time [s]",
           range = input$window_start + c(0, input$window_length),
           rangeslider = list(
-            thickness = 0.15,
+            thickness = 0.3,
             yaxis = list(rangemode = "auto")
           )
         )
