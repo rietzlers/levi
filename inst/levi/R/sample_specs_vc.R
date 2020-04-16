@@ -44,7 +44,7 @@ sample_specs_ctrl <- function(input, output, session){
 
   # return-Values ------
   reactive({
-    validate(need(sample_specs(), message = "Alloy/Sample-Specifications are missing."))
+    validate(need(sample_specs(), message = "Alloy/Sample-Specifications are missing. Set them in the Dashboard"))
     c(alloy_name, . , d, m, Temp_liquid) %<-% sample_specs()
     list(
       alloy = alloy_name,
