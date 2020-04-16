@@ -17,9 +17,16 @@ seewave_ctrl <- function(input, output, session, tevi_model, selected_sidebar_ta
   # observers -----------
   observeEvent(tevi_model(),{
     updateSelectInput(session, "selected_signal", label = "Signal",
-                      choices = names(tevi_model()$tevi_data),
+                      choices = names(tevi_model()$analysis_data),
                       selected = "radius_y")
-  }) #update signal-selection
+    updateNumericInput(session, "we",
+                       value = max(tevi_model()$analysis_data$t, na.rm = TRUE),
+                       max = max(tevi_model()$analysis_data$t, na.rm = TRUE))
+    updateNumericInput(session, "bp_max",
+                       value = round(tevi_model()$frame_rate / 2, 0),
+                       max = round(tevi_model()$frame_rate / 2, 0)
+                       )
+  })
 
   output$seewave_plot <- renderPlot({
     sig_name <- input$selected_signal
@@ -29,33 +36,27 @@ seewave_ctrl <- function(input, output, session, tevi_model, selected_sidebar_ta
     bp[1] <- max(0, bp[1])
     bp[2] <- min(sr, bp[2])
 
-    data_selection <- tevi_model()$tevi_data %>% filter(t %>% between(time_range[1], time_range[2]))
-    t <- data_selection[["t"]]
-    signal <- data_selection[[sig_name]]
+    tapered_data <- tevi_model()$analysis_data %>% filter(t %>% between(time_range[1], time_range[2]))
+    t <- tapered_data[["t"]]
+    signal <- tapered_data[[sig_name]]
     signal <- signal - mean(signal, na.rm = TRUE)
-
-
-    N <- length(signal) # Nr. samples T = N * sample_rate
-    T <- N / sr # Observation-length
 
     wl <- 2^8
     #to do: select window-length conditional on Observation-length
 
     if(selected_sidebar_tab() == "spec_osc"){
-      validate(need(N > 2^8, message = str_glue("selected time range is to short (it is only {round(T, 2)}s long)")))
       return(
         seewave::spectro(
-        signal, f = sr, wl = wl, ovlp = 50, flim = bp/1000,
+        signal, f = sr, wl = wl, ovlp = 50, #flim = bp/1000,
         osc = TRUE, alab = sig_name
       )
      )
     }
     if(selected_sidebar_tab() == "spec_dom_freq"){
-      validate(need(N > 2^8, message = str_glue("selected time range is to short (it is only {round(T, 2)} s long)")))
       dom_freqs <- seewave::dfreq(signal, f = sr, wl = wl, ovlp = 50, bandpass = bp, threshold = 10, plot = FALSE)
         return(
           {
-            seewave::spectro(signal, f = sr, wl = wl, ovlp = 50, flim = bp/1000)
+            seewave::spectro(signal, f = sr, wl = wl, ovlp = 50)#, flim = bp/1000)
             points(dom_freqs, col = "red", bg = "yellow", pch = 21)
           }
         )
