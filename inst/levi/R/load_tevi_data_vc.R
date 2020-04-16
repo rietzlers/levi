@@ -47,6 +47,7 @@ load_tevi_data_ctrl <- function(input, output, session) {
   }, ignoreInit = TRUE)
 
   analysis_data <- reactive({
+    validate(need(exp_time_range(), message = "can not define analysis-data as there is no exp_time_range"))
     tevi_data() %>%
       filter(t %>% between(exp_time_range()[1], exp_time_range()[2])) %>%
       mutate(t = t - min(t, na.rm = TRUE))
@@ -154,7 +155,11 @@ load_tevi_data_ctrl <- function(input, output, session) {
   })
   # return-values ----------
   reactive({
-    validate(need(exp_time_range(), message = "brush temp-plot in 'dashboard'-tab 'upload tevi-data' to set experimental time-range"))
+    validate(need(tevi_data_RV(),
+                  message = "No Tevi-data available! Make sure you have uploaded a .csv-Tevi-file."))
+    validate(need(analysis_data(),
+                  message = "No analysis-time-range specified. Brush temp-plot in 'dashboard'-tab 'upload tevi-data' to set experimental time-range"))
+    browser()
     list(
       tevi_data = tevi_data(),
       analysis_data = analysis_data(),
