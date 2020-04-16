@@ -101,16 +101,16 @@ simulate_data_ctrl <- function(input, output, session, resample_UI){
   # return-values ----------
   return(
     list(
-    reactive(
-      list(
-        tevi_data = ex_data(),
-        tevi_data_name = "Simulated data",
-        exp_time_range = c(0, input$T),
-        HPs = NULL,
-        frame_rate = input$sr
-      )
-    ),
-    reactive(input$data_choice)
+      reactive(
+        list(
+          analysis_data = ex_data(),
+          tevi_data_name = "Simulated data",
+          exp_time_range = c(0, input$T),
+          HPs = NULL,
+          frame_rate = input$sr
+        )
+      ),
+      reactive(input$data_choice)
     )
   )
 }
