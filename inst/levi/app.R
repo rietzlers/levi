@@ -32,7 +32,7 @@ ui <- function(request) {
           menuItem(
             "Surface-Tension",icon = icon("tint"),
             menuSubItem("ST-Analysis", icon = icon("diagnoses"), tabName = "st_analysis"),
-            menuSubItem("ST-Results", icon = icon("receipt"), tabName = "st_results")
+            menuSubItem("ST-Data", icon = icon("receipt"), tabName = "st_datatable")
 
           ),
           menuItem(
@@ -63,7 +63,7 @@ ui <- function(request) {
                   dashboard_UI("main_dashboard")),
           tabItem(tabName = "simulate_data_UI", simulate_data_view("simulate_data")),
           tabItem(tabName = "st_analysis", surface_tension_analysis_UI("st_analysis")),
-          tabItem(tabName = "st_results", "plot and table"),
+          #tabItem(tabName = "st_datatable", surface_tension_analysis_UI("st_analysis")),
           tabItem(tabName = "viscosity_analysis_UI", "to be done"),
           tabItem(tabName = "spec_osc", seewave_view("spec_osc")),
           tabItem(tabName = "spec_dom_freq", seewave_view("spec_dom_freq")),
@@ -130,7 +130,7 @@ server <- function(input, output, session) {
   # data-simulation -----
   c(sim_data_model, model_choice) %<-% callModule(simulate_data_ctrl, "simulate_data", resample_UI)
   # surface-tension-analysis ----------
-  callModule(surface_tension_analysis_ctrl, "st_analysis", model, sample_specs, tasks, notifications)
+  callModule(surface_tension_analysis_ctrl, "st_analysis", model, sample_specs, tasks, notifications, selected_sidebar_tab)
 
   # signal-analysis ----------
   {
