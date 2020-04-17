@@ -47,7 +47,7 @@ ui <- function(request) {
           ),
           uiOutput("resample_UI"),
           bookmarkButton(
-            label = "Save current results",
+            label = "save session",
             title = HTML(
               "Paste the URL into your browsers location-bar and then bookmark it with your browser. (Make sure to give the bookmark a mneomic name.) You can send this URL to a collaborator to share your current analysis-results. (Your collaborator needs access to the same shiny-server!)"
             ),

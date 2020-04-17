@@ -6,121 +6,140 @@ spectrumUI <- function(id) {
     box(width = 12,
         fluidRow(
           column(width = 1,
-                 textInput(ns("spans"), label = "span", value = "c(3,3)"),
-                 bsTooltip(ns("spans"), "specify daniell-smoother: NULL for no smoothing", "top", options = list(container = "body")),
-                 numericInput(ns("taper"), label = "taper", value = 0.1, step = .1, min = 0, max = 1),
-                 bsTooltip(ns("taper"), "apply cosine-taper to % of window", "top")),
+                 actionButton(ns("show_ctrls"), label = NULL, icon = icon("wrench"),  width = "100%"),
+                 bsTooltip(ns("show_ctrls"), "Show additional controls")),
           column(width = 5,
                  plotOutput(ns("complete_spectrum"), height = 250,
                             brush = brushOpts(id = ns("brush"), fill = "#ccc", direction = "x", resetOnNew = FALSE))),
           column(width = 6,
                  plotlyOutput(ns("bp_spectrum"), height = 250))
          )
-    # style = "border-style = groove; border: 1px solid black; padding: 25px"
-    )
+    ),
+    bsModal(ns("additional_ctrls"), title = "Additional Controls for Spectrum-Plots", trigger = ns("show_ctrls"),
+            box(
+              title = tags$span("Arguments for ", tags$a(href = "https://www.rdocumentation.org/packages/stats/versions/3.6.2/topics/spec.pgram", "spectrum ")),
+              textInput(ns("spans"), label = "span", value = "c(3,3)"),
+              bsTooltip(ns("spans"), "specify daniell-smoother: NULL for no smoothing", "top", options = list(container = "body")),
+              numericInput(ns("taper"), label = "taper", value = 0.1, step = .1, min = 0, max = 1),
+              bsTooltip(ns("taper"), "apply cosine-taper to % of window", "top")
+            ),
+            size = "large")
   )
 }
 
 
-spectrum_ctrl <- function(input, output, session, tevi_model, data_selection, signal_name, window_range){
+spectrum_ctrl <- function(input, output, session, tevi_model, tapered_data, signal_name, window_range){
 
   # data: parameters ----
-  bp <- reactive(({
-    input$brush %>%
-      levi::get_brush_range( "set band-pass by brushing spectrum-plot") %>%
-      round(1)
-  }))
-  spans <- reactive({
-    spans <- -1
-    tryCatch(
-      error = function(e) e,
-      spans <- eval(rlang::parse_expr(input$spans))
-    )
-    validate(need(min(spans) > 1,
-                  message = "No valid spans for Daniell-Smoother! It must be a numeric vector of positve integers, i.e. c(3,3), c(2)"))
-    spans
-  })
-  taper <- reactive({
-    validate(need(input$taper, label = "taper"))
-    input$taper
-  })
+  bp <-
+    reactive(({
+      input$brush %>%
+        levi::get_brush_range( "set band-pass by brushing spectrum-plot") %>%
+        round(1)
+    }))
+
+  spans <-
+    reactive({
+      spans <- -1
+      tryCatch(
+        error = function(e) e,
+        spans <- eval(rlang::parse_expr(input$spans))
+      )
+      validate(need(min(spans) > 1,
+                    message = "No valid spans for Daniell-Smoother! It must be a numeric vector of positve integers, i.e. c(3,3), c(2)"))
+      spans
+    })
+
+  taper <-
+    reactive({
+      validate(need(input$taper, label = "taper"))
+      input$taper
+    })
+
   # data: estimates------------
-  spectrum_estimate <- reactive({
-    levi::estimate_signal_spectrum(
-      data_selection(),
-      signal_name(),
-      tevi_model()$frame_rate,
-      spans = spans(),
-      taper = taper()
-    )
-  })
-  lfit_models <- reactive({
-    lorentz_fit_to_fft <-
-      levi::fit_lorentz(
-      dplyr::filter(spectrum_estimate(), calc_method == "fft"),
-      bp = bp(), # lorentz-kurve wird IMMER an die BP-gefilterte Kurve angepasst!
-      sr = tevi_model()$frame_rate)
-    lorentz_fit_to_spectrum <-
-      levi::fit_lorentz(
-        dplyr::filter(spectrum_estimate(), calc_method == "spectrum"),
-        bp = bp(), # lorentz-kurve wird IMMER an die BP-gefilterte Kurve angepasst!
-        sr = tevi_model()$frame_rate)
-    fitted_models = list(
-      to_fft_data = lorentz_fit_to_fft,
-      to_spectrum_data = lorentz_fit_to_spectrum
-    )
-  })
-  parameter_estimates <- reactive({
-    sr <- tevi_model()$frame_rate
-
-    f_raw_estimates <-
-      spectrum_estimate() %>%
-      group_by(calc_method) %>%
-      get_dom_freq(sr) %>%
-      ungroup() %>%
-      transmute(
-        calc_method,
-        dom_freq_estimate = f
+  spectrum_estimate <-
+    reactive({
+      levi::estimate_signal_spectrum(
+        tapered_data(),
+        signal_name(),
+        tevi_model()$frame_rate,
+        spans = spans(),
+        taper = taper()
       )
+    })
 
-    lfit_estimates <-
-     lfit_models() %>%
-      map_dfr(lorentz_parameters) %>%
-      set_names(c("fft_lorentz", "spectrum_lorentz")) %>%
-      mutate(parameter = c("A", "f0", "d")) %>%
-      pivot_longer(cols = contains("lorentz"), names_to = "calc_method")
-
-    f_lfit_estimates <-
-      lfit_estimates %>%
-      filter(parameter == "f0") %>%
-      transmute(
-        calc_method,
-        dom_freq_estimate = value
+  lfit_models <-
+    reactive({
+      lorentz_fit_to_fft <-
+        levi::fit_lorentz(
+          dplyr::filter(spectrum_estimate(), calc_method == "fft"),
+          bp = bp(), # lorentz-kurve wird IMMER an die BP-gefilterte Kurve angepasst!
+          sr = tevi_model()$frame_rate)
+      lorentz_fit_to_spectrum <-
+        levi::fit_lorentz(
+          dplyr::filter(spectrum_estimate(), calc_method == "spectrum"),
+          bp = bp(), # lorentz-kurve wird IMMER an die BP-gefilterte Kurve angepasst!
+          sr = tevi_model()$frame_rate)
+      fitted_models = list(
+        to_fft_data = lorentz_fit_to_fft,
+        to_spectrum_data = lorentz_fit_to_spectrum
       )
+    })
 
-    damping_estimates <-
-      lfit_estimates %>%
-      filter(parameter == "d") %>%
-      transmute(
-        calc_method,
-        damping_estimate = value,
-        spans = input$spans,
-        taper = as.numeric(input$taper)
-      )
+  parameter_estimates <-
+    reactive({
 
-    f_raw_estimates %>%
-      dplyr::union(f_lfit_estimates) %>%
-      left_join(damping_estimates, by = c("calc_method")) %>%
-      mutate(
-        hp_limit = bp()[1],
-        lp_limit = bp()[2],
-        win_start = window_range()[1],
-        win_end = window_range()[2],
-        t = mean(window_range(), na.rm = TRUE),
-        signal = signal_name()
-      )
+      sr <- tevi_model()$frame_rate
 
-  })
+      f_raw_estimates <-
+        spectrum_estimate() %>%
+        filter(f %>% between(bp()[1], bp()[2])) %>%
+        group_by(calc_method) %>%
+        get_dom_freq(sr) %>%
+        ungroup() %>%
+        transmute(
+          calc_method,
+          dom_freq_estimate = f
+        )
+
+      lfit_estimates <-
+        lfit_models() %>%
+        map_dfr(lorentz_parameters) %>%
+        set_names(c("fft_lorentz", "spectrum_lorentz")) %>%
+        mutate(parameter = c("A", "f0", "d")) %>%
+        pivot_longer(cols = contains("lorentz"), names_to = "calc_method")
+
+      f_lfit_estimates <-
+        lfit_estimates %>%
+        filter(parameter == "f0") %>%
+        transmute(
+          calc_method,
+          dom_freq_estimate = value
+        )
+
+      damping_estimates <-
+        lfit_estimates %>%
+        filter(parameter == "d") %>%
+        transmute(
+          calc_method,
+          damping_estimate = value,
+          spans = input$spans,
+          taper = as.numeric(input$taper)
+        )
+
+      f_raw_estimates %>%
+        dplyr::union(f_lfit_estimates) %>%
+        left_join(damping_estimates, by = c("calc_method")) %>%
+        mutate(
+          hp_limit = bp()[1],
+          lp_limit = bp()[2],
+          win_start = window_range()[1],
+          win_end = window_range()[2],
+          t = mean(window_range(), na.rm = TRUE),
+          signal = signal_name()
+        )
+
+    })
 
 
   # outputs  -----------
@@ -149,8 +168,10 @@ spectrum_ctrl <- function(input, output, session, tevi_model, data_selection, si
     })
 
   # return-values -----------
-  parameter_estimates
-
+  reactive({
+    validate(need(parameter_estimates, "parameter_estimates"))
+    parameter_estimates()
+    })
 }
 
 

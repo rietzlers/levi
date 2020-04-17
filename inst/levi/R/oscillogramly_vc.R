@@ -8,7 +8,8 @@ oscillogramUI <- function(id){
                  selectInput(ns("selected_signal"), label = "Signal", choices = NULL),
                  numericInput(ns("window_start"), label = "Window-Start", value = 0, min = 0, step = 0.5),
                  numericInput(ns("window_length"), label = "Window-Length", value = 1, min = 0.1, step = 0.1),
-                 actionButton(ns("show_ctrls"), label = "Controls", icon = icon("wrench"),  width = "100%")),
+                 actionButton(ns("show_ctrls"), label = NULL, icon = icon("wrench"),  width = "100%"),
+                 bsTooltip(ns("show_ctrls"), "Show additional controls")),
           column(width = 11, plotlyOutput(ns("oscillogram"), height = "300px"))
         )
     ),

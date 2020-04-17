@@ -5,21 +5,28 @@ surface_tension_results_UI <- function(id){
     box(width = 12,
         fluidRow(
           column(width = 1,
-                 box(width = 12,
-                 actionButton(ns("add_result"), label = "Save current values", icon = icon("save"), width = "100%"),
-                 actionButton(ns("show_ctrls"), label = "Controls", icon = icon("wrench"),  width = "100%"),
-                 selectInput(ns("st_xvar"), label = "Display: ", selected = "t", choices = c("time [s]" = "t", "Temp. [° C]" = "smoothed_temp")),
-                 selectInput(ns("st_yvar"), label = NULL, selected = "f", choices = c("Freq. [Hz]" = "f","Surface-Tension [Nm]" = "st"))
-                 )
+                 actionButton(ns("add_result"), label = "save", icon = icon("save"), width = "100%"),
+                 bsTooltip(ns("add_result"), "add the current values to the result-dataset"),
+                 actionButton(ns("show_ctrls"), label = NULL, icon = icon("wrench"),  width = "100%"),
+                 bsTooltip(ns("show_ctrls"), "Show additional controls")
           ),
           column(width = 11,
                  plotlyOutput(ns("surface_tension_plot"), height = "350px"))
           )),
       box(width = 12, title = "Surface-Tension Results-Data", collapsible = TRUE, collapsed = TRUE,
           DT::dataTableOutput(ns("spec_analsis_results_DT"))
-          ),
+      ),
     bsModal(ns("additional_ctrls"), title = "Additional Controls for Surface-Tension-Results-Data", trigger = ns("show_ctrls"),
-
+            box(title = "Axis-Scaling of result-plot",
+                fluidRow(
+                  column(width = 6,
+                         selectInput(ns("st_yvar"), label = NULL, selected = "f", choices = c("Freq. [Hz]" = "f","Surface-Tension [Nm]" = "st"))),
+                  column(width = 6,
+                         selectInput(ns("st_xvar"), label = NULL, selected = "t", choices = c("time [s]" = "t", "Temp. [° C]" = "smoothed_temp"))),
+                  tags$div("Time = 0s is different for each tevi-data-set! This means you have to be carful in interpreting the plot.
+                           Only temprature allows unambigous interpretation.")
+                )
+            ),
             size = "large")
     )
 }
