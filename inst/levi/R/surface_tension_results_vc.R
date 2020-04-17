@@ -13,9 +13,10 @@ surface_tension_results_UI <- function(id){
           column(width = 11,
                  plotlyOutput(ns("surface_tension_plot"), height = "350px"))
           )),
-      box(width = 12, title = "Surface-Tension Results-Data", collapsible = TRUE, collapsed = TRUE,
-          DT::dataTableOutput(ns("spec_analsis_results_DT"))
-      ),
+    box(width = 12, title = "Surface-Tension Results-Data", collapsible = TRUE, collapsed = TRUE,
+        DT::dataTableOutput(ns("spec_analsis_results_DT"))
+    ),
+
     bsModal(ns("additional_ctrls"), title = "Additional Controls for Surface-Tension-Results-Data", trigger = ns("show_ctrls"),
             box(title = "Axis-Scaling of result-plot",
                 fluidRow(
