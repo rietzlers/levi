@@ -23,17 +23,17 @@ ui <- function(request) {
             icon = icon("dashboard")
           ),
           menuItem(
-            "Signal-Analysis",
-            icon = icon("signal"),
+            "Signal-Analysis", icon = icon("signal"),
             menuSubItem("Spectrum and Oscillogram", tabName = "spec_osc"),
             menuSubItem("Spec+Dom-Freq", tabName = "spec_dom_freq"),
             menuSubItem("Instantanous Frequency", tabName = "inst_freqs"),
             menuSubItem("Smoothed Signal Envelope", tabName = "sig_envelope")
           ),
           menuItem(
-            "Surface-Tension",
-            tabName = "surface_tension_analysis_UI",
-            icon = icon("tint")
+            "Surface-Tension",icon = icon("tint"),
+            menuSubItem("ST-Analysis", icon = icon("diagnoses"), tabName = "st_analysis"),
+            menuSubItem("ST-Results", icon = icon("receipt"), tabName = "st_results")
+
           ),
           menuItem(
             "Viscosity",
@@ -62,7 +62,8 @@ ui <- function(request) {
                   #tags$head(tags$script(src = "script.js")),
                   dashboard_UI("main_dashboard")),
           tabItem(tabName = "simulate_data_UI", simulate_data_view("simulate_data")),
-          tabItem(tabName = "surface_tension_analysis_UI", surface_tension_analysis_UI("st_analysis")),
+          tabItem(tabName = "st_analysis", surface_tension_analysis_UI("st_analysis")),
+          tabItem(tabName = "st_results", "plot and table"),
           tabItem(tabName = "viscosity_analysis_UI", "to be done"),
           tabItem(tabName = "spec_osc", seewave_view("spec_osc")),
           tabItem(tabName = "spec_dom_freq", seewave_view("spec_dom_freq")),
