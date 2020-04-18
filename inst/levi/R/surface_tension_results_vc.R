@@ -47,27 +47,23 @@ surface_tension_results_ctrl <- function(input, output, session, tevi_model, sam
 
     if(input$st_xvar == "t"){
       x_var <- "t"
-      x_range <- range(tevi_model()$analysis_data[["t"]], na.rm = TRUE)
       x_axis_title <- "time [s]"
     }else{
       x_var <- "temp"
-      x_range <- range(convert_to_temp(tevi_model()$analysis_data[["t"]], tevi_model()$analysis_data), na.rm = TRUE)
       x_axis_title <- "Temp. [°C]"
     }
 
     if(input$st_yvar == "f"){
       y_var <- "dom_freq_estimate"
       y_axis_title <- "Dom. Freq. of Signal [Hz]"
-      y_range <- c(10, 70)
       y_unit <- "Hz"
     }else{
       y_var <- "st"
-      y_range <- to_surface_tension(c(10, 70), sample_specs()$mass)
       y_axis_title <- "Surface-Tension of Alloy [Nm]"
       y_unit <- "Nm"
     }
 
-    calc_method_trace <- function(p, cm, trace,  estimates = NULL, p_size = 6,  sl = TRUE, fit_lm = FALSE, farbe = "black"){
+    calc_method_trace <- function(p, cm, trace,  estimates = NULL, p_size = 15,  sl = TRUE, fit_lm = FALSE, farbe = "red"){
       if(missing(trace)){trace = cm}
       p <-
         p %>%
@@ -113,23 +109,21 @@ surface_tension_results_ctrl <- function(input, output, session, tevi_model, sam
       spec_analysis_results() %>%
         plot_ly(source = "st_plot") %>%
         add_fun(function(p){calc_method_trace(p, "fft", fit_lm = TRUE, farbe = "blue")}) %>%
-        add_fun(function(p){calc_method_trace(p, "spectrum", fit_lm = TRUE, farbe = "green")}) %>%
-        add_fun(function(p){calc_method_trace(p, "fft_lorentz", fit_lm = TRUE, farbe ="yellow")}) %>%
-        add_fun(function(p){calc_method_trace(p, "spectrum_lorentz", fit_lm = TRUE, farbe = "orange")}) %>%
-        add_fun(function(p){calc_method_trace(p, "fft", trace = "current estimate", p_size = 20,
+        add_fun(function(p){calc_method_trace(p, "fft_lorentz", fit_lm = TRUE, farbe ="darkblue")}) %>%
+        add_fun(function(p){calc_method_trace(p, "spectrum", fit_lm = TRUE, farbe = "black")}) %>%
+        add_fun(function(p){calc_method_trace(p, "spectrum_lorentz", fit_lm = TRUE, farbe = "darkgrey")}) %>%
+        add_fun(function(p){calc_method_trace(p, "fft", trace = "current estimate", p_size = 30,
                                               estimates = live_parameter_estimates(), sl = FALSE)}) %>%
-        add_fun(function(p){calc_method_trace(p, "spectrum",  trace = "current estimate", p_size = 20,
+        add_fun(function(p){calc_method_trace(p, "spectrum",  trace = "current estimate", p_size = 30,
                                               estimates = live_parameter_estimates(), sl = FALSE)}) %>%
-        add_fun(function(p){calc_method_trace(p, "fft_lorentz",  trace = "current estimate", p_size = 20,
+        add_fun(function(p){calc_method_trace(p, "fft_lorentz",  trace = "current estimate", p_size = 30,
                                               estimates = live_parameter_estimates(), sl = FALSE)}) %>%
-        add_fun(function(p){calc_method_trace(p, "spectrum_lorentz",  trace = "current estimate", p_size = 20,
+        add_fun(function(p){calc_method_trace(p, "spectrum_lorentz",  trace = "current estimate", p_size = 30,
                                               estimates = live_parameter_estimates(), sl = FALSE)}) %>%
         layout(
           legend = list(x = 0.8, y = 0.9),
-          xaxis = list(title = x_axis_title,
-                       range = x_range),
-          yaxis = list(title = y_axis_title,
-                       range = y_range)
+          xaxis = list(title = x_axis_title),
+          yaxis = list(title = y_axis_title)
         )
 
     })
