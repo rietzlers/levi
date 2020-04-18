@@ -74,20 +74,17 @@ spectrum_ctrl <- function(input, output, session, tapered_data, frame_rate, sign
 
   lfit_models <-
     reactive({
-      lorentz_fit_to_fft <-
-        levi::fit_lorentz(
-          dplyr::filter(bp_filtered_spectrum(), calc_method == "fft"),
-          bp = bp(), # lorentz-kurve wird IMMER an die BP-gefilterte Kurve angepasst!
-          sr = frame_rate())
-      lorentz_fit_to_spectrum <-
-        levi::fit_lorentz(
-          dplyr::filter(bp_filtered_spectrum(), calc_method == "spectrum"),
-          bp = bp(), # lorentz-kurve wird IMMER an die BP-gefilterte Kurve angepasst!
-          sr = frame_rate())
-      fitted_models = list(
-        to_fft_data = lorentz_fit_to_fft,
-        to_spectrum_data = lorentz_fit_to_spectrum
-      )
+      fitted_models =
+        list(
+          to_fft_data =
+            levi::fit_lorentz(
+              dplyr::filter(bp_filtered_spectrum(), calc_method == "fft")
+            ),
+          to_spectrum_data =
+            levi::fit_lorentz(
+              dplyr::filter(bp_filtered_spectrum(), calc_method == "spectrum")
+            )
+        )
     })
 
   parameter_estimates <-

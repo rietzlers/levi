@@ -106,17 +106,15 @@ estimate_signal_spectrum <- function(signal_data, signal_name, frame_rate,  span
 #'
 #' @param fc_data tibble with columns f and fc_amp
 #' @param c0 numeric vector c(A, f0, d) with start-values for nls
-#' @param sr samplerate
 #' @param nr_tries # to repeat nls with different start-values if
 #' it did not converge the first time.
-#' @param bp numeric vector of length 2 specifying a Band-Pass; fit to bp-filtered data
 #'
 #' @return nls-fit-object or NULL
 #' @export
-fit_lorentz <- function(fc_data, c0, sr, nr_tries = 10){
+fit_lorentz <- function(fc_data, c0, nr_tries = 10){
 
   if(missing(c0)){
-    c(f, fc_amp) %<-% get_dom_freq(fc_data, sample_rate = sr)
+    c(f, fc_amp) %<-% get_dom_freq(fc_data)
     c0 = c(A = fc_amp^2, f0 = f, d = 0.5)
   }
 
