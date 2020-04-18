@@ -15,11 +15,10 @@ surface_tension_result_data_UI <- function(id){
           )
         )
     ),
-    bsModal(ns("delete_data_confirmation"), title = "Please confirm deletion", trigger = ns("delete_rows"),
-            actionButton(ns("deletion_confirmed"), label = "delete", icon = icon("trash-alt")),
-            DT::dataTableOutput(ns("data_selection")),
-            size = "large"
-    )
+    bsModal(ns("delete_data_confirmation"), trigger = ns("delete_rows"), size = "large",
+            title = tagList("Delete selected observations?",
+                            actionButton(ns("deletion_confirmed"), label = "delete", icon = icon("trash-alt"))),
+            DT::dataTableOutput(ns("data_selection")))
   )
 }
 
@@ -39,22 +38,60 @@ surface_tension_results_data_ctrl <- function(input, output, session, tevi_model
   observeEvent(
     add_result(), {
       if(is.null(spec_analysis_results())){
-        spec_analysis_results(live_parameter_estimates())
+        updated_results <-
+          live_parameter_estimates() %>%
+          mutate(win_length = round(win_end - win_start, 2))
       }else{
-        spec_analysis_results(
+        updated_results <-
           dplyr::union(
             spec_analysis_results(),
-            live_parameter_estimates()
+            live_parameter_estimates() %>%
+              mutate(win_length = round(win_end - win_start, 2))
           )
-        )}
+      }
+
+      updated_results <-
+        updated_results %>%
+        mutate(
+          t = round(t, 3),
+          dom_freq_estimate = round(dom_freq_estimate, 2),
+          damping_estimate = round(damping_estimate, 1),
+          win_start = round(win_start, 2),
+          win_end = round(win_end, 2),
+          temp = round(temp, 1),
+          st = round(st, 4)
+        ) %>%
+        mutate(
+          calc_method = factor(calc_method),
+          signal = factor(signal),
+          tevi_data_name = factor(tevi_data_name),
+          spans = factor(spans)
+        ) %>%
+        select(
+          t, dom_freq_estimate, temp, st, damping_estimate, calc_method, everything()
+        ) %>%
+        arrange(t, calc_method)
+
+      spec_analysis_results(updated_results)
     })
 
   observeEvent(
     input$delete_rows,
     {
       rows <- input$spec_analsis_results_DT_rows_selected
-      print(rows)
-      output$data_selection <- renderDT(spec_analysis_results()[rows, ])
+      output$data_selection <-
+        renderDT(
+          spec_analysis_results()[rows, ],
+          rownames = FALSE,
+          filter = 'top',
+          extensions = c('Buttons', 'Responsive'),
+          options = list(
+            #initComplete = JS('function(setting, json) { alert("done"); }'),
+            dom = 'Bftli',
+            buttons = list(I('colvis'), list(extend = "collection", buttons = c('csv', 'excel', 'pdf'), text = "Download"), 'copy', 'print'),
+            paging = TRUE,
+            autoWidth = TRUE
+          ))
     }
   )
 
@@ -62,10 +99,7 @@ surface_tension_results_data_ctrl <- function(input, output, session, tevi_model
     input$deletion_confirmed,
     {
       rows <- input$spec_analsis_results_DT_rows_selected
-      print(rows)
-      spec_analysis_results(
-        spec_analysis_results()[-rows, ]
-      )
+      spec_analysis_results(spec_analysis_results()[-rows, ])
       toggleModal(session, "delete_data_confirmation", toggle = "close")
     },
     ignoreInit = TRUE
@@ -81,27 +115,7 @@ surface_tension_results_data_ctrl <- function(input, output, session, tevi_model
   # st-results-table ---------
   output$spec_analsis_results_DT <- DT::renderDataTable({
     validate(need(spec_analysis_results(), label = "spec_analysis_results"))
-    spec_analysis_results() %>%
-      mutate(
-        t = round(t, 3),
-        dom_freq_estimate = round(dom_freq_estimate, 2),
-        damping_estimate = round(damping_estimate, 1),
-        win_length = round(win_end - win_start, 2),
-        win_start = round(win_start, 2),
-        win_end = round(win_end, 2),
-        temp = round(temp, 1),
-        st = round(st, 4)
-      ) %>%
-      select(
-        t, dom_freq_estimate, temp, st, damping_estimate, calc_method, everything()
-      ) %>%
-      mutate(
-        calc_method = factor(calc_method),
-        signal = factor(signal),
-        tevi_data_name = factor(tevi_data_name),
-        spans = factor(spans)
-      ) %>%
-      arrange(t, calc_method) %>%
+    spec_analysis_results()  %>%
       datatable(
         rownames = FALSE,
         colnames = c("time [s]" = "t", "Estimate of dom. Freq. [Hz]" = "dom_freq_estimate",
