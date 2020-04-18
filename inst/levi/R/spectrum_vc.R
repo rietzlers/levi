@@ -62,24 +62,28 @@ spectrum_ctrl <- function(input, output, session, tapered_data, frame_rate, sign
       levi::estimate_signal_spectrum(
         tapered_data(),
         signal_name(),
-        tevi_model()$frame_rate,
+        frame_rate(),
         spans = spans(),
         taper = taper()
       )
     })
 
+  bp_filtered_spectrum <- reactive({
+    spectrum_estimate() %>% filter(f %>% between(bp()[1], bp()[2]))
+  })
+
   lfit_models <-
     reactive({
       lorentz_fit_to_fft <-
         levi::fit_lorentz(
-          dplyr::filter(spectrum_estimate(), calc_method == "fft"),
+          dplyr::filter(bp_filtered_spectrum(), calc_method == "fft"),
           bp = bp(), # lorentz-kurve wird IMMER an die BP-gefilterte Kurve angepasst!
-          sr = tevi_model()$frame_rate)
+          sr = frame_rate())
       lorentz_fit_to_spectrum <-
         levi::fit_lorentz(
-          dplyr::filter(spectrum_estimate(), calc_method == "spectrum"),
+          dplyr::filter(bp_filtered_spectrum(), calc_method == "spectrum"),
           bp = bp(), # lorentz-kurve wird IMMER an die BP-gefilterte Kurve angepasst!
-          sr = tevi_model()$frame_rate)
+          sr = frame_rate())
       fitted_models = list(
         to_fft_data = lorentz_fit_to_fft,
         to_spectrum_data = lorentz_fit_to_spectrum
@@ -89,11 +93,10 @@ spectrum_ctrl <- function(input, output, session, tapered_data, frame_rate, sign
   parameter_estimates <-
     reactive({
 
-      sr <- tevi_model()$frame_rate
+      sr <- frame_rate()
 
       f_raw_estimates <-
-        spectrum_estimate() %>%
-        filter(f %>% between(bp()[1], bp()[2])) %>%
+        bp_filtered_spectrum() %>%
         group_by(calc_method) %>%
         get_dom_freq(sr) %>%
         ungroup() %>%
@@ -145,7 +148,6 @@ spectrum_ctrl <- function(input, output, session, tapered_data, frame_rate, sign
   # outputs  -----------
   output$complete_spectrum <- renderPlot({
     spectrum_estimate() %>%
-      filter(f %>% between(0, tevi_model()$frame_rate/2)) %>%
       ggplot(aes(x = f)) +
       geom_line(data = ~ dplyr::filter(.x, calc_method == "spectrum"), aes(y = fc_amp)) +
       geom_point(data = ~ dplyr::filter(.x, calc_method == "spectrum"), aes(y = fc_amp), shape = "x", size = 0.8) +
@@ -159,11 +161,11 @@ spectrum_ctrl <- function(input, output, session, tapered_data, frame_rate, sign
 
   output$bp_spectrum <- renderPlotly({
       gen_spec_plot(
-        spectrum_estimate(),
+        bp_filtered_spectrum(),
         lfit_models = lfit_models(),
         scale = "raw",
         bp = bp(),
-        sample_rate = tevi_model()$frame_rate
+        sample_rate = frame_rate()
       )
     })
 
