@@ -159,7 +159,6 @@ spectrum_ctrl <- function(input, output, session, tapered_data, frame_rate, sign
         bp_filtered_spectrum(),
         lfit_models = lfit_models(),
         scale = "raw",
-        bp = bp(),
         sample_rate = frame_rate()
       )
     })

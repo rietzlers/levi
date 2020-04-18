@@ -2,19 +2,17 @@
 #' generate spectrogram-plot
 #'
 #' @param est_spec tibble: estimated spectrum
-#' @param lfit lfit-model
+#' @param lfit_models lfit-models
 #' @param scale string: raw/log10
-#' @param bp numeric vector: bandpass-limits
 #' @param sample_rate sample-rate
 #'
 #' @return plot-object
 #'
 #' @export
 gen_spec_plot <-
-  function(est_spec, lfit_models, scale = "log10", bp,  sample_rate){
+  function(est_spec, lfit_models, scale = "log10",  sample_rate){
     spec_plotly <-
       est_spec %>%
-      filter(f > 0) %>%
       plot_ly() %>%
       add_fun(function(p){
         p_data <- p %>% plotly_data() %>% filter(calc_method == "fft")
@@ -70,8 +68,7 @@ gen_spec_plot <-
           title = list(text = "<b>Calculation-Method</b>")
         ),
         xaxis = list(
-          title = "Freq [Hz]",
-          range = bp
+          title = "Freq [Hz]"
         ),
         yaxis = list(
           title = if_else(scale == "log10", "log10(Fourier-Coef-Amp)", "Fourier-Coef-Amp"),
@@ -85,7 +82,7 @@ gen_spec_plot <-
         spec_plotly %>%
         add_trace(
           type = "scatter", mode = "line",
-          data = tibble(f = seq(bp[1], bp[2], by = 1/100)) %>% lorentz_amps(lfit),
+          data = tibble(f = seq(min(est_spec$f), max(est_spec$f), by = 1/100)) %>% lorentz_amps(lfit),
           x = ~f, y = ~lf_amp, color = I("blue"),
           name = str_glue("Lortentz-fit (fft); f <sub>0</sub>: {round((lfit %>% lorentz_parameters())[['f0']], 1)} Hz"),
           hovertemplate = "Freq.: %{x:.1f} Hz"
@@ -107,7 +104,7 @@ gen_spec_plot <-
         spec_plotly %>%
         add_trace(
           type = "scatter", mode = "line",
-          data = tibble(f = seq(bp[1], bp[2], by = 1/100)) %>% lorentz_amps(lfit),
+          data = tibble(f = seq(min(est_spec$f), max(est_spec$f), by = 1/100)) %>% lorentz_amps(lfit),
           x = ~f, y = ~lf_amp, color = I("black"),
           name = str_glue("Lortentz-fit (spectrum); f <sub>0</sub>: {round((lfit %>% lorentz_parameters())[['f0']], 1)} Hz"),
           hovertemplate = "Freq.: %{x:.1f} Hz"
@@ -123,7 +120,6 @@ gen_spec_plot <-
         )
     }
 
-
     spec_plotly %>%
       config(
         displaylogo = FALSE,
@@ -132,9 +128,65 @@ gen_spec_plot <-
           "zoomOut2d",
           "lasso2d",
           "pan2d",
-          "hoverClosestCartesian",
-          "hoverCompareCartesian"
+          "hoverClosestCartesian"
         )
       )
 
   }
+
+
+#' adds a trace to st-result-plot for a calc_method
+#'
+#' @param p plot_ly object
+#' @param cm string specifying the calc_method
+#' @param trace name/legend for the trace
+#' @param estimates data-frame
+#' @param p_size point-size
+#' @param sl logical: showlegend
+#' @param fit_lm logical: add lm-model-fit to trace
+#' @param farbe color of the trace
+#'
+#' @return plot_ly-object
+#' @export
+calc_method_trace <- function(p, cm, trace,  estimates = NULL, p_size = 6,  sl = TRUE, fit_lm = FALSE, farbe = "black"){
+  if(missing(trace)){trace = cm}
+  p <-
+    p %>%
+    filter(calc_method == cm) %>%
+    add_trace(
+      data = estimates,
+      name = trace,
+      type = "scatter",
+      mode = "markers",
+      x = ~ get(x_var),
+      y = ~ get(y_var),
+      hovertemplate = paste("%{y:.2f}", y_unit),
+      size = I(p_size),
+      showlegend = sl,
+      color = I(farbe)
+    )
+  if(fit_lm == TRUE){
+    complete_obs <-
+      plotly_data(p) %>%
+      filter(!is.na(dom_freq_estimate)) %>%
+      filter(calc_method == cm)
+    lm <- lm(get(y_var) ~ get(x_var), data = complete_obs)
+    c(y0, m) %<-% coef(lm)
+
+    lm_data <-
+      tibble(
+        x = complete_obs[[x_var]],
+        fitted_values = predict(lm)
+      )
+    p <-
+      p %>%
+      add_lines(
+        data = lm_data,
+        name = str_glue("{round(y0, 2)} + {round(m, 4)} x"),
+        x = ~x, y = ~fitted_values,
+        hoverinfo = "none",
+        color = I(farbe)
+      )
+  }
+  p
+}
