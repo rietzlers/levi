@@ -210,8 +210,7 @@ lorentz_amps <- function(freqs, lf_model){
 #' @export
 get_dom_freq <- function(fc_data, sample_rate = 400){
   fc_data %>%
-    dplyr::filter(f %>% between(0.1, sample_rate/2)) %>%
-    dplyr::filter(near(fc_amp, max(fc_amp)))  %>%
+    slice(which.max((fc_amp))) %>%
     dplyr::transmute(f = f, fc_amp = 2 * fc_amp)
 }
 
