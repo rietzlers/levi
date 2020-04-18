@@ -113,11 +113,7 @@ estimate_signal_spectrum <- function(signal_data, signal_name, frame_rate,  span
 #'
 #' @return nls-fit-object or NULL
 #' @export
-fit_lorentz <- function(fc_data, c0, bp, sr, nr_tries = 10){
-
-  if(missing(bp)){
-    bp = c(0.1, sr/2)
-  }
+fit_lorentz <- function(fc_data, c0, sr, nr_tries = 10){
 
   if(missing(c0)){
     c(f, fc_amp) %<-% get_dom_freq(fc_data, sample_rate = sr)
@@ -129,9 +125,6 @@ fit_lorentz <- function(fc_data, c0, bp, sr, nr_tries = 10){
     transmute(
       f,
       fc_amp_squared = fc_amp^2
-    ) %>%
-    filter(
-      f %>% between(bp[1], bp[2])
     )
 
   fit <- function(fc_data, c0 = c0){
