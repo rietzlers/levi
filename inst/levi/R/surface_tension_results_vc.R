@@ -7,13 +7,23 @@ surface_tension_results_UI <- function(id){
           column(width = 1,
                  actionButton(ns("add_result"), label = "save", icon = icon("save"), width = "100%"),
                  bsTooltip(ns("add_result"), "add the current values to the result-dataset"),
+                 selectInput(ns("selected_view"), label = "show", choices = c("ST-Plot" = "st_plot", "ST-Datatable" = "st_datatable")),
                  actionButton(ns("show_ctrls"), label = NULL, icon = icon("wrench"),  width = "100%"),
                  bsTooltip(ns("show_ctrls"), "Show additional controls")
           ),
           column(width = 11,
-                 plotlyOutput(ns("surface_tension_plot"), height = "350px"))
-          )),
-    surface_tension_result_data_UI(ns("st_result_data")),
+                 tags$style(paste("#", ns("tab_wizard"), " { display:none; }", sep = "")),
+                 tabsetPanel(id = ns("tab_wizard"),
+                             tabPanel(ns("st_plot"),
+                                      plotlyOutput(ns("surface_tension_plot"), height = "400px")
+                                      ),
+                             tabPanel(ns("st_datatable"),
+                                      surface_tension_result_data_UI(ns("st_result_data"))
+                                      )
+                            )
+                 )
+          )
+        ),
     bsModal(ns("additional_ctrls"), title = "Additional Controls for Surface-Tension-Results-Data", trigger = ns("show_ctrls"),
             box(title = "Axis-Scaling of result-plot",
                 fluidRow(
@@ -39,6 +49,10 @@ surface_tension_results_ctrl <- function(input, output, session, tevi_model, sam
         tevi_data_name = tevi_model()$tevi_data_name
       )
   })
+
+  observe(
+    updateTabsetPanel(session, "tab_wizard", selected = session$ns(input$selected_view))
+  )
 
   # st-result-plot  -----------
   output$surface_tension_plot <- renderPlotly({
