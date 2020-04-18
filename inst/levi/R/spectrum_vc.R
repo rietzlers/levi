@@ -90,12 +90,10 @@ spectrum_ctrl <- function(input, output, session, tapered_data, frame_rate, sign
   parameter_estimates <-
     reactive({
 
-      sr <- frame_rate()
-
       f_raw_estimates <-
         bp_filtered_spectrum() %>%
         group_by(calc_method) %>%
-        get_dom_freq(sr) %>%
+        get_dom_freq() %>%
         ungroup() %>%
         transmute(
           calc_method,
