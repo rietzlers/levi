@@ -2,19 +2,18 @@
 surface_tension_result_data_UI <- function(id){
   ns <- NS(id)
   tagList(
-    box(width = 12, title = "Surface-Tension Results-Data", collapsible = TRUE, collapsed = TRUE,
-        fluidRow(
-          column(width = 1,
-                 actionButton(ns("delete_rows"), label = "del. rows", icon = icon("minus-square"), width = "100%"),
-                 bsTooltip(ns("delete_rows"), "delete selected rows in datatable"),
-                 actionButton(ns("show_ctrls"), label = NULL, icon = icon("wrench"),  width = "100%"),
-                 bsTooltip(ns("show_ctrls"), "Show additional controls")
-          ),
-          column(width = 11,
-                 DT::dataTableOutput(ns("spec_analsis_results_DT"))
-          )
-        )
-    ),
+    fluidRow(
+      column(width = 1,
+             actionButton(ns("delete_rows"), label = "del. rows", icon = icon("minus-square"), width = "100%"),
+             bsTooltip(ns("delete_rows"), "delete selected rows in datatable"),
+             actionButton(ns("show_ctrls"), label = NULL, icon = icon("wrench"),  width = "100%"),
+             bsTooltip(ns("show_ctrls"), "Show additional controls")
+      ),
+      column(width = 11,
+             DT::dataTableOutput(ns("spec_analsis_results_DT"), height = "400px")
+      )
+    )
+    ,
     bsModal(ns("delete_data_confirmation"), trigger = ns("delete_rows"), size = "large",
             title = tagList("Delete selected observations?",
                             actionButton(ns("deletion_confirmed"), label = "delete", icon = icon("trash-alt"))),
