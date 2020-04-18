@@ -5,6 +5,7 @@ Version: 0.1.0
 Author: Stephan Rietzler
 Maintainer: Stephan Rietzler <stephan.rietzler@protonmail.com>
 Description: Shiny-Application to analyse recorded drop-oscillations.
+Depends: R (>= 3.5.0) 
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
