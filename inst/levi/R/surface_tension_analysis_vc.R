@@ -20,7 +20,11 @@ surface_tension_analysis_ctrl <- function(input, output, session, tevi_model, sa
   c(signal_name, window_range) %<-% callModule(oscillogram_ctrl, "oscillogram", tevi_model)
 
   # periodogram----------
-  parameter_estimates <- callModule(spectrum_ctrl, "spectrum_analysis", tevi_model, tapered_data, signal_name, window_range)
+  parameter_estimates <-
+    callModule(
+      spectrum_ctrl, "spectrum_analysis",
+      tapered_data, reactive(tevi_model()$frame_rate), signal_name, window_range
+    )
 
    # st-results  --------
   callModule(surface_tension_results_ctrl, "st-results", tevi_model, sample_specs, parameter_estimates)

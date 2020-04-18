@@ -28,7 +28,7 @@ spectrumUI <- function(id) {
 }
 
 
-spectrum_ctrl <- function(input, output, session, tevi_model, tapered_data, signal_name, window_range){
+spectrum_ctrl <- function(input, output, session, tapered_data, frame_rate, signal_name, window_range){
 
   # data: parameters ----
   bp <-
