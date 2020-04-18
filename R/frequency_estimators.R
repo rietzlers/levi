@@ -134,7 +134,7 @@ fit_lorentz <- function(fc_data, c0, bp, sr, nr_tries = 10){
       f %>% between(bp[1], bp[2])
     )
 
-  fit <- function(fc_data, c0 = c0, sr = sr){
+  fit <- function(fc_data, c0 = c0){
     tryCatch(
       error = function(cnd) {
         #warning(str_glue("nls did not converge;  start_values: ({c0[1]}, {c0[2]}, {c0[3]})"))
@@ -156,7 +156,7 @@ fit_lorentz <- function(fc_data, c0, bp, sr, nr_tries = 10){
   }
 
   for(i in 1:nr_tries){
-    lf_model <- fit(fc_data, c0 = c0, sr = sr)
+    lf_model <- fit(fc_data, c0 = c0)
     if(!is.null(lf_model)) return(lf_model)
     # else: try with modified start-values
     c0 <- rnorm(n = 3, mean = c0, sd = c0/10)
