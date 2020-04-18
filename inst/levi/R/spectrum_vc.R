@@ -9,10 +9,10 @@ spectrumUI <- function(id) {
                  actionButton(ns("show_ctrls"), label = NULL, icon = icon("wrench"),  width = "100%"),
                  bsTooltip(ns("show_ctrls"), "Show additional controls")),
           column(width = 5,
-                 plotOutput(ns("complete_spectrum"), height = 250,
+                 plotOutput(ns("complete_spectrum"), height = 300,
                             brush = brushOpts(id = ns("brush"), fill = "#ccc", direction = "x", resetOnNew = FALSE))),
           column(width = 6,
-                 plotlyOutput(ns("bp_spectrum"), height = 250))
+                 plotlyOutput(ns("bp_spectrum"), height = 300))
          )
     ),
     bsModal(ns("additional_ctrls"), title = "Additional Controls for Spectrum-Plots", trigger = ns("show_ctrls"),
