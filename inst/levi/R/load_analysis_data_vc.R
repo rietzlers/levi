@@ -72,8 +72,6 @@ load_tevi_data_ctrl <- function(input, output, session) {
   })
 
   # analysis-data/exp-time-range--------------
-
-
   exp_time_range <- reactiveVal(NULL)
   observeEvent(
     event_data("plotly_brushed", source = ns("temp_plot")),
@@ -109,7 +107,6 @@ load_tevi_data_ctrl <- function(input, output, session) {
   })
   # plot_center_xy  -------------
   output$plot_center_xy <- renderPlot({
-
     center_xy_plot <-
       tevi_data() %>%
       ggplot(aes(x = t)) +

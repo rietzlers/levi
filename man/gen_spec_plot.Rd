@@ -4,18 +4,16 @@
 \alias{gen_spec_plot}
 \title{generate spectrogram-plot}
 \usage{
-gen_spec_plot(est_spec, lfit_models, scale = "log10", bp, sample_rate)
+gen_spec_plot(est_spec, lfit_models, scale = "log10", sample_rate)
 }
 \arguments{
 \item{est_spec}{tibble: estimated spectrum}
 
+\item{lfit_models}{lfit-models}
+
 \item{scale}{string: raw/log10}
 
-\item{bp}{numeric vector: bandpass-limits}
-
 \item{sample_rate}{sample-rate}
-
-\item{lfit}{lfit-model}
 }
 \value{
 plot-object
