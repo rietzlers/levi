@@ -15,7 +15,7 @@ oscillogramUI <- function(id){
     ),
     bsModal(ns("osci_ctrls"), title = "Additional Oscillogram Controls", trigger = ns("show_ctrls"),
             numericInput(ns("window_step_size"), label = "Set step-size [%]", value = 50, min = 0, max = 200, step = 10),
-            selectInput(ns("bp_choices"), label = "Show Signals", choices = c("Raw" = "raw", "BP-Filterd" = "bp_filtered", "Both" = "both")),
+            #selectInput(ns("bp_choices"), label = "Show Signals", choices = c("Raw" = "raw", "BP-Filterd" = "bp_filtered", "Both" = "both")),
             size = "large")
   )
 }

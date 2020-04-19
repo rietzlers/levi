@@ -5,9 +5,9 @@ surface_tension_result_data_UI <- function(id){
     fluidRow(
       column(width = 1,
              actionButton(ns("delete_rows"), label = "del. rows", icon = icon("minus-square"), width = "100%"),
-             bsTooltip(ns("delete_rows"), "delete selected rows in datatable"),
-             actionButton(ns("show_ctrls"), label = NULL, icon = icon("wrench"),  width = "100%"),
-             bsTooltip(ns("show_ctrls"), "Show additional controls")
+             bsTooltip(ns("delete_rows"), "delete selected rows in datatable")
+             # actionButton(ns("show_ctrls"), label = NULL, icon = icon("wrench"),  width = "100%"),
+             # bsTooltip(ns("show_ctrls"), "Show additional controls")
       ),
       column(width = 11,
              DT::dataTableOutput(ns("spec_analsis_results_DT"), height = "400px")
@@ -39,13 +39,19 @@ surface_tension_results_data_ctrl <- function(input, output, session, tevi_model
       if(is.null(spec_analysis_results())){
         updated_results <-
           live_parameter_estimates() %>%
-          mutate(win_length = round(win_end - win_start, 2))
+          mutate(
+            win_length = round(win_end - win_start, 2),
+            add_date = Sys.time()
+            )
       }else{
         updated_results <-
           dplyr::union(
             spec_analysis_results(),
             live_parameter_estimates() %>%
-              mutate(win_length = round(win_end - win_start, 2))
+              mutate(
+                win_length = round(win_end - win_start, 2),
+                add_date = Sys.time()
+              )
           )
       }
 
