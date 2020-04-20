@@ -5,19 +5,24 @@ surface_tension_result_data_UI <- function(id){
     fluidRow(
       column(width = 1,
              actionButton(ns("delete_rows"), label = "del. rows", icon = icon("minus-square"), width = "100%"),
-             bsTooltip(ns("delete_rows"), "delete selected rows in datatable")
-             # actionButton(ns("show_ctrls"), label = NULL, icon = icon("wrench"),  width = "100%"),
-             # bsTooltip(ns("show_ctrls"), "Show additional controls")
+             bsTooltip(ns("delete_rows"), "delete selected rows in datatable"),
+             actionButton(ns("show_ctrls"), label = NULL, icon = icon("wrench"),  width = "100%"),
+             bsTooltip(ns("show_ctrls"), "Show additional controls")
       ),
       column(width = 11,
              DT::dataTableOutput(ns("spec_analsis_results_DT"), height = "400px")
       )
-    )
-    ,
+    ),
     bsModal(ns("delete_data_confirmation"), trigger = ns("delete_rows"), size = "large",
             title = tagList("Delete selected observations?",
                             actionButton(ns("deletion_confirmed"), label = "delete", icon = icon("trash-alt"))),
-            DT::dataTableOutput(ns("data_selection")))
+            DT::dataTableOutput(ns("data_selection"))
+            ),
+    bsModal(ns("ctrls"), trigger = ns("show_ctrls"), size = "large",
+            title = "Additiona controls for data-table",
+            fileInput(ns("upload_st_data"), "Choose ST-data-table to upload (csv-file)",
+                      accept = c('text/csv', 'text/comma-separated-values', '.csv'))
+    )
   )
 }
 
@@ -109,6 +114,51 @@ surface_tension_results_data_ctrl <- function(input, output, session, tevi_model
     },
     ignoreInit = TRUE
   )
+
+  observeEvent(input$upload_st_data,{
+    upload_file <- input$upload_st_data
+    tryCatch(
+      error = function(e){
+        showModal(modalDialog(title = "Upload-Error",
+                              "Uploading data did not succed! Maybe the csv-file is corrupt.
+                              Check for standard column-names, seperators ..."))
+      },
+      {
+      st_data <-
+        readr::read_csv(
+          upload_file$datapath,
+          col_types =
+            cols(
+              `time [s]` = col_double(),
+              `Estimate of dom. Freq. [Hz]` = col_double(),
+              `Temp. [° C]` = col_double(),
+              `Surface-Tension [Nm]` = col_double(),
+              `Damping-Estimate [1/s]` = col_double(),
+              calc_method = col_character(),
+              spans = col_character(),
+              taper = col_double(),
+              hp_limit = col_double(),
+              lp_limit = col_double(),
+              win_start = col_double(),
+              win_end = col_double(),
+              signal = col_character(),
+              tevi_data_name = col_character(),
+              win_length = col_double(),
+              add_date = col_datetime(format = "")
+            )
+        ) %>%
+        dplyr::rename(
+          t = "time [s]",
+          dom_freq_estimate = "Estimate of dom. Freq. [Hz]",
+          temp = "Temp. [° C]",
+          st = "Surface-Tension [Nm]",
+          damping_estimate = "Damping-Estimate [1/s]"
+        )
+      spec_analysis_results(st_data)
+    }
+    )
+  }, ignoreInit = TRUE)
+
   # bookmark-callbacks ---------------
   onBookmark(function(state){
     state$values$spec_analysis_results <- spec_analysis_results()
