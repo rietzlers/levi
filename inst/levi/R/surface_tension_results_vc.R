@@ -28,9 +28,9 @@ surface_tension_results_UI <- function(id){
             box(title = "Axis-Scaling of result-plot",
                 fluidRow(
                   column(width = 6,
-                         selectInput(ns("st_yvar"), label = NULL, selected = "f", choices = c("Freq. [Hz]" = "f","Surface-Tension [Nm]" = "st"))),
+                         selectInput(ns("st_yvar"), label = NULL, selected = "st", choices = c("Surface-Tension [Nm]" = "st", "Freq. [Hz]" = "f"))),
                   column(width = 6,
-                         selectInput(ns("st_xvar"), label = NULL, selected = "t", choices = c("time [s]" = "t", "Temp. [° C]" = "smoothed_temp"))),
+                         selectInput(ns("st_xvar"), label = NULL, selected = "temp", choices = c("Temp. [° C]" = "temp", "time [s]" = "t"))),
                   tags$div("Time = 0s is different for each tevi-data-set! This means you have to be carful in interpreting the plot.
                            Only temperature allows unambigous interpretation.")
                 )
