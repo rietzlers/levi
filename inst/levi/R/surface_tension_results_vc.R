@@ -95,6 +95,7 @@ surface_tension_results_ctrl <- function(input, output, session, tevi_model, sam
           color = I(farbe)
         )
       if(fit_lm == TRUE){
+        try({
         complete_obs <-
           plotly_data(p) %>%
           filter(!is.na(dom_freq_estimate)) %>%
@@ -115,6 +116,33 @@ surface_tension_results_ctrl <- function(input, output, session, tevi_model, sam
             x = ~x, y = ~fitted_values,
             hoverinfo = "none",
             color = I(farbe)
+          )
+        })
+      }
+      if(input$st_xvar == "temp"){
+        p <-
+          p %>%
+          layout(
+            shapes =
+              list(
+                type = "line",
+                y0 = 0,
+                y1 = 1,
+                yref = "paper",
+                x0 = sample_specs()$Temp_liquid - 273,
+                x1 = sample_specs()$Temp_liquid - 273,
+                line = list(
+                  color = I("grey"),
+                  dash = "dash")
+              )
+          ) %>%
+          add_annotations(
+            x = sample_specs()$Temp_liquid - 273,
+            y = 0.2,
+            xref = "x",
+            yref = "paper",
+            text = str_glue("Liquid-Temp: {sample_specs()$Temp_liquid - 273} °C"),
+            clicktoshow = "onoff"
           )
       }
       p
