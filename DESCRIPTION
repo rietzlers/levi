@@ -27,5 +27,6 @@ Imports:
     rlang,
     cowplot,
     seewave,
-    readxl
+    readxl,
+    shinyBS
 RoxygenNote: 7.1.0
