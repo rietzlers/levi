@@ -32,25 +32,32 @@ load_tevi_data_ctrl <- function(input, output, session) {
 
   observeEvent(input$file, {
     # update raw-tevi-data
-    input$file$datapath %>% import_tevi_data() %>% tevi_data_RV()
+    tryCatch({
+      input$file$datapath %>% import_tevi_data() %>% tevi_data_RV()
+      showNotification(
+        "Tevi-data uploaded: Make sure to that the right sample-specs are selected!",
+        duration = 10, type = "warning"
+      )
 
-    showNotification(
-      "Tevi-data uploaded: Make sure to that the right sample-specs are selected!",
-      duration = 10, type = "warning"
+      # estimate sample/frame-rate from mean dt
+      c(est_sample_freq) %<-%
+        (tevi_data() %>% summarize(est_sample_freq = round(1 / mean(diff(t), na.rm = TRUE))))
+
+      updateNumericInput(
+        session, "frame_rate",
+        value = est_sample_freq
+      )
+
+      showNotification(
+        HTML(str_glue("Estimated frame-rate for data from file '{input$file$name}' is: <b>{est_sample_freq} Hz </b>.")),
+        duration = 10, type = "message")
+    },
+    error = function(e){
+      showNotification(
+        e$message
+      )
+    }
     )
-
-    # estimate sample/frame-rate from mean dt
-    c(est_sample_freq) %<-%
-      (tevi_data() %>% summarize(est_sample_freq = round(1 / mean(diff(t), na.rm = TRUE))))
-
-    updateNumericInput(
-      session, "frame_rate",
-      value = est_sample_freq
-    )
-
-    showNotification(
-      HTML(str_glue("Estimated frame-rate for data from file '{input$file$name}' is: <b>{est_sample_freq} Hz </b>.")),
-      duration = 10, type = "message")
   })
 
   tevi_data <-
