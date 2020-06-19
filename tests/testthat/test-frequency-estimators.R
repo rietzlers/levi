@@ -1,6 +1,7 @@
 context("fft and periodogram estimators")
 
-library(tidyverse)
+library(tibble)
+library(dplyr)
 library(testthat)
 library(magrittr)
 
@@ -39,8 +40,4 @@ testthat::test_that("non-regular ts are detected", {
 })
 
 
-test_that("fft runs", {
-  sr <- 400
-  data <- tibble(t = seq(0, 2, by = 1/sr), s = cos(2*pi*30*t))
 
-})

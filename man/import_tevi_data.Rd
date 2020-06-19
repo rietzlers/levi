@@ -4,7 +4,12 @@
 \alias{import_tevi_data}
 \title{loads tevi-data}
 \usage{
-import_tevi_data(file_path)
+import_tevi_data(
+  file_path,
+  time_var = "seconds",
+  temp_var = "pyro",
+  heat_i_var = "htr_i"
+)
 }
 \arguments{
 \item{file_path}{path as supplied from fileInput}

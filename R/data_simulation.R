@@ -14,7 +14,10 @@
 #' @return tibble with vars: t, s
 #'
 #' @examples
-#' library(tidyverse)
+#' library(tibble)
+#' library(dplyr)
+#' library(ggplot2)
+#' library(stringr)
 #' library(magrittr)
 #' library(cowplot)
 #' library(zeallot)

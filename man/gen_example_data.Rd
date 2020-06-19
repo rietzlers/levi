@@ -31,7 +31,10 @@ run the example to see the intended workflow:
 }
 }
 \examples{
-library(tidyverse)
+library(tibble)
+library(dplyr)
+library(ggplot2)
+library(stringr)
 library(magrittr)
 library(cowplot)
 library(zeallot)
