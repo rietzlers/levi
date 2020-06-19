@@ -53,9 +53,7 @@ load_tevi_data_ctrl <- function(input, output, session) {
         duration = 10, type = "message")
     },
     error = function(e){
-      showNotification(
-        e$message
-      )
+      showNotification(e$message, duration = NULL)
     }
     )
   })
