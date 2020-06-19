@@ -95,39 +95,46 @@ spectrum_ctrl <- function(input, output, session, tapered_data, frame_rate, sign
         group_by(calc_method) %>%
         get_dom_freq() %>%
         ungroup() %>%
+        rowwise() %>%
         transmute(
-          calc_method,
+          origin = paste0(calc_method, "_data"),
+          method = "raw",
           dom_freq_estimate = f
-        )
+        ) %>%
+        ungroup()
 
       lfit_estimates <-
         lfit_models() %>%
-        map_dfr(lorentz_parameters) %>%
-        set_names(c("fft_lorentz", "spectrum_lorentz")) %>%
+        map_dfc(lorentz_parameters) %>%
         mutate(parameter = c("A", "f0", "d")) %>%
-        pivot_longer(cols = contains("lorentz"), names_to = "calc_method")
+        pivot_longer(cols = contains("data"), names_to = "origin", values_to = "estimate", names_prefix = "to_") %>%
+        mutate(method = "lorentz")
 
       f_lfit_estimates <-
         lfit_estimates %>%
         filter(parameter == "f0") %>%
         transmute(
-          calc_method,
-          dom_freq_estimate = value
+          origin,
+          method,
+          dom_freq_estimate = estimate
         )
 
       damping_estimates <-
         lfit_estimates %>%
         filter(parameter == "d") %>%
         transmute(
-          calc_method,
-          damping_estimate = value,
+          origin,
+          method,
+          damping_estimate = estimate,
           spans = input$spans,
           taper = as.numeric(input$taper)
         )
 
+
+
       f_raw_estimates %>%
         dplyr::union(f_lfit_estimates) %>%
-        left_join(damping_estimates, by = c("calc_method")) %>%
+        left_join(damping_estimates, by = c("origin", "method")) %>%
         mutate(
           hp_limit = bp()[1],
           lp_limit = bp()[2],
@@ -135,6 +142,12 @@ spectrum_ctrl <- function(input, output, session, tapered_data, frame_rate, sign
           win_end = window_range()[2],
           t = mean(window_range(), na.rm = TRUE),
           signal = signal_name()
+        ) %>%
+        mutate(
+          calc_method = str_replace(
+            paste0(str_replace(origin, "data", ""), if_else(method == "raw", "", method)),
+            "_$", ""
+          )
         )
 
     })
