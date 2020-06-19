@@ -16,17 +16,14 @@ surface_tension_analysis_ctrl <- function(input, output, session, tevi_model, sa
       filter(t %>% between(window_range()[1], window_range()[2]))
   })
 
-  # oscillogram------
+  # oscillogram -> c(signal_name, window_range) ------
   c(signal_name, window_range) %<-% callModule(oscillogram_ctrl, "oscillogram", tevi_model)
 
-  # periodogram----------
+  # spectrum -> parameter_estimates----------
   parameter_estimates <-
-    callModule(
-      spectrum_ctrl, "spectrum_analysis",
-      tapered_data, reactive(tevi_model()$frame_rate), signal_name, window_range
-    )
+    callModule(spectrum_ctrl, "spectrum_analysis", tapered_data, reactive(tevi_model()$frame_rate), signal_name, window_range)
 
-   # st-results  --------
+   # st-results -> NULL  --------
   callModule(surface_tension_results_ctrl, "st-results", tevi_model, sample_specs, parameter_estimates)
 }
 
