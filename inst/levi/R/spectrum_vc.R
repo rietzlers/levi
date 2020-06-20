@@ -72,24 +72,13 @@ spectrum_ctrl <- function(input, output, session, tapered_data, frame_rate, sign
     spectrum_estimate() %>% filter(f %>% between(bp()[1], bp()[2]))
   })
 
-  lfit_models <-
-    reactive({
-      fitted_models =
-        list(
-          to_fft_data =
-            bp_filtered_spectrum() %>%
-            filter(calc_method == "fft") %>%
-            fit_lorentz(),
-          to_spectrum_data =
-            bp_filtered_spectrum() %>%
-            filter(calc_method == "spectrum") %>%
-            fit_lorentz()
-        )
-    })
+  lfit_model <-
+    reactive({bp_filtered_spectrum() %>% fit_lorentz()})
 
   parameter_estimates <-
     reactive({
 
+      browse
       f_raw_estimates <-
         bp_filtered_spectrum() %>%
         group_by(calc_method) %>%
@@ -155,13 +144,12 @@ spectrum_ctrl <- function(input, output, session, tapered_data, frame_rate, sign
   # outputs  -----------
   output$complete_spectrum <- renderPlot({
     spectrum_estimate() %>%
-      ggplot(aes(x = f)) +
-      geom_line(data = ~ dplyr::filter(.x, calc_method == "spectrum"), aes(y = fc_amp)) +
-      geom_point(data = ~ dplyr::filter(.x, calc_method == "spectrum"), aes(y = fc_amp), shape = "x", size = 0.8) +
-      geom_point(data = ~ dplyr::filter(.x, calc_method == "fft", f > 0), aes(y = fc_amp), color = "blue", shape = "+", size = 1.5) +
+      ggplot(aes(x = f, y = fc_amp)) +
+      geom_line() +
+      geom_point(shape = "x", size = 0.8) +
       scale_y_continuous(
-        name = "log10(Fourier-Coef-Amp)", # if_else(input$scale == "log10", "log10(Fourier-Coef-Amp)", "Fourier-Coef-Amp"),
-        trans = "log10"#if_else(input$scale == "log10", "log10", "identity")
+        name = "log10(Fourier-Coef-Amp)",
+        trans = "log10"
       ) +
       labs(x = "Frequency [Hz]")
     })
@@ -169,8 +157,7 @@ spectrum_ctrl <- function(input, output, session, tapered_data, frame_rate, sign
   output$bp_spectrum <- renderPlotly({
       gen_spec_plot(
         bp_filtered_spectrum(),
-        lfit_models = lfit_models(),
-        scale = "raw",
+        lfit_model = lfit_model(),
         sample_rate = frame_rate()
       )
     })

@@ -21,16 +21,9 @@ estimate_signal_spectrum <-
 
   tibble(
     f = est_spec$freq,
-    calc_method = "spectrum",
     spec = est_spec$spec,
     fc_amp = sqrt(spec)
-    ) %>%
-    dplyr::union(
-      levi::fftc(signal_data, signal_name, sr = frame_rate) %>%
-        mutate(calc_method = "fft") %>%
-        select(f, calc_method, spec, fc_amp) %>%
-        dplyr::filter(f < frame_rate/2)
-      )
+    )
 }
 
 # lorentz-fit ----------------
@@ -137,13 +130,12 @@ lorentz_amps <- function(freqs, lf_model){
 #' multipliziert.
 #'
 #' @param fc_data datensatz mit variablen f und fc_amp
-#' @param sample_rate sample-rate
 #'
 #' @return tibble with variables f and fc_amp
 #' (fc_amp is the signal-amplitude of the dominant frequency!
 #' Not the amplitude of the Fourie-Coefficient!)
 #' @export
-get_dom_freq <- function(fc_data, sample_rate = 400){
+get_dom_freq <- function(fc_data){
   fc_data %>%
     slice(which.max((fc_amp))) %>%
     dplyr::transmute(f = f, fc_amp = 2 * fc_amp)
