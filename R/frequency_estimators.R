@@ -1,67 +1,3 @@
-# fourier-transformation ------------
-
-#' calculate fourier-koeffs. with fft
-#'
-#' The function \code{fft} returns the \bold{unnormalized} Fourier-Coefficients
-#' for the Fourier-Frequencies 0/N, ... (N-1)/N, where N = T/dT ist the Number of samples.
-#'
-#'
-#' @param data tibble with var "signal"
-#' @param signal character: name of signal
-#' @param sr samplerate
-#'
-#' @return tibble with vars f (Kreisfrequenz, d.h. cycles per unit-time), fc, fc_amp and fc_arg and spec = N * fc_amp^2
-#'
-#' @export
-fftc <- function(data, signal, sr){
-  if(!regular_ts(data, signal, sr)) warning("no regular ts")
-
-  N <- length(data[[signal]])
-
-  data %>%
-    transmute(
-      f = 0:(N - 1) / N * sr,
-      fc = fft(.data[[signal]]) / N, # Normalisierung !!!
-      fc_amp = Mod(fc),
-      fc_arg = Arg(fc),
-      spec = N * fc_amp^2
-    )
-}
-
-
-
-#' Band-Pass-Filter signal
-#'
-#' The function calculates the Fourier-Coefficients with fft,
-#' sets all Fourier-Coefficients not within the bp-range to 0
-#' and inverses the fft.
-#'
-#'
-#' @param sig_data tibble with var signal
-#' @param signal_name var-name of the signal
-#' @param bp numeric vector: lower and upper bp-Freqs
-#' @param sr samplerate
-#'
-#' @return tibble with vars t and signal_name
-#' @export
-bp_filter <- function(sig_data, signal_name, bp, sr){
-  N <- length(sig_data$t)
-  levi::fftc(sig_data, signal_name, sr) %>%
-    mutate(
-      t = sig_data$t,
-      fc = if_else(
-        between(f, bp[1], bp[2]) | between(f, (sr - bp[2]), (sr - bp[1])),
-        fc * N, # N = lenght(t): Normierung wieder rückgängig machen.
-        0i
-        ),
-      !!sym(signal_name) := Re(fft(fc, inverse = TRUE)) / N # Normierung!
-    ) %>%
-    select(-fc)
-}
-
-
-
-
 
 #' Estimate Spectrum from Signal
 #'
@@ -71,7 +7,7 @@ bp_filter <- function(sig_data, signal_name, bp, sr){
 #' @param spans vector of odd integers giving the widths of modified Daniell smoothers to be used to smooth the periodogram.
 #' @param taper specifies the proportion of data to taper
 #'
-#' @return tibble with vars: f, fc_amp, calc_method(spectrum/fft), spec
+#' @return tibble with vars: f, spec and fc_amp
 #'
 #' @export
 estimate_signal_spectrum <-
