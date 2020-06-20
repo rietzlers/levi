@@ -39,16 +39,7 @@ surface_tension_results_UI <- function(id){
     )
 }
 
-surface_tension_results_ctrl <- function(input, output, session, tevi_model, sample_specs, parameter_estimates){
-
-  live_parameter_estimates <- reactive({
-    parameter_estimates() %>%
-      mutate(
-        temp = convert_to_temp(t, tevi_model()$analysis_data),
-        st = to_surface_tension(dom_freq_estimate, sample_specs()$mass),
-        tevi_data_name = tevi_model()$tevi_data_name
-      )
-  })
+surface_tension_results_ctrl <- function(input, output, session, tevi_model, sample_specs, live_parameter_estimates){
 
   observe(
     updateTabsetPanel(session, "tab_wizard", selected = session$ns(input$selected_view))
@@ -59,120 +50,29 @@ surface_tension_results_ctrl <- function(input, output, session, tevi_model, sam
 
     validate(need(spec_analysis_results(), message = "need spec-analysis-results"))
 
-    if(input$st_xvar == "t"){
-      x_var <- "t"
-      x_axis_title <- "time [s]"
-    }else{
-      x_var <- "temp"
-      x_axis_title <- "Temp. [°C]"
-    }
-
-    if(input$st_yvar == "f"){
-      y_var <- "dom_freq_estimate"
-      y_axis_title <- "Dom. Freq. of Signal [Hz]"
-      y_unit <- "Hz"
-    }else{
-      y_var <- "st"
-      y_axis_title <- "Surface-Tension of Alloy [Nm]"
-      y_unit <- "Nm"
-    }
-
-    calc_method_trace <- function(p, cm, trace,  estimates = NULL, p_size = 15,  sl = TRUE, fit_lm = FALSE, farbe = "red"){
-      if(missing(trace)){trace = cm}
-      p <-
-        p %>%
-        filter(calc_method == cm) %>%
-        add_trace(
-          data = estimates,
-          name = trace,
-          type = "scatter",
-          mode = "markers",
-          x = ~ get(x_var),
-          y = ~ get(y_var),
-          hovertemplate = paste("%{y:.2f}", y_unit),
-          size = I(p_size),
-          showlegend = sl,
-          color = I(farbe)
-        )
-      if(fit_lm == TRUE){
-        try({
-        complete_obs <-
-          plotly_data(p) %>%
-          filter(!is.na(dom_freq_estimate)) %>%
-          filter(calc_method == cm)
-
-        lm <- lm(get(y_var) ~ get(x_var), data = complete_obs)
-
-        c(y0, m) %<-% coef(lm)
-
-        lm_data <-
-          tibble(
-            x = complete_obs[[x_var]],
-            fitted_values = predict(lm)
-          )
-        p <-
-          p %>%
-          add_lines(
-            data = lm_data,
-            name = str_glue("{round(y0, 2)} + {round(m, 4)} x"),
-            x = ~x, y = ~fitted_values,
-            hoverinfo = "none",
-            color = I(farbe)
-          )
-        })
-      }
-      if(input$st_xvar == "temp"){
-        p <-
-          p %>%
-          layout(
-            shapes =
-              list(
-                type = "line",
-                y0 = 0,
-                y1 = 1,
-                yref = "paper",
-                x0 = sample_specs()$Temp_liquid - 273,
-                x1 = sample_specs()$Temp_liquid - 273,
-                line = list(
-                  color = I("grey"),
-                  dash = "dash")
-              )
-          ) %>%
-          add_annotations(
-            x = sample_specs()$Temp_liquid - 273,
-            y = 0.2,
-            xref = "x",
-            yref = "paper",
-            text = str_glue("Liquid-Temp: {sample_specs()$Temp_liquid - 273} °C"),
-            clicktoshow = "onoff"
-          )
-      }
-      p
-    }
-
       spec_analysis_results() %>%
         plot_ly(source = "st_plot") %>%
-        add_fun(function(p){calc_method_trace(p, "fft", fit_lm = TRUE, farbe = "blue")}) %>%
-        add_fun(function(p){calc_method_trace(p, "fft_lorentz", fit_lm = TRUE, farbe ="darkblue")}) %>%
-        add_fun(function(p){calc_method_trace(p, "spectrum", fit_lm = TRUE, farbe = "black")}) %>%
-        add_fun(function(p){calc_method_trace(p, "spectrum_lorentz", fit_lm = TRUE, farbe = "darkgrey")}) %>%
-        add_fun(function(p){calc_method_trace(p, "fft", trace = "current estimate", p_size = 30,
-                                              estimates = live_parameter_estimates(), sl = FALSE)}) %>%
-        add_fun(function(p){calc_method_trace(p, "spectrum",  trace = "current estimate", p_size = 30,
-                                              estimates = live_parameter_estimates(), sl = FALSE)}) %>%
-        add_fun(function(p){calc_method_trace(p, "fft_lorentz",  trace = "current estimate", p_size = 30,
-                                              estimates = live_parameter_estimates(), sl = FALSE)}) %>%
-        add_fun(function(p){calc_method_trace(p, "spectrum_lorentz",  trace = "current estimate", p_size = 30,
-                                              estimates = live_parameter_estimates(), sl = FALSE)}) %>%
+        add_markers(x = ~ t, y = ~ f_0, name = "f_0", hovertemplate = "%{y:.1f}  Hz",
+                    marker = list(color = "red")) %>%
+        add_markers(x = ~ t, y = ~ f_dom, name = "f_dom", hovertemplate = "%{y:.1f}  Hz",
+                    marker = list(color = "black")) %>%
+        add_markers(data = live_parameter_estimates(), name = "f_0 (current)",
+                    x = ~ t, y = ~ f_0, name = "f_0", hovertemplate = "%{y:.1f}  Hz",
+                    marker = list(color = "red", symbol = c("x"), size = 10, opacity = 0.5),
+                    showlegend = FALSE) %>%
+        add_markers(data = live_parameter_estimates(), name = "f_dom (current)",
+                    x = ~ t, y = ~ f_dom, name = "f_dom", hovertemplate = "%{y:.1f}  Hz",
+                    marker = list(color = "black", symbol = c("x"), size = 10, opacity = 0.5),
+                    showlegend = FALSE) %>%
         layout(
           legend = list(x = 0.8, y = 0.9),
-          xaxis = list(title = x_axis_title),
-          yaxis = list(title = y_axis_title)
+          xaxis = list(title = "time [s]"),
+          yaxis = list(title = "Freq [Hz]")
         )
 
     })
 
-  spec_analysis_results <- callModule(surface_tension_results_data_ctrl, "st_result_data", tevi_model, sample_specs, parameter_estimates,
+  spec_analysis_results <- callModule(surface_tension_results_data_ctrl, "st_result_data", tevi_model, sample_specs, live_parameter_estimates,
                                       reactive(input$add_result))
 
   # return-values ----------

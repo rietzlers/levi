@@ -26,61 +26,36 @@ surface_tension_result_data_UI <- function(id){
   )
 }
 
-surface_tension_results_data_ctrl <- function(input, output, session, tevi_model, sample_specs, parameter_estimates, add_result){
+surface_tension_results_data_ctrl <- function(input, output, session, tevi_model, sample_specs, live_parameter_estimates, add_result){
 
-  # data ----------
-  live_parameter_estimates <- reactive({
-    parameter_estimates() %>%
-      mutate(
-        temp = convert_to_temp(t, tevi_model()$analysis_data),
-        st = to_surface_tension(dom_freq_estimate, sample_specs()$mass),
-        tevi_data_name = tevi_model()$tevi_data_name
-      )
-  })
 
   spec_analysis_results <- reactiveVal(NULL)
   observeEvent(
     add_result(), {
-      if(is.null(spec_analysis_results())){
+      if (is.null(spec_analysis_results())) {
         updated_results <-
           live_parameter_estimates() %>%
-          mutate(
-            win_length = round(win_end - win_start, 2),
-            add_date = Sys.time()
-            )
-      }else{
+          mutate(add_date = Sys.time())
+      } else{
         updated_results <-
           dplyr::union(
             spec_analysis_results(),
             live_parameter_estimates() %>%
-              mutate(
-                win_length = round(win_end - win_start, 2),
-                add_date = Sys.time()
-              )
+              mutate(add_date = Sys.time())
           )
       }
 
       updated_results <-
         updated_results %>%
         mutate(
-          t = round(t, 3),
-          dom_freq_estimate = round(dom_freq_estimate, 2),
-          damping_estimate = round(damping_estimate, 1),
-          win_start = round(win_start, 2),
-          win_end = round(win_end, 2),
-          temp = round(temp, 1),
-          st = round(st, 4)
-        ) %>%
-        mutate(
-          calc_method = factor(calc_method),
           signal = factor(signal),
           tevi_data_name = factor(tevi_data_name),
           spans = factor(spans)
         ) %>%
         select(
-          t, dom_freq_estimate, temp, st, damping_estimate, calc_method, everything()
+          t, temp, f_0, f_dom, st_0, st_dom, d, everything()
         ) %>%
-        arrange(t, calc_method)
+        arrange(t)
 
       spec_analysis_results(updated_results)
     })
@@ -170,12 +145,14 @@ surface_tension_results_data_ctrl <- function(input, output, session, tevi_model
   # st-results-table ---------
   output$spec_analsis_results_DT <- DT::renderDataTable({
     validate(need(spec_analysis_results(), label = "spec_analysis_results"))
+
     spec_analysis_results()  %>%
       datatable(
         rownames = FALSE,
-        colnames = c("time [s]" = "t", "Estimate of dom. Freq. [Hz]" = "dom_freq_estimate",
-                     "Temp. [° C]" = "temp", "Surface-Tension [Nm]" ="st",
-                     "Damping-Estimate [1/s]" = "damping_estimate"),
+        colnames = c("time [s]" = "t",
+                     "Estimate of dom. Freq. [Hz]" = "f_dom",
+                     "Temp. [° C]" = "temp", "Surface-Tension [Nm]" ="st_dom",
+                     "Damping-Estimate [1/s]" = "d"),
         filter = 'top',
         extensions = c('Buttons', 'Responsive'),
         options = list(

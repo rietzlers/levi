@@ -28,7 +28,7 @@ spectrumUI <- function(id) {
 }
 
 
-spectrum_ctrl <- function(input, output, session, tapered_data, frame_rate, signal_name, window_range){
+spectrum_ctrl <- function(input, output, session, tapered_data, frame_rate, signal_name){
 
   # data: parameters ----
   bp <-
@@ -68,76 +68,26 @@ spectrum_ctrl <- function(input, output, session, tapered_data, frame_rate, sign
       )
     })
 
-  bp_filtered_spectrum <- reactive({
-    spectrum_estimate() %>% filter(f %>% between(bp()[1], bp()[2]))
-  })
+  bp_filtered_spectrum <-
+    reactive({
+      spectrum_estimate() %>% filter(f %>% between(bp()[1], bp()[2]))
+    })
 
   lfit_model <-
     reactive({bp_filtered_spectrum() %>% fit_lorentz()})
 
   parameter_estimates <-
     reactive({
-
-      browse
-      f_raw_estimates <-
+      estimates <-
         bp_filtered_spectrum() %>%
-        group_by(calc_method) %>%
-        get_dom_freq() %>%
-        ungroup() %>%
-        rowwise() %>%
-        transmute(
-          origin = paste0(calc_method, "_data"),
-          method = "raw",
-          dom_freq_estimate = f
-        ) %>%
-        ungroup()
-
-      lfit_estimates <-
-        lfit_models() %>%
-        map_dfc(lorentz_parameters) %>%
-        mutate(parameter = c("A", "f0", "d")) %>%
-        pivot_longer(cols = contains("data"), names_to = "origin", values_to = "estimate", names_prefix = "to_") %>%
-        mutate(method = "lorentz")
-
-      f_lfit_estimates <-
-        lfit_estimates %>%
-        filter(parameter == "f0") %>%
-        transmute(
-          origin,
-          method,
-          dom_freq_estimate = estimate
-        )
-
-      damping_estimates <-
-        lfit_estimates %>%
-        filter(parameter == "d") %>%
-        transmute(
-          origin,
-          method,
-          damping_estimate = estimate,
+        slice(which.max((fc_amp))) %>%
+        dplyr::transmute(
+          f_dom = f,
+          f_0 = as.numeric((lfit_model() %>% lorentz_parameters())['f0']),
+          d = as.numeric((lfit_model() %>% lorentz_parameters())['d']),
           spans = input$spans,
           taper = as.numeric(input$taper)
         )
-
-
-      f_raw_estimates %>%
-        dplyr::union(f_lfit_estimates) %>%
-        left_join(damping_estimates, by = c("origin", "method")) %>%
-        mutate(
-          hp_limit = bp()[1],
-          lp_limit = bp()[2],
-          win_start = window_range()[1],
-          win_end = window_range()[2],
-          t = mean(window_range(), na.rm = TRUE),
-          signal = signal_name()
-        ) %>%
-        mutate(
-          calc_method = str_replace(
-            paste0(str_replace(origin, "data", ""), if_else(method == "raw", "", method)),
-            "_$", ""
-          )
-        )
-
     })
 
 
