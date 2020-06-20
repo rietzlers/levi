@@ -146,9 +146,8 @@ spectrum_ctrl <- function(input, output, session, tapered_data, frame_rate, sign
     spectrum_estimate() %>%
       ggplot(aes(x = f, y = fc_amp)) +
       geom_line() +
-      geom_point(shape = "x", size = 0.8) +
       scale_y_continuous(
-        name = "log10(Fourier-Coef-Amp)",
+        name = "log10(spectrum-estimates)",
         trans = "log10"
       ) +
       labs(x = "Frequency [Hz]")
@@ -157,8 +156,7 @@ spectrum_ctrl <- function(input, output, session, tapered_data, frame_rate, sign
   output$bp_spectrum <- renderPlotly({
       gen_spec_plot(
         bp_filtered_spectrum(),
-        lfit_model = lfit_model(),
-        sample_rate = frame_rate()
+        lfit_model = lfit_model()
       )
     })
 
