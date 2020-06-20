@@ -5,7 +5,7 @@
 #'
 #' @return a tibble with all signals + vars: \emph{t, smoothed_temperature}
 #' @export
-import_tevi_data <- function(file_path, time_var = "seconds", temp_var = "pyro", heat_i_var = "htr_i") {
+import_tevi_data <- function(file_path) {
   # load data as is
   df_raw <-
     vroom::vroom(
