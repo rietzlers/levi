@@ -74,7 +74,8 @@ bp_filter <- function(sig_data, signal_name, bp, sr){
 #' @return tibble with vars: f, fc_amp, calc_method(spectrum/fft), spec
 #'
 #' @export
-estimate_signal_spectrum <- function(signal_data, signal_name, frame_rate,  spans = c(3, 3), taper = 0.1) {
+estimate_signal_spectrum <-
+  function(signal_data, signal_name, frame_rate,  spans = c(3, 3), taper = 0.1) {
 
   est_spec <-
     spectrum(ts(signal_data[[signal_name]], frequency = frame_rate),

@@ -100,7 +100,9 @@ surface_tension_results_ctrl <- function(input, output, session, tevi_model, sam
           plotly_data(p) %>%
           filter(!is.na(dom_freq_estimate)) %>%
           filter(calc_method == cm)
+
         lm <- lm(get(y_var) ~ get(x_var), data = complete_obs)
+
         c(y0, m) %<-% coef(lm)
 
         lm_data <-

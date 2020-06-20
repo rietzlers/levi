@@ -77,13 +77,13 @@ spectrum_ctrl <- function(input, output, session, tapered_data, frame_rate, sign
       fitted_models =
         list(
           to_fft_data =
-            levi::fit_lorentz(
-              dplyr::filter(bp_filtered_spectrum(), calc_method == "fft")
-            ),
+            bp_filtered_spectrum() %>%
+            filter(calc_method == "fft") %>%
+            fit_lorentz(),
           to_spectrum_data =
-            levi::fit_lorentz(
-              dplyr::filter(bp_filtered_spectrum(), calc_method == "spectrum")
-            )
+            bp_filtered_spectrum() %>%
+            filter(calc_method == "spectrum") %>%
+            fit_lorentz()
         )
     })
 
@@ -129,7 +129,6 @@ spectrum_ctrl <- function(input, output, session, tapered_data, frame_rate, sign
           spans = input$spans,
           taper = as.numeric(input$taper)
         )
-
 
 
       f_raw_estimates %>%
