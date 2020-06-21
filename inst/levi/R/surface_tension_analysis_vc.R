@@ -9,7 +9,7 @@ surface_tension_analysis_UI <- function(id) {
   )
 }
 
-surface_tension_analysis_ctrl <- function(input, output, session, tevi_model, sample_specs, tasks, notifications, selected_sidebar_tab){
+surface_tension_analysis_ctrl <- function(input, output, session, tevi_model, sample_specs, tasks, notifications, selected_sidebar_tab, show_ctrls){
 
   tapered_data <- reactive({
     tevi_model()$analysis_data %>%
@@ -21,7 +21,7 @@ surface_tension_analysis_ctrl <- function(input, output, session, tevi_model, sa
 
   # spectrum -> parameter_estimates----------
   parameter_estimates <-
-    callModule(spectrum_ctrl, "spectrum_analysis", tapered_data, reactive(tevi_model()$frame_rate), signal_name)
+    callModule(spectrum_ctrl, "spectrum_analysis", tapered_data, reactive(tevi_model()$frame_rate), signal_name, show_ctrls)
 
   live_parameter_estimates <-
     reactive({

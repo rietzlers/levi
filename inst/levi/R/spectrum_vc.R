@@ -28,8 +28,12 @@ spectrumUI <- function(id) {
 }
 
 
-spectrum_ctrl <- function(input, output, session, tapered_data, frame_rate, signal_name){
+spectrum_ctrl <- function(input, output, session, tapered_data, frame_rate, signal_name, show_ctrls){
 
+
+  # observeEvent(show_ctrls(),
+  #   toggleModal(session, "additional_ctrls", toggle = "toggle")
+  # )
   # data: parameters ----
   bp <-
     reactive(({
