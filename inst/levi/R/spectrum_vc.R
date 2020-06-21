@@ -7,7 +7,10 @@ spectrumUI <- function(id) {
         fluidRow(
           column(width = 1,
                  actionButton(ns("show_ctrls"), label = NULL, icon = icon("wrench"),  width = "100%"),
-                 bsTooltip(ns("show_ctrls"), "Show additional controls")),
+                 bsTooltip(ns("show_ctrls"), "Show additional controls"),
+                 actionButton(ns("add_result"), label = "save", icon = icon("save"), width = "100%"),
+                 bsTooltip(ns("add_result"), "add the current values to the result-dataset")
+                 ),
           column(width = 5,
                  plotOutput(ns("complete_spectrum"), height = 300,
                             brush = brushOpts(id = ns("brush"), fill = "#ccc", direction = "x", resetOnNew = FALSE))),
@@ -115,10 +118,14 @@ spectrum_ctrl <- function(input, output, session, tapered_data, frame_rate, sign
     })
 
   # return-values -----------
-  reactive({
+  list(
+    parameter_estimates =
+      reactive({
     validate(need(parameter_estimates, "parameter_estimates"))
     parameter_estimates()
-    })
+  }),
+  add_result = reactive(input$add_result)
+  )
 }
 
 

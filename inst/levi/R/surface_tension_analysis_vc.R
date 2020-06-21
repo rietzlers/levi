@@ -20,8 +20,8 @@ surface_tension_analysis_ctrl <- function(input, output, session, tevi_model, sa
   c(signal_name, window_range) %<-% callModule(oscillogram_ctrl, "oscillogram", tevi_model)
 
   # spectrum -> parameter_estimates----------
-  parameter_estimates <-
-    callModule(spectrum_ctrl, "spectrum_analysis", tapered_data, reactive(tevi_model()$frame_rate), signal_name, show_ctrls)
+  c(parameter_estimates, add_result) %<-%
+    callModule(spectrum_ctrl, "spectrum_analysis", tapered_data, reactive(tevi_model()$frame_rate), signal_name)
 
   live_parameter_estimates <-
     reactive({
@@ -39,6 +39,6 @@ surface_tension_analysis_ctrl <- function(input, output, session, tevi_model, sa
     })
 
    # st-results -> NULL  --------
-  callModule(surface_tension_results_ctrl, "st-results", tevi_model, sample_specs, live_parameter_estimates)
+  callModule(surface_tension_results_ctrl, "st-results", tevi_model, sample_specs, live_parameter_estimates, add_result)
 }
 
