@@ -24,6 +24,7 @@ source("R/report_notes_vc.R")
 
 source("R/surface_tension_analysis_vc.R")
 source("R/oscillogramly_vc.R")
+source("R/estimate_spectrum_vc.R")
 source("R/spectrum_vc.R")
 source("R/surface_tension_results_vc.R")
 source("R/surface_tension_result_data_vc.R")
