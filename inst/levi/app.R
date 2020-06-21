@@ -31,7 +31,8 @@ ui <- function(request) {
           ),
           menuItem(
             "Surface-Tension",icon = icon("tint"),
-            tabName = "st_analysis"
+            menuSubItem("Estimate Spectrum", tabName = "estimate_spectrum_ui"),
+            menuSubItem("ST-Results", tabName = "st_results_ui")
           ),
           menuItem(
             "Viscosity",
@@ -60,7 +61,7 @@ ui <- function(request) {
                   #tags$head(tags$script(src = "script.js")),
                   dashboard_UI("main_dashboard")),
           tabItem(tabName = "simulate_data_UI", simulate_data_view("simulate_data")),
-          tabItem(tabName = "st_analysis", surface_tension_analysis_UI("st_analysis")),
+          tabItem(tabName = "estimate_spectrum_ui", surface_tension_analysis_UI("st_analysis")),
           tabItem(tabName = "viscosity_analysis_UI", "to be done"),
           tabItem(tabName = "spec_osc", seewave_view("spec_osc")),
           tabItem(tabName = "spec_dom_freq", seewave_view("spec_dom_freq")),
