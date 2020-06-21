@@ -87,7 +87,7 @@ estimate_spectrum_ctrl <- function(input, output, session, tevi_model, sample_sp
                   showlegend = FALSE) %>%
       layout(
         legend = list(x = 0.8, y = 0.9),
-        xaxis = list(title = "time [s]"),
+        xaxis = list(title = "time [s]", range = range(tevi_model()$analysis_data[["t"]], nar.rm = TRUE)),
         yaxis = list(title = "Freq [Hz]")
       )
 

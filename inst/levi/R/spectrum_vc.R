@@ -6,8 +6,10 @@ spectrumUI <- function(id) {
     box(width = 12,
         fluidRow(
           column(width = 1,
-                 actionButton(ns("show_ctrls"), label = NULL, icon = icon("wrench"),  width = "100%"),
-                 bsTooltip(ns("show_ctrls"), "Show additional controls"),
+                 textInput(ns("spans"), label = "span", value = "c(3,3)"),
+                 bsTooltip(ns("spans"), "specify daniell-smoother: NULL for no smoothing", "top", options = list(container = "body")),
+                 numericInput(ns("taper"), label = "taper", value = 0.1, step = .1, min = 0, max = 1),
+                 bsTooltip(ns("taper"), "apply cosine-taper to % of window", "top"),
                  actionButton(ns("add_result"), label = "save", icon = icon("save"), width = "100%"),
                  bsTooltip(ns("add_result"), "add the current values to the result-dataset")
                  ),
@@ -17,16 +19,7 @@ spectrumUI <- function(id) {
           column(width = 6,
                  plotlyOutput(ns("bp_spectrum"), height = 300))
          )
-    ),
-    bsModal(ns("additional_ctrls"), title = "Additional Controls for Spectrum-Plots", trigger = ns("show_ctrls"),
-            box(
-              title = tags$span("Arguments for ", tags$a(href = "https://www.rdocumentation.org/packages/stats/versions/3.6.2/topics/spec.pgram", "spectrum ")),
-              textInput(ns("spans"), label = "span", value = "c(3,3)"),
-              bsTooltip(ns("spans"), "specify daniell-smoother: NULL for no smoothing", "top", options = list(container = "body")),
-              numericInput(ns("taper"), label = "taper", value = 0.1, step = .1, min = 0, max = 1),
-              bsTooltip(ns("taper"), "apply cosine-taper to % of window", "top")
-            ),
-            size = "large")
+    )
   )
 }
 
@@ -114,14 +107,12 @@ spectrum_ctrl <- function(input, output, session, tapered_data, frame_rate, sign
     })
 
   # return-values -----------
-  list(
-    parameter_estimates =
-      reactive({
-    validate(need(parameter_estimates, "parameter_estimates"))
-    parameter_estimates()
-  }),
-  add_result = reactive(input$add_result)
-  )
+  list(parameter_estimates =
+         reactive({
+           validate(need(parameter_estimates, "parameter_estimates"))
+           parameter_estimates()
+         }),
+       add_result = reactive(input$add_result))
 }
 
 
