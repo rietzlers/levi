@@ -111,7 +111,7 @@ st_results_ctrl <- function(input, output, session, live_estimates, add_estimate
       add_markers(x = ~ temp, y = ~ st_dom, name = "st_dom", hovertemplate = "%{y:.1f N/m}",
                   marker = list(color = "black")) %>%
       layout(
-        legend = list(x = 0.8, y = 0.9),
+        #legend = list(x = 0.8, y = 0.9),
         xaxis = list(title = "Temp. [°C]"),
         yaxis = list(title = "Surface-Tension [N/m]")
       )

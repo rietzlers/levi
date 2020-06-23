@@ -47,15 +47,13 @@ estimate_spectrum_ctrl <- function(input, output, session, st_estimates, tevi_mo
     live_parameter_estimates() %>%
       plot_ly(source = "st_plot") %>%
       add_markers(data = live_parameter_estimates(), name = "f_0 (current)",
-                  x = ~ t, y = ~ f_0, name = "f_0", hovertemplate = "%{y:.1f}  Hz",
-                  marker = list(color = "red", symbol = c("x"), size = 10, opacity = 0.5),
-                  showlegend = FALSE) %>%
+                  x = ~ t, y = ~ f_0, name = "f_0 (live)", hovertemplate = "%{y:.1f}  Hz",
+                  marker = list(color = "red", symbol = c("x"), size = 10, opacity = 0.5)) %>%
       add_markers(data = live_parameter_estimates(), name = "f_dom (current)",
                   x = ~ t, y = ~ f_dom, name = "f_dom", hovertemplate = "%{y:.1f}  Hz",
-                  marker = list(color = "black", symbol = c("x"), size = 10, opacity = 0.5),
-                  showlegend = FALSE) %>%
+                  marker = list(color = "black", symbol = c("x"), size = 10, opacity = 0.5)) %>%
       layout(
-        legend = list(x = 0.8, y = 0.9),
+        legend = list(x = -0.1, y = 0.9),
         xaxis = list(title = "time [s]", range = range(tevi_model()$analysis_data[["t"]], nar.rm = TRUE)),
         yaxis = list(title = "Freq [Hz]")
       )
