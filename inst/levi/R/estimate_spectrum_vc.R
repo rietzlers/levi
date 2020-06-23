@@ -18,14 +18,15 @@ estimate_spectrum_ctrl <- function(input, output, session, st_estimates, tevi_mo
 
   live_parameter_estimates <-
     reactive({
+      validate(need(sample_specs(), message = "Alloy/Sample-Specifications are missing. Set them in the Dashboard"))
       parameter_estimates() %>%
         mutate(
           t = mean(window_range()) %>% round(3),
           win_start = window_range()[1] %>% round(1),
           win_end = window_range()[2] %>% round(1),
           temp = convert_to_temp(t, tevi_model()$analysis_data),
-          st_dom = to_surface_tension(f_dom, sample_specs()$mass) %>% round(1),
-          st_0 = to_surface_tension(f_0, sample_specs()$mass) %>% round(1),
+          st_dom = to_surface_tension(f_dom, sample_specs()$mass) %>% round(3),
+          st_0 = to_surface_tension(f_0, sample_specs()$mass) %>% round(3),
           tevi_data_name = tevi_model()$tevi_data_name,
           signal = signal_name()
         )
