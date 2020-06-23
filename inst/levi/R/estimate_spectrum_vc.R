@@ -33,6 +33,7 @@ estimate_spectrum_ctrl <- function(input, output, session, tevi_model, sample_sp
 
   spec_analysis_results <- reactiveVal(NULL)
   observeEvent(add_result(), {
+
     if (is.null(spec_analysis_results())) {
       updated_results <-
         live_parameter_estimates() %>%
@@ -57,6 +58,15 @@ estimate_spectrum_ctrl <- function(input, output, session, tevi_model, sample_sp
       arrange(t)
 
     spec_analysis_results(updated_results)
+
+  })
+
+  # bookmark-callbacks ---------------
+  onBookmark(function(state){
+    state$values$spec_analysis_results <- spec_analysis_results()
+  })
+  onRestore(function(state){
+    spec_analysis_results(state$values$spec_analysis_results)
   })
 
   # oscillogram -> c(signal_name, window_range) ------
