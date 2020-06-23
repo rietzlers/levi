@@ -129,8 +129,8 @@ server <- function(input, output, session) {
   # data-simulation -----
   c(sim_data_model, model_choice) %<-% callModule(simulate_data_ctrl, "simulate_data", resample_UI)
   # surface-tension-analysis ----------
-  callModule(estimate_spectrum_ctrl, "estimate_spectrum",  model, sample_specs, tasks, notifications, selected_sidebar_tab)
-  callModule(st_results_ctrl, "st_analysis", model, sample_specs, tasks, notifications, selected_sidebar_tab)
+  c(live_estimates, add_estimate) %<-% callModule(estimate_spectrum_ctrl, "estimate_spectrum", st_estimates,  model, sample_specs, tasks, notifications, selected_sidebar_tab)
+  st_estimates <- callModule(st_results_ctrl, "st_analysis", live_estimates, add_estimate, model, sample_specs, tasks, notifications, selected_sidebar_tab)
   #callModule(surface_tension_analysis_ctrl, "st_analysis", model, sample_specs, tasks, notifications, selected_sidebar_tab)
 
   # signal-analysis ----------

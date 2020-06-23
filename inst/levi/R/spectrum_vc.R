@@ -10,8 +10,8 @@ spectrumUI <- function(id) {
                  bsTooltip(ns("spans"), "specify daniell-smoother: NULL for no smoothing", "top", options = list(container = "body")),
                  numericInput(ns("taper"), label = "taper", value = 0.1, step = .1, min = 0, max = 1),
                  bsTooltip(ns("taper"), "apply cosine-taper to % of window", "top"),
-                 actionButton(ns("add_result"), label = "save", icon = icon("save"), width = "100%"),
-                 bsTooltip(ns("add_result"), "add the current values to the result-dataset")
+                 actionButton(ns("add_result"), label = "add", icon = icon("plus"), width = "100%"),
+                 bsTooltip(ns("add_result"), "add the current frequency-estimates to the result-data-set")
                  ),
           column(width = 5,
                  plotOutput(ns("complete_spectrum"), height = 300,
@@ -78,11 +78,13 @@ spectrum_ctrl <- function(input, output, session, tapered_data, frame_rate, sign
         bp_filtered_spectrum() %>%
         slice(which.max((fc_amp))) %>%
         dplyr::transmute(
-          f_dom = f,
+          f_dom = f %>% round(2),
           f_0 = as.numeric((lfit_model() %>% lorentz_parameters())['f0']),
           d = as.numeric((lfit_model() %>% lorentz_parameters())['d']),
           spans = input$spans,
-          taper = as.numeric(input$taper)
+          taper = as.numeric(input$taper),
+          hp_limit = bp()[2],
+          lp_limit = bp()[1]
         )
     })
 
