@@ -20,7 +20,7 @@ estimate_spectrum_ctrl <- function(input, output, session, st_estimates, tevi_mo
     reactive({
       parameter_estimates() %>%
         mutate(
-          t = mean(window_range()) %>% round(1),
+          t = mean(window_range()) %>% round(3),
           win_start = window_range()[1] %>% round(1),
           win_end = window_range()[2] %>% round(1),
           temp = convert_to_temp(t, tevi_model()$analysis_data),
