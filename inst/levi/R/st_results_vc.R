@@ -106,9 +106,9 @@ st_results_ctrl <- function(input, output, session, live_estimates, add_estimate
 
     st_estimates() %>%
       plot_ly(source = "st_plot") %>%
-      add_markers(x = ~temp, y = ~ st_0, name = "st_0", hovertemplate = "%{y:.1f} N/m",
+      add_markers(x = ~temp, y = ~ st_0, name = "st_0", hovertemplate = "%{y:.3f} N/m",
                   marker = list(color = "red")) %>%
-      add_markers(x = ~ temp, y = ~ st_dom, name = "st_dom", hovertemplate = "%{y:.1f N/m}",
+      add_markers(x = ~ temp, y = ~ st_dom, name = "st_dom", hovertemplate = "%{y:.3f N/m}",
                   marker = list(color = "black")) %>%
       layout(
         #legend = list(x = 0.8, y = 0.9),
