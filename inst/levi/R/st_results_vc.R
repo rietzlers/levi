@@ -54,7 +54,7 @@ st_results_ctrl <- function(input, output, session, live_estimates, add_estimate
         tevi_data_name = factor(tevi_data_name),
         spans = factor(spans)
       ) %>%
-      select(t, temp, f_0, f_dom, st_0, st_dom, d, everything()) %>%
+      select(t, temp, f_0, f_dom, st_0, st_dom, d, lp_limit, hp_limit, win_start, win_end, signal, tevi_data_name,  everything()) %>%
       arrange(t)
 
     parameter_estimates(updated_results)
