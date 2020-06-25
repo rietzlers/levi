@@ -31,17 +31,17 @@ st_results_UI <- function(id) {
 st_results_ctrl <- function(input, output, session, live_estimates, add_estimate, model, sample_specs, tasks, notifications, selected_sidebar_tab){
 
 
-  st_estimates <- reactiveVal(NULL)
+  parameter_estimates <- reactiveVal(NULL)
   observeEvent(add_estimate(), {
 
-    if (is.null(st_estimates())) {
+    if (is.null(parameter_estimates())) {
       updated_results <-
         live_estimates() %>%
         mutate(add_date = Sys.time())
     } else{
       updated_results <-
         dplyr::union(
-          st_estimates(),
+          parameter_estimates(),
           live_estimates() %>%
             mutate(add_date = Sys.time())
         )
@@ -57,7 +57,7 @@ st_results_ctrl <- function(input, output, session, live_estimates, add_estimate
       select(t, temp, f_0, f_dom, st_0, st_dom, d, everything()) %>%
       arrange(t)
 
-    st_estimates(updated_results)
+    parameter_estimates(updated_results)
 
   })
 
@@ -65,7 +65,7 @@ st_results_ctrl <- function(input, output, session, live_estimates, add_estimate
       rows <- input$spec_analsis_results_DT_rows_selected
       output$data_selection <-
         renderDT(
-          st_estimates()[rows, ],
+          parameter_estimates()[rows, ],
           rownames = FALSE,
           filter = 'top',
           extensions = c('Buttons', 'Responsive'),
@@ -80,7 +80,7 @@ st_results_ctrl <- function(input, output, session, live_estimates, add_estimate
 
   observeEvent(input$deletion_confirmed, {
       rows <- input$spec_analsis_results_DT_rows_selected
-      st_estimates(st_estimates()[-rows, ])
+      parameter_estimates(parameter_estimates()[-rows, ])
       toggleModal(session, "delete_data_confirmation", toggle = "close")
     },
     ignoreInit = TRUE)
@@ -92,7 +92,7 @@ st_results_ctrl <- function(input, output, session, live_estimates, add_estimate
         readr::read_csv(
           upload_file$datapath
         )
-      st_estimates(st_data)
+      parameter_estimates(st_data)
     }, error = function(e){
         showModal(modalDialog(title = "Upload-Error",
                               "Uploading data did not succed! Maybe the csv-file is corrupt.
@@ -102,9 +102,9 @@ st_results_ctrl <- function(input, output, session, live_estimates, add_estimate
 
   # st-result-plot  -----------
   output$surface_tension_plot <- renderPlotly({
-    validate(need(st_estimates(), label = "st_estimates"))
+    validate(need(parameter_estimates(), label = "parameter_estimates"))
 
-    st_estimates() %>%
+    parameter_estimates() %>%
       plot_ly(source = "st_plot") %>%
       add_markers(x = ~temp, y = ~ st_0, name = "st_0", hovertemplate = "%{y:.3f} N/m",
                   marker = list(color = "red")) %>%
@@ -120,9 +120,9 @@ st_results_ctrl <- function(input, output, session, live_estimates, add_estimate
 
   # st-results-table ---------
   output$spec_analsis_results_DT <- DT::renderDataTable({
-    validate(need(st_estimates(), label = "st_estimates"))
+    validate(need(parameter_estimates(), label = "parameter_estimates"))
 
-    st_estimates()  %>%
+    parameter_estimates()  %>%
       datatable(
         rownames = FALSE,
         filter = 'top',
@@ -140,17 +140,13 @@ st_results_ctrl <- function(input, output, session, live_estimates, add_estimate
 
   # bookmark-callbacks ---------------
   onBookmark(function(state){
-    state$values$st_estimates <- st_estimates()
+    state$values$parameter_estimates <- parameter_estimates()
   })
   onRestore(function(state){
-    st_estimates(state$values$st_estimates)
+    parameter_estimates(state$values$parameter_estimates)
   })
 
   # return-values ----------
-  return(
-    reactive({
-      st_estimates()
-    })
-  )
+  return(reactive({parameter_estimates()}))
 
 }

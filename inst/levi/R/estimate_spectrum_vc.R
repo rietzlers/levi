@@ -8,7 +8,7 @@ estimate_spectrum_UI <- function(id) {
   )
 }
 
-estimate_spectrum_ctrl <- function(input, output, session, st_estimates, tevi_model, sample_specs, tasks, notifications, selected_sidebar_tab){
+estimate_spectrum_ctrl <- function(input, output, session, parameter_estimates, tevi_model, sample_specs, tasks, notifications, selected_sidebar_tab){
 
   # local data ---------
   tapered_data <- reactive({
@@ -19,11 +19,11 @@ estimate_spectrum_ctrl <- function(input, output, session, st_estimates, tevi_mo
   live_parameter_estimates <-
     reactive({
       validate(need(sample_specs(), message = "Alloy/Sample-Specifications are missing. Set them in the Dashboard"))
-      parameter_estimates() %>%
+      freq_estimates() %>%
         mutate(
           t = mean(window_range()) %>% round(3),
-          win_start = window_range()[1] %>% round(1),
-          win_end = window_range()[2] %>% round(1),
+          win_start = window_range()[1] %>% round(3),
+          win_end = window_range()[2] %>% round(3),
           temp = convert_to_temp(t, tevi_model()$analysis_data),
           st_dom = to_surface_tension(f_dom, sample_specs()$mass) %>% round(3),
           st_0 = to_surface_tension(f_0, sample_specs()$mass) %>% round(3),
@@ -32,24 +32,23 @@ estimate_spectrum_ctrl <- function(input, output, session, st_estimates, tevi_mo
         )
     })
 
-
   # oscillogram -> c(signal_name, window_range) ------
   c(signal_name, window_range) %<-% callModule(oscillogram_ctrl, "oscillogram", tevi_model)
 
-  # spectrum -> c(parameter_estimates, add_estimate) ----------
-  c(parameter_estimates, add_estimate) %<-%
+  # spectrum -> c(freq_estimates, add_estimate) ----------
+  c(freq_estimates, add_estimate) %<-%
     callModule(spectrum_ctrl, "spectrum_analysis", tapered_data, reactive(tevi_model()$frame_rate), signal_name)
 
-  # st-result-plot  -----------
+  # freq-vs-time-plot  -----------
   output$freq_vs_time_plot <- renderPlotly({
 
   st_plot <-
     live_parameter_estimates() %>%
       plot_ly(source = "st_plot") %>%
-      add_markers(data = live_parameter_estimates(), name = "f_0 (current)",
+      add_markers(name = "f_0 (current)",
                   x = ~ t, y = ~ f_0, name = "f_0 (live)", hovertemplate = "%{y:.1f}  Hz",
                   marker = list(color = "red", symbol = c("x"), size = 10, opacity = 0.5)) %>%
-      add_markers(data = live_parameter_estimates(), name = "f_dom (current)",
+      add_markers(name = "f_dom (current)",
                   x = ~ t, y = ~ f_dom, name = "f_dom", hovertemplate = "%{y:.1f}  Hz",
                   marker = list(color = "black", symbol = c("x"), size = 10, opacity = 0.5)) %>%
       layout(
@@ -58,11 +57,12 @@ estimate_spectrum_ctrl <- function(input, output, session, st_estimates, tevi_mo
         yaxis = list(title = "Freq [Hz]")
       )
 
-  if (!is.null(st_estimates())) {
+  if (!is.null(parameter_estimates())) {
+   # lm_f_0 <- lm(f_0 ~ t, data = freq_estimates())
     st_plot <-
       st_plot %>%
       add_markers(
-        data = st_estimates(),
+        data = parameter_estimates(),
         x = ~ t,
         y = ~ f_0,
         name = "f_0",
@@ -70,7 +70,7 @@ estimate_spectrum_ctrl <- function(input, output, session, st_estimates, tevi_mo
         marker = list(color = "red")
       ) %>%
       add_markers(
-        data = st_estimates(),
+        data = parameter_estimates(),
         x = ~ t,
         y = ~ f_dom,
         name = "f_dom",
