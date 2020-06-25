@@ -72,7 +72,7 @@ spectrum_ctrl <- function(input, output, session, tapered_data, frame_rate, sign
   lfit_model <-
     reactive({bp_filtered_spectrum() %>% fit_lorentz()})
 
-  parameter_estimates <-
+  freq_estimates <-
     reactive({
       estimates <-
         bp_filtered_spectrum() %>%
@@ -191,10 +191,10 @@ spectrum_ctrl <- function(input, output, session, tapered_data, frame_rate, sign
     })
 
   # return-values -----------
-  list(parameter_estimates =
+  list(freq_estimates =
          reactive({
-           validate(need(parameter_estimates, "parameter_estimates"))
-           parameter_estimates()
+           validate(need(freq_estimates, "freq_estimates"))
+           freq_estimates()
          }),
        add_result = reactive(input$add_result))
 }
