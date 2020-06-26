@@ -39,7 +39,7 @@
 #'   geom_line(data = bp_signal, aes(x = t, y = s), color = "red")
 #'
 # max amplitude
-#' c(f, fc_amp) %<-% get_dom_freq(sig_fc, sr)
+#' c(f, fc_amp) %<-% get_dom_freq(sig_fc)
 #' fcp <-
 #'   fcp + labs(subtitle = str_glue("Dom. Freq. {round(f, 2)} Hz / Amp: {round(fc_amp, 1)}"))
 

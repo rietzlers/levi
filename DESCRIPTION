@@ -28,5 +28,6 @@ Imports:
     cowplot,
     seewave,
     readxl,
-    shinyBS
+    shinyBS,
+    broom
 RoxygenNote: 7.1.0

@@ -103,13 +103,7 @@ load_tevi_data_ctrl <- function(input, output, session) {
     hps[[str_glue("hp{hp_nr}")]] <- get_brush_range(input$heat_pulses_plot_brush, str_glue("brush heat-puls-plot to set hp {hp_nr}"))
   }) # update heat-pulses
 
-  # bookmark-callbacks ---------------
-  onBookmark(function(state){
-    state$values$exp_time_range <- exp_time_range()
-  })
-  onRestored(function(state){
-    exp_time_range(state$values$exp_time_range)
-  })
+
   # plot_center_xy  -------------
   output$plot_center_xy <- renderPlot({
     center_xy_plot <-
@@ -138,15 +132,13 @@ load_tevi_data_ctrl <- function(input, output, session) {
       plot_ly(x  = ~t, source = ns("temp_plot")) %>%
       add_lines(y = ~pyro_temp, name = "Measured", hovertemplate = "%{y:.0f} °C") %>%
       add_lines(
-        name =
-          "Smoothed Temp.
-      (used for time - Temp conversion)",
+        name = "Smoothed Temp. (used for time - Temp conversion)",
         y = ~smoothed_temp,
         color = I("red"),
         hovertemplate = "%{y:.0f} °C"
       ) %>%
       layout(
-        legend = list(x = 0.8, y = 0.8),
+        legend = list(x = 0.6, y = 0.9, orientation = "h"),
         dragmode = "select",
         selectdirection = "h",
         xaxis = list(title = "time [s]"),
@@ -163,6 +155,14 @@ load_tevi_data_ctrl <- function(input, output, session) {
   })
   output$hp_range <- renderText({
     hps[[str_glue("hp{input$hp_nr}")]]
+  })
+
+  # bookmark-callbacks ---------------
+  onBookmark(function(state){
+    state$values$exp_time_range <- exp_time_range()
+  })
+  onRestored(function(state){
+    exp_time_range(state$values$exp_time_range)
   })
 
   # return-values ----------

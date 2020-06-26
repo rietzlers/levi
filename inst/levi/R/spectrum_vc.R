@@ -6,29 +6,25 @@ spectrumUI <- function(id) {
     box(width = 12,
         fluidRow(
           column(width = 1,
-                 actionButton(ns("show_ctrls"), label = NULL, icon = icon("wrench"),  width = "100%"),
-                 bsTooltip(ns("show_ctrls"), "Show additional controls")),
+                 textInput(ns("spans"), label = "span", value = "c(3,3)"),
+                 bsTooltip(ns("spans"), "specify daniell-smoother: NULL for no smoothing", "top", options = list(container = "body")),
+                 numericInput(ns("taper"), label = "taper", value = 0.1, step = .1, min = 0, max = 1),
+                 bsTooltip(ns("taper"), "apply cosine-taper to % of window", "top"),
+                 actionButton(ns("add_result"), label = "add", icon = icon("plus"), width = "100%"),
+                 bsTooltip(ns("add_result"), "add the current frequency-estimates to the result-data-set")
+                 ),
           column(width = 5,
                  plotOutput(ns("complete_spectrum"), height = 300,
                             brush = brushOpts(id = ns("brush"), fill = "#ccc", direction = "x", resetOnNew = FALSE))),
           column(width = 6,
                  plotlyOutput(ns("bp_spectrum"), height = 300))
          )
-    ),
-    bsModal(ns("additional_ctrls"), title = "Additional Controls for Spectrum-Plots", trigger = ns("show_ctrls"),
-            box(
-              title = tags$span("Arguments for ", tags$a(href = "https://www.rdocumentation.org/packages/stats/versions/3.6.2/topics/spec.pgram", "spectrum ")),
-              textInput(ns("spans"), label = "span", value = "c(3,3)"),
-              bsTooltip(ns("spans"), "specify daniell-smoother: NULL for no smoothing", "top", options = list(container = "body")),
-              numericInput(ns("taper"), label = "taper", value = 0.1, step = .1, min = 0, max = 1),
-              bsTooltip(ns("taper"), "apply cosine-taper to % of window", "top")
-            ),
-            size = "large")
+    )
   )
 }
 
 
-spectrum_ctrl <- function(input, output, session, tapered_data, frame_rate, signal_name, window_range){
+spectrum_ctrl <- function(input, output, session, tapered_data, frame_rate, signal_name){
 
   # data: parameters ----
   bp <-
@@ -68,118 +64,139 @@ spectrum_ctrl <- function(input, output, session, tapered_data, frame_rate, sign
       )
     })
 
-  bp_filtered_spectrum <- reactive({
-    spectrum_estimate() %>% filter(f %>% between(bp()[1], bp()[2]))
-  })
-
-  lfit_models <-
+  bp_filtered_spectrum <-
     reactive({
-      fitted_models =
-        list(
-          to_fft_data =
-            bp_filtered_spectrum() %>%
-            filter(calc_method == "fft") %>%
-            fit_lorentz(),
-          to_spectrum_data =
-            bp_filtered_spectrum() %>%
-            filter(calc_method == "spectrum") %>%
-            fit_lorentz()
-        )
+      spectrum_estimate() %>% filter(f %>% between(bp()[1], bp()[2]))
     })
 
-  parameter_estimates <-
+  lfit_model <-
+    reactive({bp_filtered_spectrum() %>% fit_lorentz()})
+
+  freq_estimates <-
     reactive({
-
-      f_raw_estimates <-
+      estimates <-
         bp_filtered_spectrum() %>%
-        group_by(calc_method) %>%
-        get_dom_freq() %>%
-        ungroup() %>%
-        rowwise() %>%
-        transmute(
-          origin = paste0(calc_method, "_data"),
-          method = "raw",
-          dom_freq_estimate = f
-        ) %>%
-        ungroup()
-
-      lfit_estimates <-
-        lfit_models() %>%
-        map_dfc(lorentz_parameters) %>%
-        mutate(parameter = c("A", "f0", "d")) %>%
-        pivot_longer(cols = contains("data"), names_to = "origin", values_to = "estimate", names_prefix = "to_") %>%
-        mutate(method = "lorentz")
-
-      f_lfit_estimates <-
-        lfit_estimates %>%
-        filter(parameter == "f0") %>%
-        transmute(
-          origin,
-          method,
-          dom_freq_estimate = estimate
-        )
-
-      damping_estimates <-
-        lfit_estimates %>%
-        filter(parameter == "d") %>%
-        transmute(
-          origin,
-          method,
-          damping_estimate = estimate,
+        slice(which.max((fc_amp))) %>%
+        dplyr::transmute(
+          f_dom = f %>% round(2),
+          f_0 = as.numeric((lfit_model() %>% lorentz_parameters())['f0']),
+          d = as.numeric((lfit_model() %>% lorentz_parameters())['d']),
           spans = input$spans,
-          taper = as.numeric(input$taper)
+          taper = as.numeric(input$taper),
+          hp_limit = bp()[2],
+          lp_limit = bp()[1]
         )
-
-
-      f_raw_estimates %>%
-        dplyr::union(f_lfit_estimates) %>%
-        left_join(damping_estimates, by = c("origin", "method")) %>%
-        mutate(
-          hp_limit = bp()[1],
-          lp_limit = bp()[2],
-          win_start = window_range()[1],
-          win_end = window_range()[2],
-          t = mean(window_range(), na.rm = TRUE),
-          signal = signal_name()
-        ) %>%
-        mutate(
-          calc_method = str_replace(
-            paste0(str_replace(origin, "data", ""), if_else(method == "raw", "", method)),
-            "_$", ""
-          )
-        )
-
     })
 
 
   # outputs  -----------
   output$complete_spectrum <- renderPlot({
     spectrum_estimate() %>%
-      ggplot(aes(x = f)) +
-      geom_line(data = ~ dplyr::filter(.x, calc_method == "spectrum"), aes(y = fc_amp)) +
-      geom_point(data = ~ dplyr::filter(.x, calc_method == "spectrum"), aes(y = fc_amp), shape = "x", size = 0.8) +
-      geom_point(data = ~ dplyr::filter(.x, calc_method == "fft", f > 0), aes(y = fc_amp), color = "blue", shape = "+", size = 1.5) +
+      ggplot(aes(x = f, y = fc_amp)) +
+      geom_line() +
       scale_y_continuous(
-        name = "log10(Fourier-Coef-Amp)", # if_else(input$scale == "log10", "log10(Fourier-Coef-Amp)", "Fourier-Coef-Amp"),
-        trans = "log10"#if_else(input$scale == "log10", "log10", "identity")
+        name = "log10(spectrum-estimates)",
+        trans = "log10"
       ) +
       labs(x = "Frequency [Hz]")
     })
 
   output$bp_spectrum <- renderPlotly({
-      gen_spec_plot(
+    gen_spec_plot <-
+      function(est_spec, lfit_model){
+        spec_plotly <-
+          est_spec %>%
+          plot_ly() %>%
+          add_fun(function(p){
+            p_data <- p %>% plotly_data()
+            c(f_dom, fc_amp_max) %<-% (p_data %>% get_dom_freq())
+            p %>%
+              add_trace(
+                type = "scatter", mode = "markers",
+                x = ~f, y = ~fc_amp, color = I("black"),
+                text = ~if_else(near(fc_amp, fc_amp_max/2), str_glue("<b>{round(f_dom, 1)} Hz</b>"), ""),
+                textposition = "middle right",
+                name = "spectrum",
+                hovertemplate = "Freq.: %{x:.1f} Hz"
+              ) %>%
+              slice(which.max(fc_amp)) %>%
+              add_annotations(
+                x = ~f, y = ~fc_amp, color = I("black"),
+                axref = "x", ax = ~(f - 1), xanchor = "right",
+                ayref = "y", ay = ~fc_amp,
+                standoff = 10,
+                text = ~ str_glue("f <sub>dom</sub>: {round(f_dom, 1)} Hz"),
+                clicktoshow = "onoff",
+                showarrow = FALSE
+              )
+          })
+
+        if(!is.null(  lfit_model)){
+          lfit <-   lfit_model
+          spec_plotly <-
+            spec_plotly %>%
+            add_trace(
+              type = "scatter", mode = "line",
+              data = tibble(f = seq(min(est_spec$f), max(est_spec$f), by = 1/100)) %>% lorentz_amps(lfit),
+              x = ~f, y = ~lf_amp, color = I("red"),
+              name = "Lorentz-fit",
+              hovertemplate = "Freq.: %{x:.1f} Hz"
+            ) %>%
+            slice(which.max(lf_amp)) %>%
+            add_annotations(
+              x = ~f, y = ~lf_amp, color = I("red"),
+              axref = "x", ax = ~(f + 1), xanchor = "left",
+              ayref = "y", ay = ~lf_amp,
+              standoff = 10,
+              text = ~ str_glue("<span style='color:red'> f <sub>0</sub>: {round((lfit %>% lorentz_parameters())[['f0']], 1)} Hz </span>"),
+              clicktoshow = "onoff",
+              showarrow = FALSE
+            )
+        }else{
+          spec_plotly <-
+            spec_plotly %>%
+            add_trace(
+              type = "scatter", mode = "line",
+              x = 0, y = 1,color = I("red"),
+              visible = "legendonly",
+              name = "lorentz-fit did not converge"
+            )
+        }
+
+        spec_plotly %>%
+          layout(
+            legend = list(
+              x = 0.8, y = 0.9,
+              title = list(text = "")
+            ),
+            xaxis = list(
+              title = "Freq [Hz]"
+            )
+          ) %>%
+          config(
+            displaylogo = FALSE,
+            modeBarButtonsToRemove = c(
+              "zoomIn2d",
+              "zoomOut2d",
+              "lasso2d",
+              "pan2d",
+              "hoverClosestCartesian"
+            )
+          )
+      }
+    gen_spec_plot(
         bp_filtered_spectrum(),
-        lfit_models = lfit_models(),
-        scale = "raw",
-        sample_rate = frame_rate()
+        lfit_model = lfit_model()
       )
     })
 
   # return-values -----------
-  reactive({
-    validate(need(parameter_estimates, "parameter_estimates"))
-    parameter_estimates()
-    })
+  list(freq_estimates =
+         reactive({
+           validate(need(freq_estimates, "freq_estimates"))
+           freq_estimates()
+         }),
+       add_result = reactive(input$add_result))
 }
 
 

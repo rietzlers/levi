@@ -31,7 +31,8 @@ ui <- function(request) {
           ),
           menuItem(
             "Surface-Tension",icon = icon("tint"),
-            tabName = "st_analysis"
+            menuSubItem("Estimate Spectrum", tabName = "estimate_spectrum_ui"),
+            menuSubItem("ST-Results", tabName = "st_results_ui")
           ),
           menuItem(
             "Viscosity",
@@ -60,7 +61,8 @@ ui <- function(request) {
                   #tags$head(tags$script(src = "script.js")),
                   dashboard_UI("main_dashboard")),
           tabItem(tabName = "simulate_data_UI", simulate_data_view("simulate_data")),
-          tabItem(tabName = "st_analysis", surface_tension_analysis_UI("st_analysis")),
+          tabItem(tabName = "estimate_spectrum_ui", estimate_spectrum_UI("estimate_spectrum")),
+          tabItem(tabName = "st_results_ui", st_results_UI("st_analysis")),
           tabItem(tabName = "viscosity_analysis_UI", "to be done"),
           tabItem(tabName = "spec_osc", seewave_view("spec_osc")),
           tabItem(tabName = "spec_dom_freq", seewave_view("spec_dom_freq")),
@@ -127,7 +129,8 @@ server <- function(input, output, session) {
   # data-simulation -----
   c(sim_data_model, model_choice) %<-% callModule(simulate_data_ctrl, "simulate_data", resample_UI)
   # surface-tension-analysis ----------
-  callModule(surface_tension_analysis_ctrl, "st_analysis", model, sample_specs, tasks, notifications, selected_sidebar_tab)
+  c(live_estimates, add_estimate) %<-% callModule(estimate_spectrum_ctrl, "estimate_spectrum", parameter_estimates,  model, sample_specs, tasks, notifications, selected_sidebar_tab)
+  parameter_estimates <- callModule(st_results_ctrl, "st_analysis", live_estimates, add_estimate, model, sample_specs, tasks, notifications, selected_sidebar_tab)
 
   # signal-analysis ----------
   {

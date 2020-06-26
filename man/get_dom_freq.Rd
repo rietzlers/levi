@@ -4,12 +4,10 @@
 \alias{get_dom_freq}
 \title{get dominant freq and corresponding amplitude in signal}
 \usage{
-get_dom_freq(fc_data, sample_rate = 400)
+get_dom_freq(fc_data)
 }
 \arguments{
 \item{fc_data}{datensatz mit variablen f und fc_amp}
-
-\item{sample_rate}{sample-rate}
 }
 \value{
 tibble with variables f and fc_amp
