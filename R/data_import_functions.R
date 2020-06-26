@@ -26,8 +26,6 @@ import_tevi_data <- function(file_path) {
   # standardize var-names (remove different prefix for ax-/radial-data)
   names(df) <- map_chr(names(df), ~ str_remove(.x, "^a_|^r_"))
 
-  print(names(df_raw))
-
   # check if df contains all obligatory variables
   # add exp-time: time=0 is start of measurement
   if(!(df %>% rlang::has_name("seconds"))){

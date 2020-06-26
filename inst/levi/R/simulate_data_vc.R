@@ -71,7 +71,7 @@ simulate_data_ctrl <- function(input, output, session, resample_UI){
     # calculate fc
     sig_fc <- levi::fftc(ex_data, "s", sr)
     # max amplitude
-    c(f_max, fmax_amp) %<-% (get_dom_freq(sig_fc, sr) %>% round(1))
+    c(f_max, fmax_amp) %<-% (get_dom_freq(sig_fc) %>% round(1))
 
     # bp filter
     bp_signal <-

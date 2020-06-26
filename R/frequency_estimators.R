@@ -1,67 +1,3 @@
-# fourier-transformation ------------
-
-#' calculate fourier-koeffs. with fft
-#'
-#' The function \code{fft} returns the \bold{unnormalized} Fourier-Coefficients
-#' for the Fourier-Frequencies 0/N, ... (N-1)/N, where N = T/dT ist the Number of samples.
-#'
-#'
-#' @param data tibble with var "signal"
-#' @param signal character: name of signal
-#' @param sr samplerate
-#'
-#' @return tibble with vars f (Kreisfrequenz, d.h. cycles per unit-time), fc, fc_amp and fc_arg and spec = N * fc_amp^2
-#'
-#' @export
-fftc <- function(data, signal, sr){
-  if(!regular_ts(data, signal, sr)) warning("no regular ts")
-
-  N <- length(data[[signal]])
-
-  data %>%
-    transmute(
-      f = 0:(N - 1) / N * sr,
-      fc = fft(.data[[signal]]) / N, # Normalisierung !!!
-      fc_amp = Mod(fc),
-      fc_arg = Arg(fc),
-      spec = N * fc_amp^2
-    )
-}
-
-
-
-#' Band-Pass-Filter signal
-#'
-#' The function calculates the Fourier-Coefficients with fft,
-#' sets all Fourier-Coefficients not within the bp-range to 0
-#' and inverses the fft.
-#'
-#'
-#' @param sig_data tibble with var signal
-#' @param signal_name var-name of the signal
-#' @param bp numeric vector: lower and upper bp-Freqs
-#' @param sr samplerate
-#'
-#' @return tibble with vars t and signal_name
-#' @export
-bp_filter <- function(sig_data, signal_name, bp, sr){
-  N <- length(sig_data$t)
-  levi::fftc(sig_data, signal_name, sr) %>%
-    mutate(
-      t = sig_data$t,
-      fc = if_else(
-        between(f, bp[1], bp[2]) | between(f, (sr - bp[2]), (sr - bp[1])),
-        fc * N, # N = lenght(t): Normierung wieder rückgängig machen.
-        0i
-        ),
-      !!sym(signal_name) := Re(fft(fc, inverse = TRUE)) / N # Normierung!
-    ) %>%
-    select(-fc)
-}
-
-
-
-
 
 #' Estimate Spectrum from Signal
 #'
@@ -71,7 +7,7 @@ bp_filter <- function(sig_data, signal_name, bp, sr){
 #' @param spans vector of odd integers giving the widths of modified Daniell smoothers to be used to smooth the periodogram.
 #' @param taper specifies the proportion of data to taper
 #'
-#' @return tibble with vars: f, fc_amp, calc_method(spectrum/fft), spec
+#' @return tibble with vars: f, spec and fc_amp
 #'
 #' @export
 estimate_signal_spectrum <-
@@ -85,16 +21,9 @@ estimate_signal_spectrum <-
 
   tibble(
     f = est_spec$freq,
-    calc_method = "spectrum",
     spec = est_spec$spec,
     fc_amp = sqrt(spec)
-    ) %>%
-    dplyr::union(
-      levi::fftc(signal_data, signal_name, sr = frame_rate) %>%
-        mutate(calc_method = "fft") %>%
-        select(f, calc_method, spec, fc_amp) %>%
-        dplyr::filter(f < frame_rate/2)
-      )
+    )
 }
 
 # lorentz-fit ----------------
@@ -201,13 +130,12 @@ lorentz_amps <- function(freqs, lf_model){
 #' multipliziert.
 #'
 #' @param fc_data datensatz mit variablen f und fc_amp
-#' @param sample_rate sample-rate
 #'
 #' @return tibble with variables f and fc_amp
 #' (fc_amp is the signal-amplitude of the dominant frequency!
 #' Not the amplitude of the Fourie-Coefficient!)
 #' @export
-get_dom_freq <- function(fc_data, sample_rate = 400){
+get_dom_freq <- function(fc_data){
   fc_data %>%
     slice(which.max((fc_amp))) %>%
     dplyr::transmute(f = f, fc_amp = 2 * fc_amp)
@@ -239,4 +167,65 @@ regular_ts <- function(data, signal, sr) {
     return(FALSE)
   }
   return(TRUE)
+}
+
+# fourier-transformation ------------
+
+#' calculate fourier-koeffs. with fft
+#'
+#' The function \code{fft} returns the \bold{unnormalized} Fourier-Coefficients
+#' for the Fourier-Frequencies 0/N, ... (N-1)/N, where N = T/dT ist the Number of samples.
+#'
+#'
+#' @param data tibble with var "signal"
+#' @param signal character: name of signal
+#' @param sr samplerate
+#'
+#' @return tibble with vars f (Kreisfrequenz, d.h. cycles per unit-time), fc, fc_amp and fc_arg and spec = N * fc_amp^2
+#'
+#' @export
+fftc <- function(data, signal, sr){
+  if(!regular_ts(data, signal, sr)) warning("no regular ts")
+
+  N <- length(data[[signal]])
+
+  data %>%
+    transmute(
+      f = 0:(N - 1) / N * sr,
+      fc = fft(.data[[signal]]) / N, # Normalisierung !!!
+      fc_amp = Mod(fc),
+      fc_arg = Arg(fc),
+      spec = N * fc_amp^2
+    )
+}
+
+
+
+#' Band-Pass-Filter signal
+#'
+#' The function calculates the Fourier-Coefficients with fft,
+#' sets all Fourier-Coefficients not within the bp-range to 0
+#' and inverses the fft.
+#'
+#'
+#' @param sig_data tibble with var signal
+#' @param signal_name var-name of the signal
+#' @param bp numeric vector: lower and upper bp-Freqs
+#' @param sr samplerate
+#'
+#' @return tibble with vars t and signal_name
+#' @export
+bp_filter <- function(sig_data, signal_name, bp, sr){
+  N <- length(sig_data$t)
+  levi::fftc(sig_data, signal_name, sr) %>%
+    mutate(
+      t = sig_data$t,
+      fc = if_else(
+        between(f, bp[1], bp[2]) | between(f, (sr - bp[2]), (sr - bp[1])),
+        fc * N, # N = lenght(t): Normierung wieder rückgängig machen.
+        0i
+      ),
+      !!sym(signal_name) := Re(fft(fc, inverse = TRUE)) / N # Normierung!
+    ) %>%
+    select(-fc)
 }

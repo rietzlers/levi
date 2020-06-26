@@ -15,6 +15,7 @@ library(shinyBS)
 library(levi)
 library(readxl)
 library(seewave)
+library(broom)
 
 # source code which needs to run once -------------------------------------
 source("R/dashboard_vc.R")
@@ -22,11 +23,12 @@ source("R/sample_specs_vc.R")
 source("R/load_analysis_data_vc.R")
 source("R/report_notes_vc.R")
 
-source("R/surface_tension_analysis_vc.R")
+
 source("R/oscillogramly_vc.R")
+source("R/estimate_spectrum_vc.R")
+source("R/st_results_vc.R")
 source("R/spectrum_vc.R")
-source("R/surface_tension_results_vc.R")
-source("R/surface_tension_result_data_vc.R")
+
 
 source("R/seewaveplots_vc.R")
 
