@@ -104,7 +104,8 @@ st_results_ctrl <- function(input, output, session, live_estimates, add_estimate
   output$surface_tension_plot <- renderPlotly({
     validate(need(parameter_estimates(), label = "parameter_estimates"))
 
-    parameter_estimates() %>%
+    st_plot <-
+      parameter_estimates() %>%
       plot_ly(source = "st_plot") %>%
       add_markers(x = ~temp, y = ~ st_0, name = "st_0", hovertemplate = "%{y:.3f} N/m",
                   marker = list(color = "red")) %>%
@@ -116,6 +117,38 @@ st_results_ctrl <- function(input, output, session, live_estimates, add_estimate
         yaxis = list(title = "Surface-Tension [N/m]")
       )
 
+    st_0 <- parameter_estimates() %>% transmute(temp = temp - sample_specs()$Temp_liquid, st_0)
+    st_dom <- parameter_estimates() %>% transmute(temp = temp - sample_specs()$Temp_liquid, st_dom)
+
+    if(length(st_0) > 1){
+      st_0_lm <- lm(st_0 ~ temp , data = st_0)
+      y_0 <- coefficients(st_0_lm)[1]
+      m <- coefficients(st_0_lm)[2]
+      operator <- if_else(m>=0, "+", "-")
+      st_0_model <- str_glue("ST = {format(y_0, digits = 4)} N/m {operator} {format(abs(m), scientific = TRUE, digits = 3)} N/(m°C) Temp")
+      st_plot <-
+        st_plot %>%
+        add_lines(
+          name = st_0_model, line = list(color = "red"),
+          data = lm(st_0 ~ temp, data = parameter_estimates()) %>% augment(),
+          x = ~temp, y = ~.fitted
+          )
+    }
+    if(length(st_dom) > 1){
+      st_dom_lm <- lm(st_dom ~ temp , data = st_dom)
+      y_0 <- coefficients(st_dom_lm)[1]
+      m <- coefficients(st_dom_lm)[2]
+      operator <- if_else(m>=0, "+", "-")
+      st_dom_model <- str_glue("ST = {format(y_0, digits = 4)} N/m {operator} {format(abs(m), scientific = TRUE, digits = 3)} N/(m°C) Temp")
+      st_plot <-
+        st_plot %>%
+        add_lines(
+          name = st_dom_model, line = list(color = "black"),
+          data = lm(st_dom ~ temp, data = parameter_estimates()) %>% augment(),
+          x = ~temp, y = ~.fitted
+        )
+    }
+    st_plot
   })
 
   # st-results-table ---------
@@ -123,6 +156,7 @@ st_results_ctrl <- function(input, output, session, live_estimates, add_estimate
     validate(need(parameter_estimates(), label = "parameter_estimates"))
 
     parameter_estimates()  %>%
+      arrange(temp) %>%
       datatable(
         rownames = FALSE,
         filter = 'top',

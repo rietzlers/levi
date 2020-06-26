@@ -15,6 +15,7 @@ library(shinyBS)
 library(levi)
 library(readxl)
 library(seewave)
+library(broom)
 
 # source code which needs to run once -------------------------------------
 source("R/dashboard_vc.R")
