@@ -10,11 +10,12 @@ Shiny-Web-App zur Analyse von EML-Experimenten
 2. Lokal (Bei dieser Option müssen gegebenenfalls Pakete nachinstalliert werden.)
     - **old version** Installiere Paket lokal mit dem Befehl`devtools::install_github("rietzlers/levi", ref = "master")` 
     und starte die App mit `shiny::runApp(system.file('levi', package='levi'))`
-    - **Modified Version**: Installiere Paket lokal mit dem Befehl`devtools::install_github("rietzlers/levi", ref = "spectrum")` 
+    - **Modified Version**: Installiere Paket lokal mit dem Befehl `devtools::install_github("rietzlers/levi", ref = "spectrum")` 
     und starte die App mit `shiny::runApp(system.file('levi', package='levi'))`
 3. **Installation on shiny-server**
-    - install package with `devtools::install_github("rietzlers/levi")` on the machine on which
-    the shiny-server runs. (An up to date version of R and R-Studio should be installed on this
+    - install package with `devtools::install_github("rietzlers/levi", ref = "master")` or  
+    `devtools::install_github("rietzlers/levi", ref = "spectrum")`  (depending on which version you prefer)
+    on the machine on which the shiny-server runs. (An up to date version of R and R-Studio should be installed on this
     machine.) Make sure that all packages on which the package levi depends are installed and 
     up to date.
     - navigate to R-packages-installation-folder: there should be a folder named 'levi'.
